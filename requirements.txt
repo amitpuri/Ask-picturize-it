@@ -1,0 +1,12 @@
+openai==0.27.4
+requests==2.28.2
+gradio==3.25.0
+Pillow==9.3.0
+cloudinary==1.32.0
+pymongo==4.3.3
+numpy==1.24.2
+torch==2.0.0
+diffusers
+accelerate
+transformers==4.28.1
+gpt3-tokenizer
