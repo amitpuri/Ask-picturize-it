@@ -8,6 +8,7 @@ from OpenAIUtil.TextOperations import *
 from Utils.ImageUtils import * #fallback_image_implement
 from Utils.DiffusionImageGenerator import * #generate_image
 from Utils.StabilityAPI import * #text_to_image
+
 # UI Component handlers
 class AskMeUIHandlers:
 
@@ -60,8 +61,19 @@ class AskMeUIHandlers:
         celeb_client = CelebDataClient(self.connection_string, self.database)
         name, prompt, response, image_url, generated_image_url = celeb_client.get_celebs_response(keyword)
         try:
+            if response is not None and len(response)==0:
+                response = None
+            if prompt is not None and len(prompt)==0:
+                prompt = None
+            if image_url is not None and len(image_url)==0:
+                image_url = None
+            if generated_image_url is not None and len(generated_image_url)==0:
+                generated_image_url = None
+
             if image_url and generated_image_url and response and prompt:
                 return name, prompt, response, image_utils.url_to_image(image_url), image_utils.url_to_image(generated_image_url)
+            elif image_url is None and generated_image_url is None and response and prompt:
+                return name, prompt, response, None, None            
             elif response and prompt and (image_url and not generated_image_url):
                 return name, prompt, response, image_utils.url_to_image(image_url), None
             elif response and prompt and (not image_url and generated_image_url):
@@ -182,7 +194,38 @@ class AskMeUIHandlers:
         except Exception as err:
             return f"Error {err} in AskMeUIHandlers -> ask_chatgpt_summarize",""
     
-    
+
+        
+    def celeb_upload_save_real_generated_image(self, name, prompt, description, folder_name, real_picture, generated_picture):
+        celeb_client = CelebDataClient(self.connection_string, self.database)
+        cloudinary_client = CloudinaryClient(self.cloudinary_cloud_name, self.cloudinary_api_key, self.cloudinary_api_secret)
+        # reading existing details real and generated image URLs, rest ignored
+        l_name, l_prompt, response, real_picture_url, generated_image_url = celeb_client.get_celebs_response(name)
+        
+        if real_picture_url is not None and len(real_picture_url)==0:
+            real_picture_url = None
+        if generated_image_url is not None and len(generated_image_url)==0:
+            generated_image_url = None
+
+        # uploading real picture
+        if real_picture_url and real_picture_url is None:
+            cloudinary_client.set_folder_name(folder_name)
+            real_picture_url = cloudinary_client.upload_image(real_picture, name)
+        # uploading generated picture
+        if generated_picture and generated_image_url is None:
+            cloudinary_client.set_folder_name("Generated")
+            generated_image_url = cloudinary_client.upload_image(generated_picture, name)
+
+        # saving record back
+        celeb_client.update_describe(name, prompt, description, real_picture_url, generated_image_url)
+        return "Uploaded and saved real and generated images", name, prompt, description, real_picture_url, generated_image_url
+
+    def update_description(self, name, prompt, description):
+        try:
+            celeb_client = CelebDataClient(self.connection_string, self.database)
+            celeb_client.update_describe(name, prompt, description, "", "")
+        except Exception as err:
+            print(f"Error {err} in AskMeUIHandlers -> update_description")    
     
     def describe_handler(self, name, prompt, folder_name, input_celeb_real_picture, input_celeb_generated_picture):
         image_utils = ImageUtils()                  
