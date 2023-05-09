@@ -10,3 +10,4 @@ diffusers
 accelerate
 transformers==4.28.1
 gpt3-tokenizer
+wikipedia==1.4.0
