@@ -10,15 +10,12 @@ from ExamplesUtil.CelebPromptGenerator import *
 from MongoUtil.StateDataClient import *
 from UIHandlers import AskMeUIHandlers
 from Utils.Optimizers import Prompt_Optimizer
-from Utils.ImageUtils import * #fallback_image_implement
 
 
 #from dotenv import load_dotenv
 #load_dotenv()
 
 TITLE = '# [Ask-me-to-picturize-it](https://github.com/amitpuri/Ask-me-to-picturize-it)'
-
-
 
 DESCRIPTION = """<strong>This space uses following:</strong>
    <p>
@@ -58,12 +55,7 @@ of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
-
-
 furnished to do so, subject to the following conditions:
-
-
-
 
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
@@ -88,7 +80,6 @@ AWESOME_CHATGPT_PROMPTS = """
 Credits 🧠 Awesome ChatGPT Prompts <a href='https://github.com/f/awesome-chatgpt-prompts'>https://github.com/f/awesome-chatgpt-prompts</a>
 """
 
-
 PRODUCT_DEFINITION = "<p>Define a product by prompt, picturize it, get variations, save it with a keyword for later retrieval. Credits <a href='https://www.deeplearning.ai/short-courses/chatgpt-prompt-engineering-for-developers'>https://www.deeplearning.ai/short-courses/chatgpt-prompt-engineering-for-developers</a></p>"
 
 LABEL_GPT_CELEB_SCREEN = "Name, Describe, Preview and Upload"
@@ -105,6 +96,7 @@ def get_wikimedia_image(keyword):
         try:
             result = wikipedia.search(keyword, results = 1)
             wikipedia.set_lang('en')
+
             wkpage = wikipedia.WikipediaPage(title = result[0])
             title = wkpage.title
             response  = requests.get(WIKI_REQUEST+title)
@@ -112,10 +104,11 @@ def get_wikimedia_image(keyword):
             image_link = list(json_data['query']['pages'].values())[0]['original']['source']
             return image_link
         except:
-            return "https://plchldr.co/i/336x280"
+            return None
 
 def get_wiki_page_summary(keyword):
     if keyword:
+
         try:
             return wikipedia.page(keyword).summary
         except wikipedia.exceptions.PageError:
@@ -222,17 +215,38 @@ def get_celebrity_detail_from_wiki(celebrity):
     return get_wiki_page_summary(celebrity_name),get_wikimedia_image(celebrity)
 
 def get_celebs_response_handler(mongo_config, mongo_connection_string, mongo_database, celebrity):
+    if not celebrity:
+        return clear_celeb_details()
+        
     uihandlers = AskMeUIHandlers()
-    image_utils = ImageUtils()
     uihandlers.set_mongodb_config(mongo_config, mongo_connection_string, mongo_database)
     try:
-        name, prompt, response, image_url, generated_image_url = uihandlers.get_celebs_response_handler(celebrity)        
-        #image_url = get_wikimedia_image(celebrity)
+        name, prompt, response, image_url, generated_image_url = uihandlers.get_celebs_response_handler(celebrity)   
+        
+        if response:
+            print(f"Exists in database {celebrity}")
+        
+        if image_url is None: 
+            image_url = get_wikimedia_image(celebrity)
+        if generated_image_url is None:
+            generated_image_url = None
+            
         return name, prompt, get_wiki_page_summary(celebrity), response, image_url, generated_image_url
     except Exception as err:    
         wiki_summary, wiki_image  = get_celebrity_detail_from_wiki(celebrity)        
-        return celebrity, f"Write a paragraph on {celebrity}", wiki_summary, "", wiki_image, image_utils.fallback_image_implement()
+        return celebrity, f"Write a paragraph on {celebrity}", wiki_summary, "", wiki_image, None
         
+
+def clear_celeb_details():
+    return "", "", "", "", None, None
+
+
+
+def ask_chatgpt_summarize_handler(api_key, org_id, prompt):
+    uihandlers = AskMeUIHandlers()    
+    uihandlers.set_openai_config(api_key, org_id)
+    return uihandlers.ask_chatgpt_summarize(prompt)
+
 
 '''
 Codex
@@ -367,9 +381,8 @@ def generated_images_gallery_on_select(evt: gr.SelectData, generated_images_gall
         name = generated_images_gallery[evt.index]["name"]
         output_generated_image =  name
         return output_generated_image
-    else:
-        image_utils = ImageUtils()
-        return image_utils.fallback_image_implement()
+    else:        
+        return None
 
 
 
@@ -437,8 +450,7 @@ with gr.Blocks(css='styles.css') as AskMeTabbedScreen:
                         label="Upload Audio and Transcribe",
                         type="filepath"
                     )
-                with gr.Column(scale
-=2):
+                with gr.Column(scale=2):
                     gr.Examples(
                         examples=audio_examples,                   
                         label="Select one from Audio Examples and Transcribe",
@@ -496,6 +508,7 @@ with gr.Blocks(css='styles.css') as AskMeTabbedScreen:
                     )
             with gr.Column(scale=1):
                 identify_celeb_button = gr.Button("Get Details, if exists")
+                clear_celeb_details_button = gr.Button("Clear")
                 with gr.Accordion("Generate image", open=False):
                     generate_image_stability_ai_button = gr.Button("via Stability AI")
                     generate_image_diffusion_button = gr.Button("*via stable-diffusion-2 model")
@@ -509,8 +522,10 @@ with gr.Blocks(css='styles.css') as AskMeTabbedScreen:
         with gr.Row():            
             with gr.Column(scale=1):
                 know_your_celeb_description_wiki = gr.Textbox(label="Wiki summary", lines=7)
+                ask_chatgpt_summarize_button= gr.Button("Summarize via OpenAI ChatGPT")
+		    ask_chatgpt_summarize_copy_button= gr.Button("Summarize via OpenAI ChatGPT and copy to Description")
             with gr.Column(scale=1):
-                know_your_celeb_description = gr.Textbox(label="Description from OpenAI ChatGpt", lines=7)
+                know_your_celeb_description = gr.Textbox(label="Description from OpenAI ChatGPT", lines=7)
         label_upload_here = gr.Label(value=LABEL_GPT_CELEB_SCREEN, label="Info")     
     with gr.Tab("Ask Codex"):
         with gr.Row():
@@ -550,7 +565,6 @@ with gr.Blocks(css='styles.css') as AskMeTabbedScreen:
                     examples=awesome_chatgpt_prompts,
                     examples_per_page=50,
                     inputs=[awesome_chatgpt_act],
-
                     outputs=[awesome_chatgpt_act, awesome_chatgpt_prompt],
                     cache_examples=True,
                 )
@@ -602,7 +616,6 @@ with gr.Blocks(css='styles.css') as AskMeTabbedScreen:
             with gr.Column(scale=4):
                 product_def_image_prompt = gr.Textbox(label="Enter Image creation Prompt", lines=5)
                 product_def_generated_image = gr.Image(label="AI Generated Image",  type="filepath")
-
             with gr.Column(scale=1):                
                 optimize_prompt_product_def_button = gr.Button("Optimize Prompt")
                 product_def_generate_button = gr.Button("Picturize it")
@@ -626,6 +639,24 @@ with gr.Blocks(css='styles.css') as AskMeTabbedScreen:
     gr.HTML(FOOTER)
 
 
+    ask_chatgpt_summarize_copy_button.click(
+        ask_chatgpt_summarize_handler,
+        inputs=[input_key, org_id, know_your_celeb_description_wiki],
+        outputs=[label_upload_here, know_your_celeb_description]
+    )
+
+    ask_chatgpt_summarize_button.click(
+        ask_chatgpt_summarize_handler,
+        inputs=[input_key, org_id, know_your_celeb_description_wiki],
+        outputs=[label_upload_here, know_your_celeb_description_wiki]
+    )
+    
+    clear_celeb_details_button.click(
+        clear_celeb_details,
+        inputs=[],
+        outputs=[name_it, question_prompt, know_your_celeb_description_wiki, know_your_celeb_description, celeb_real_photo, celeb_generated_image]
+    )
+    
     name_it.change(
         fn=get_celebs_response_handler,
         inputs=[mongo_config, mongo_connection_string, mongo_database, name_it],
@@ -732,6 +763,7 @@ with gr.Blocks(css='styles.css') as AskMeTabbedScreen:
         fn=tokenizer_calc,
         inputs=[ask_prompt],
         outputs=[label_codex_here]        
+
     )
     
     generate_image_stability_ai_button.click(
