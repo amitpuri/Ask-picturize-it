@@ -33,6 +33,7 @@ class AskMeUIHandlers:
     def get_private_mongo_config(self):
         return os.getenv("P_MONGODB_URI"), os.getenv("P_MONGODB_DATABASE")
         
+
     def set_cloudinary_config(self, cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret):        
         self.cloudinary_cloud_name = cloudinary_cloud_name
         self.cloudinary_api_key = cloudinary_api_key
@@ -62,13 +63,13 @@ class AskMeUIHandlers:
             if image_url and generated_image_url and response and prompt:
                 return name, prompt, response, image_utils.url_to_image(image_url), image_utils.url_to_image(generated_image_url)
             elif response and prompt and (image_url and not generated_image_url):
-                return name, prompt, response, image_utils.url_to_image(image_url), image_utils.fallback_image_implement()
+                return name, prompt, response, image_utils.url_to_image(image_url), None
             elif response and prompt and (not image_url and generated_image_url):
-                return name, prompt, response, image_utils.fallback_image_implement(), image_utils.url_to_image(generated_image_url)
+                return name, prompt, response, None, image_utils.url_to_image(generated_image_url)
             elif not response and not prompt and not image_url and generated_image_url:
-                return keyword, "", "", image_utils.fallback_image_implement(), image_utils.fallback_image_implement() 
+                return keyword, "", "", None, None
         except Exception as err:
-            return f"Error {err} in AskMeUIHandlers -> Celebs Response Handler", "", "", image_utils.fallback_image_implement(), image_utils.fallback_image_implement()
+            return f"Error {err} in AskMeUIHandlers -> Celebs Response Handler", "", "", None, None
     
     
             
@@ -159,13 +160,27 @@ class AskMeUIHandlers:
                     return "Response from Database", database_response
             if self.api_key:
                 operations = TextOperations(self.api_key, self.org_id)
-                response_message, response = operations.description_from_prompt(prompt)
+                response_message, response = operations.chat_completion(prompt)
                 state_data_client.save_prompt_response(prompt, keyword, response, prompttype)
                 return response_message, response
             else:
                 return self.NO_API_KEY_ERROR, ""
         except Exception as err:
             return f"Error {err} in AskMeUIHandlers -> ask_chatgpt",""
+
+
+    def ask_chatgpt_summarize(self, prompt):
+        if not prompt:
+            return "Prompt is required!",""
+        try:        
+            if self.api_key:
+                operations = TextOperations(self.api_key, self.org_id)
+                response_message, response = operations.summarize(prompt)
+                return response_message, response
+            else:
+                return self.NO_API_KEY_ERROR, ""
+        except Exception as err:
+            return f"Error {err} in AskMeUIHandlers -> ask_chatgpt_summarize",""
     
     
     
@@ -173,27 +188,27 @@ class AskMeUIHandlers:
         image_utils = ImageUtils()                  
         name = name.strip()
         if not self.api_key or not prompt or not name :            
-            return f"Name or prompt is not entered or {self.NO_API_KEY_ERROR}", "", "", "", image_utils.fallback_image_implement(), image_utils.fallback_image_implement()
+            return f"Name or prompt is not entered or {self.NO_API_KEY_ERROR}", "", "", "", None, None
         try:
             celeb_client = CelebDataClient(self.connection_string, self.database)
             local_name, local_prompt, response, real_picture_url, generated_image_url = celeb_client.get_celebs_response(name)
                 
             if self.api_key is not None and response is None and not response:
                 operations = TextOperations(self.api_key, self.org_id)
-                response_message, response = operations.description_from_prompt(prompt)   
+                response_message, response = operations.chat_completion(prompt)   
             
             cloudinary_client = CloudinaryClient(self.cloudinary_cloud_name, self.cloudinary_api_key, self.cloudinary_api_secret)
-            if self.fallback_image in real_picture_url:
+            if real_picture_url is not None:
                 cloudinary_client.set_folder_name(folder_name)
                 real_picture_url = cloudinary_client.upload_image(input_celeb_real_picture, name)
-            if self.fallback_image in generated_image_url:
+            if generated_image_url is not None:
                 cloudinary_client.set_folder_name("Generated")
                 generated_image_url = cloudinary_client.upload_image(input_celeb_generated_picture, name)
 
             if real_picture_url is None:
-                real_picture_url = self.fallback_image
+                real_picture_url = ""
             if generated_image_url is None:
-                generated_image_url = self.fallback_image
+                generated_image_url = ""
 
             if response is not None:
                 celeb_client.update_describe(name, prompt, response, real_picture_url, generated_image_url)
@@ -201,5 +216,5 @@ class AskMeUIHandlers:
             
             return f"{self.LABEL_GPT_CELEB_SCREEN} - uploaded and saved", name, prompt, response, image_utils.url_to_image(real_picture_url), image_utils.url_to_image(generated_image_url)
         except Exception as err:
-            return f"Error {err} in AskMeUIHandlers -> describe_handler", "", "", "", image_utils.fallback_image_implement(), image_utils.fallback_image_implement()
+            return f"Error {err} in AskMeUIHandlers -> describe_handler", "", "", "", None, None
     
