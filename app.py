@@ -555,9 +555,11 @@ with gr.Blocks(css='styles.css') as AskMeTabbedScreen:
             label_upload_here = gr.Label(value=LABEL_GPT_CELEB_SCREEN, label="Info")     
         with gr.Tab("Ask GPT"):
             with gr.Row():
-                keyword_search = gr.Textbox(label="Keyword")                
-                keyword_search_prompt = gr.Textbox(label="Prompt")
-                keyword_search_response = gr.Textbox(label="Response")
+                with gr.Column(): 
+                    keyword_search = gr.Textbox(label="Keyword")                
+                    with gr.Row():
+                        keyword_search_prompt = gr.Textbox(label="Prompt")
+                        keyword_search_response = gr.Textbox(label="Response")
                 with gr.Column():    
                     with gr.Tab("Recent Codex"):
                             with gr.Row():
