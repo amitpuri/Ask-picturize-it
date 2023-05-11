@@ -70,3 +70,12 @@ Build advanced search, clustering, topic modeling, and classification functional
 | Model        | Usage                 | 
 |--------------|-----------------------|
 | Ada          | $0.0004 / 1K tokens   | 
+
+
+    docker build --rm --pull \
+      --file "Dockerfile" \
+      --label "com.amitpuri.ask-picturize-it" \
+      --tag "ask-picturize-it:latest" \
+      .
+
+    docker run -e P_MONGODB_DATABASE -e P_MONGODB_URI -it --publish 80:80 --publish 27017:27017 ask-picturize-it:latest
