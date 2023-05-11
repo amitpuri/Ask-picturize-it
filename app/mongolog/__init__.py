@@ -1,1 +1,0 @@
-from mongolog.handlers import MongoHandler
