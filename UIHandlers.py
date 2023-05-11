@@ -120,8 +120,8 @@ class AskMeUIHandlers:
     def generate_image_stability_ai_handler(self, name, prompt):
         if self.stability_api_key:
             stability_api = StabilityAPI(self.stability_api_key)
-            prompt = f"A wallpaper photo of {name} by WLOP"
-            output_generated_image=stability_api.text_to_image(name,prompt)
+            #prompt = f"A wallpaper photo of {name} by WLOP"
+            output_generated_image=stability_api.text_to_image(name, prompt)
             return "Image generated using stability AI ", output_generated_image
         else:
             image_utils = ImageUtils()
@@ -131,9 +131,9 @@ class AskMeUIHandlers:
         if name:
             image_utils = ImageUtils()
             try: 
-                prompt = f"A wallpaper photo of {name} by WLOP"
+                #prompt = f"A wallpaper photo of {name} by WLOP"
                 image_generator = DiffusionImageGenerator()
-                output_generated_image = image_generator.generate_image(name,prompt)
+                output_generated_image = image_generator.generate_image(name, prompt)
                 return "Image generated using stabilityai/stable-diffusion-2 model", output_generated_image
             except Exception as err:
                 return f"Error : {err}", image_utils.fallback_image_implement()

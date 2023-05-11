@@ -3,7 +3,6 @@ import os
 
 import gpt3_tokenizer
 import wikipedia
-import json
 import requests
 import gradio as gr
 from ExamplesUtil.CelebPromptGenerator import *
@@ -57,12 +56,7 @@ of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
-
-
 furnished to do so, subject to the following conditions:
-
-
-
 
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
@@ -90,7 +84,7 @@ Credits 🧠 Awesome ChatGPT Prompts <a href='https://github.com/f/awesome-chatg
 
 PRODUCT_DEFINITION = "<p>Define a product by prompt, picturize it, get variations, save it with a keyword for later retrieval. Credits <a href='https://www.deeplearning.ai/short-courses/chatgpt-prompt-engineering-for-developers'>https://www.deeplearning.ai/short-courses/chatgpt-prompt-engineering-for-developers</a></p>"
 
-LABEL_GPT_CELEB_SCREEN = "Name, Describe, Preview and Upload"
+LABEL_GPT_CELEB_SCREEN = "Select, Describe, Generate AI Image, Upload and Save"
 
 
 '''
@@ -196,58 +190,65 @@ def create_variation_from_image_handler(api_key, org_id, input_image_variation, 
 Know your Celebrity
 '''
 
-def create_celeb_prompt(name_it):
+def create_celeb_prompt(celebs_name_label):
     prompt_generator = CelebPromptGenerator()
-    return prompt_generator.create_celeb_prompt(name_it)
+    return prompt_generator.create_celeb_prompt(celebs_name_label)
 
 
 celeb_names = prompt_generator.get_celebs()
+
 
 question_prompts = prompt_generator.get_questions()
 
 
 
-def describe_handler(api_key, org_id, mongo_prompt_read_config, cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, cloudinary_folder, mongo_config, mongo_connection_string, mongo_database, name_it, question_prompt, input_celeb_real_picture, input_celeb_generated_picture):
+def describe_handler(api_key, org_id, mongo_prompt_read_config, cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, cloudinary_folder, mongo_config, mongo_connection_string, mongo_database, celebs_name_label, question_prompt, input_celeb_real_picture, input_celeb_generated_picture):
     uihandlers = AskMeUIHandlers()
     uihandlers.set_openai_config(api_key, org_id, mongo_prompt_read_config)
     uihandlers.set_mongodb_config(mongo_config, mongo_connection_string, mongo_database)
     uihandlers.set_cloudinary_config(cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret)
-    return uihandlers.describe_handler(name_it, question_prompt, cloudinary_folder, input_celeb_real_picture, input_celeb_generated_picture)
+    return uihandlers.describe_handler(celebs_name_label, question_prompt, cloudinary_folder, input_celeb_real_picture, input_celeb_generated_picture)
 
-def celeb_upload_save_real_generated_image_handler(cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, cloudinary_folder, mongo_config, mongo_connection_string, mongo_database, name_it, question_prompt, know_your_celeb_description, celeb_real_photo, celeb_generated_image):
+def celeb_upload_save_real_generated_image_handler(cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, cloudinary_folder, mongo_config, mongo_connection_string, mongo_database, celebs_name_label, question_prompt, know_your_celeb_description, celeb_real_photo, celeb_generated_image):
     uihandlers = AskMeUIHandlers()
     uihandlers.set_mongodb_config(mongo_config, mongo_connection_string, mongo_database)
     uihandlers.set_cloudinary_config(cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret)
-    return uihandlers.celeb_upload_save_real_generated_image(name_it, question_prompt, know_your_celeb_description, cloudinary_folder, celeb_real_photo, celeb_generated_image)
+    return uihandlers.celeb_upload_save_real_generated_image(celebs_name_label, question_prompt, know_your_celeb_description, cloudinary_folder, celeb_real_photo, celeb_generated_image)
 
 
 def get_celebrity_detail_from_wiki(celebrity):
-    celebrity_name = f"{celebrity} filmography"
+    celebrity_name = f"{celebrity}"
     return get_wiki_page_summary(celebrity_name),get_wikimedia_image(celebrity)
 
-def get_celebs_response_handler(mongo_config, mongo_connection_string, mongo_database, celebrity):
-
-    if not celebrity:
-        return clear_celeb_details()
-        
+def get_celebs_response_click_handler(mongo_config, mongo_connection_string, mongo_database, celebrity, image_prompt_text):
+    if celebrity:
+        return get_celebs_response(mongo_config, mongo_connection_string, mongo_database, celebrity, image_prompt_text)
+    else:
+        return "", "", "", "", None, None, None
+    
+def get_celebs_response_change_handler(mongo_config, mongo_connection_string, mongo_database, celebrity, image_prompt_text):
+    return get_celebs_response(mongo_config, mongo_connection_string, mongo_database, celebrity, image_prompt_text)
+    
+def get_celebs_response(mongo_config, mongo_connection_string, mongo_database, celebrity, image_prompt_text):
+    #try:
     uihandlers = AskMeUIHandlers()
     uihandlers.set_mongodb_config(mongo_config, mongo_connection_string, mongo_database)
+    wiki_summary = get_wiki_page_summary(celebrity)
     try:
-        name, prompt, response, image_url, generated_image_url = uihandlers.get_celebs_response_handler(celebrity)   
-        if image_url is None: 
-            image_url = get_wikimedia_image(celebrity)
-        if generated_image_url is None:
-            generated_image_url = None
-            
-        return name, prompt, get_wiki_page_summary(celebrity), response, image_url, generated_image_url
-    except Exception as err:    
-        wiki_summary, wiki_image  = get_celebrity_detail_from_wiki(celebrity)        
-        return celebrity, f"Write a paragraph on {celebrity}", wiki_summary, "", wiki_image, None
-        
+        name, prompt, response, wiki_image, generated_image_url = uihandlers.get_celebs_response_handler(celebrity)
+        if wiki_image is None:
+            wiki_image = get_wikimedia_image(celebrity)
+        return name, prompt, wiki_summary, response, wiki_image, generated_image_url, f"A realistic photo of {name}"
+    except:
+        response = None
+        generated_image_url = None
+        wiki_image = get_wikimedia_image(celebrity)
+        return celebrity, f"Write a paragraph on {celebrity}", wiki_summary, "", wiki_image, None, f"A realistic photo of {celebrity}"
+        pass
+    
 
 def clear_celeb_details():
-    return "", "", "", "", None, None
-
+    return "", "", "", "", None, None, None
 
 
 def celeb_summarize_handler(api_key, org_id, prompt):
@@ -326,6 +327,7 @@ saved_products =  prompt_generator.get_all_awesome_chatgpt_prompts("product")
 def ask_product_def_handler(api_key, org_id, mongo_prompt_read_config, mongo_config, mongo_connection_string, mongo_database, prompt, keyword):
     uihandlers = AskMeUIHandlers()
     uihandlers.set_mongodb_config(mongo_config, mongo_connection_string, mongo_database)
+
     uihandlers.set_openai_config(api_key, org_id, mongo_prompt_read_config)
     return uihandlers.ask_chatgpt(prompt, keyword,"product")
 
@@ -333,11 +335,12 @@ def ask_product_def_handler(api_key, org_id, mongo_prompt_read_config, mongo_con
 def update_final_prompt(product_fact_sheet, product_def_question, product_task_explanation):
     final_prompt = ""
     if product_fact_sheet:
-        final_prompt = f"{product_task_explanation}\n\n{product_def_question}\n\nTechnical specifications: \n\n{product_fact_sheet}"
+        final_prompt = f"{product_task_explanation}. {product_def_question}\n\n\nTechnical specifications: \n\n\n{product_fact_sheet}"
     else:
-        final_prompt = f"{product_task_explanation}\n\n{product_def_question}"
+        final_prompt = f"{product_task_explanation}. {product_def_question}"
     final_prompt = final_prompt.replace('\n\n','\n')
     return final_prompt
+
 
 
 
@@ -347,14 +350,13 @@ Write a product description based on the information provided in the technical s
 
 product_def_question_examples = ["Limit answer to 50 words", 
                              "Limit answer to 100 words", 
-                             "Limit answer to 150 words", 
-                             "Limit answer to 200 words", 
-                             "Limit answer to 250 words",
-                             "Limit answer to 300 words",
                              "Write the answer in bullet points",
                              "Write the answer in 2/3 sentences",
-                             "Write the answer in 3/4 sentences",
-                             "Write the answer in 4/5 sentences",
+                             "Write the answer in one line TLDR with the fewest words"
+                            ]
+
+product_def_keyword_examples = ["A chair Italian furniture definition", 
+                             "A chair Italian furniture definition TLDR" 
                             ]
 
 
@@ -378,15 +380,15 @@ def cloudinary_upload(cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_
 Image generation
 '''
 
-def generate_image_stability_ai_handler(stability_api_key, name_it, question_prompt):
+def generate_image_stability_ai_handler(stability_api_key, celebs_name_label, generate_image_prompt_text):
     uihandlers = AskMeUIHandlers()
     uihandlers.set_stabilityai_config(stability_api_key)
-    return uihandlers.generate_image_stability_ai_handler(name_it, question_prompt)
+    return uihandlers.generate_image_stability_ai_handler(celebs_name_label, generate_image_prompt_text)
 
     
-def generate_image_diffusion_handler(name_it):
+def generate_image_diffusion_handler(celebs_name_label, generate_image_prompt_text):
     uihandlers = AskMeUIHandlers()
-    return uihandlers.generate_image_diffusion_handler(name_it, question_prompt)
+    return uihandlers.generate_image_diffusion_handler(celebs_name_label, generate_image_prompt_text)
     
 '''
 UI Components
@@ -466,6 +468,7 @@ with gr.Blocks(css='styles.css') as AskMeTabbedScreen:
                         type="filepath"
                     )
                 with gr.Column(scale=2):
+
                     gr.Examples(
                         examples=audio_examples,                   
                         label="Select one from Audio Examples and Transcribe",
@@ -508,40 +511,41 @@ with gr.Blocks(css='styles.css') as AskMeTabbedScreen:
     with gr.Tab("Know your Celebrity"):
         with gr.Row():
             with gr.Column(scale=4):  
-                name_it = gr.Textbox(label="Name")                   
+                celebs_name_label = gr.Textbox(label="Celebrity") 
                 question_prompt = gr.Textbox(label="Prompt", lines=2)
-                with gr.Accordion("Celebrity Examples, select one from here", open=False):
+                with gr.Accordion("Celebrity Examples, select one from here", open=True):
                     gr.Examples(
                         fn=create_celeb_prompt,
                         label="Select one from a celebrity",
                         examples=celeb_names,
-                        examples_per_page=50,
-                        inputs=[name_it],
+                        examples_per_page=70,
+                        inputs=[celebs_name_label],
                         outputs=[question_prompt],                
                         cache_examples=True,
                     )
             with gr.Column(scale=1):
-                identify_celeb_button = gr.Button("Get Details, if exists")
-                clear_celeb_details_button = gr.Button("Clear")
-                with gr.Accordion("Generate image", open=False):
+                clear_celeb_details_button = gr.Button("Clear")                
+                generate_image_prompt_text = gr.Textbox(label="Image generation prompt", value="A realistic photo")
+                label_describe_gpt = gr.Label(value="Generate or Upload Image to Save", label="Info")
+                with gr.Accordion("Options..", open=True):
                     generate_image_stability_ai_button = gr.Button("via Stability AI")
                     generate_image_diffusion_button = gr.Button("*via stable-diffusion-2 model")
-                    label_generate_image_diffusion = gr.Label(value="* takes 40-50 mins on CPU", label="Warning") 
-                    celeb_variation_button = gr.Button("variation from the real photo (DALL-E 2)")
-                describe_button = gr.Button("Describe via ChatGPT and Save")
-                label_describe_gpt = gr.Label(value="Generate or Upload Image to Save", label="Info")
+                    label_generate_image_diffusion = gr.Label(value="* takes 30-50 mins on CPU", label="Warning") 
+                    celeb_variation_button = gr.Button("variation from the real photo (DALL-E 2)")                                
         with gr.Row():
             celeb_real_photo = gr.Image(label="Real Photo",  type="filepath")                        
             celeb_generated_image = gr.Image(label="AI Generated Image",  type="filepath")
         with gr.Row():
             with gr.Column(scale=1):
-                know_your_celeb_description_wiki = gr.Textbox(label="Wiki summary", lines=7)
+
+                know_your_celeb_description_wiki = gr.Textbox(label="Wiki summary", lines=13)
             with gr.Column(scale=1):
                 know_your_celeb_description = gr.Textbox(label="Description from OpenAI ChatGPT", lines=7)
                 with gr.Row():                    
                     celeb_summarize_copy_button = gr.Button("Summarize Wiki output, copy to Description")
                     celeb_save_description_button = gr.Button("Save Description")
-                    celeb_upload_save_real_generated_image_button = gr.Button("Upload, Save real & generated image")
+                    describe_button = gr.Button("Describe via ChatGPT and Save")
+                    celeb_upload_save_real_generated_image_button = gr.Button("Upload, Save real & generated image")                    
         label_upload_here = gr.Label(value=LABEL_GPT_CELEB_SCREEN, label="Info")     
     with gr.Tab("Ask Codex"):
         with gr.Row():
@@ -593,7 +597,6 @@ with gr.Blocks(css='styles.css') as AskMeTabbedScreen:
                 with gr.Row():                    
                     product_def_ask_button = gr.Button("Ask ChatGPT")                    
         with gr.Row():
-
             with gr.Column(scale=4):
                 product_fact_sheet = gr.Textbox(label="Product Fact sheet", lines=25)
                 product_task_explanation = gr.Textbox(label="Task explanation", lines=5)
@@ -601,6 +604,7 @@ with gr.Blocks(css='styles.css') as AskMeTabbedScreen:
             with gr.Column(scale=1):
                 gr.Examples(
                             label="Product Fact sheet examples",
+
                             fn=get_awesome_chatgpt_prompts,
                             examples=saved_products,
                             examples_per_page=3,
@@ -618,7 +622,7 @@ with gr.Blocks(css='styles.css') as AskMeTabbedScreen:
                 gr.Examples(
                     label="Question examples",
                     examples=product_def_question_examples,
-                    examples_per_page=10,
+                    examples_per_page=6,
                     inputs=[product_def_question],
                     outputs=[product_def_question],
                 )
@@ -627,7 +631,15 @@ with gr.Blocks(css='styles.css') as AskMeTabbedScreen:
                 product_def_final_prompt = gr.Textbox(label="Prompt", lines=10)
             with gr.Column(scale=1):                
                 product_def_info_label = gr.Label(value="See examples below", label="Info")
+
         product_def_response = gr.Textbox(label="Response", lines=10)
+        gr.Examples(
+            label="Recent product definitions",
+            examples=product_def_keyword_examples,
+            examples_per_page=5,
+            inputs=[product_def_keyword],
+            outputs=[product_def_response],
+        )                
         with gr.Row():
             with gr.Column(scale=4):
                 product_def_image_prompt = gr.Textbox(label="Enter Image creation Prompt", lines=5)
@@ -654,15 +666,17 @@ with gr.Blocks(css='styles.css') as AskMeTabbedScreen:
         gr.Markdown(DISCLAIMER)
     gr.HTML(FOOTER)
 
+    
     celeb_upload_save_real_generated_image_button.click(
         celeb_upload_save_real_generated_image_handler,
-        inputs=[cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, cloudinary_folder, mongo_config, mongo_connection_string, mongo_database, name_it, question_prompt, know_your_celeb_description, celeb_real_photo,  celeb_generated_image],
-        outputs=[label_upload_here, name_it, question_prompt, know_your_celeb_description, celeb_real_photo, celeb_generated_image]
+        inputs=[cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, cloudinary_folder, mongo_config, mongo_connection_string, mongo_database, celebs_name_label, question_prompt, know_your_celeb_description, celeb_real_photo, celeb_generated_image],
+        outputs=[label_upload_here, celebs_name_label, question_prompt, know_your_celeb_description, celeb_real_photo, celeb_generated_image]
 
     )
+
     celeb_save_description_button.click(
         celeb_save_description_handler,
-        inputs=[mongo_config, mongo_connection_string, mongo_database, name_it, question_prompt, know_your_celeb_description],
+        inputs=[mongo_config, mongo_connection_string, mongo_database, celebs_name_label, question_prompt, know_your_celeb_description],
         outputs=[label_upload_here, know_your_celeb_description]
     )
     
@@ -676,19 +690,13 @@ with gr.Blocks(css='styles.css') as AskMeTabbedScreen:
     clear_celeb_details_button.click(
         clear_celeb_details,
         inputs=[],
-        outputs=[name_it, question_prompt, know_your_celeb_description_wiki, know_your_celeb_description, celeb_real_photo, celeb_generated_image]
+        outputs=[celebs_name_label, question_prompt, know_your_celeb_description_wiki, know_your_celeb_description, celeb_real_photo, celeb_generated_image, generate_image_prompt_text]
     )
     
-    name_it.change(
-        fn=get_celebs_response_handler,
-        inputs=[mongo_config, mongo_connection_string, mongo_database, name_it],
-        outputs=[name_it, question_prompt, know_your_celeb_description_wiki, know_your_celeb_description, celeb_real_photo, celeb_generated_image]
-    )
-
-    identify_celeb_button.click(
-        get_celebs_response_handler,
-        inputs=[mongo_config, mongo_connection_string, mongo_database, name_it],
-        outputs=[name_it, question_prompt, know_your_celeb_description_wiki, know_your_celeb_description, celeb_real_photo, celeb_generated_image]
+    celebs_name_label.change(
+        fn=get_celebs_response_change_handler,
+        inputs=[mongo_config, mongo_connection_string, mongo_database, celebs_name_label, generate_image_prompt_text],
+        outputs=[celebs_name_label, question_prompt, know_your_celeb_description_wiki, know_your_celeb_description, celeb_real_photo, celeb_generated_image, generate_image_prompt_text]
     )
 
     product_def_image_prompt.change(
@@ -753,7 +761,7 @@ with gr.Blocks(css='styles.css') as AskMeTabbedScreen:
 
     question_prompt.change(
         fn=tokenizer_calc,
-        inputs=[question_prompt],
+        inputs=[generate_image_prompt_text],
         outputs=[label_describe_gpt]        
     )
     
@@ -789,22 +797,23 @@ with gr.Blocks(css='styles.css') as AskMeTabbedScreen:
     )
     
     generate_image_stability_ai_button.click(
+
         generate_image_stability_ai_handler,
-        inputs=[stability_api_key, name_it, question_prompt],
+        inputs=[stability_api_key, celebs_name_label, generate_image_prompt_text],
         outputs=[label_upload_here,celeb_generated_image]
     )
     
     generate_image_diffusion_button.click(
         generate_image_diffusion_handler,
-        inputs=[name_it],
+        inputs=[celebs_name_label, generate_image_prompt_text],
         outputs=[label_upload_here, celeb_generated_image]
 
     )
 
     describe_button.click(
         describe_handler,
-        inputs=[input_key, org_id, mongo_prompt_read_config, cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, cloudinary_folder, mongo_config, mongo_connection_string, mongo_database, name_it, question_prompt, celeb_real_photo,  celeb_generated_image],
-        outputs=[label_upload_here, name_it, question_prompt, know_your_celeb_description, celeb_real_photo, celeb_generated_image]
+        inputs=[input_key, org_id, mongo_prompt_read_config, cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, cloudinary_folder, mongo_config, mongo_connection_string, mongo_database, celebs_name_label, question_prompt, celeb_real_photo,  celeb_generated_image],
+        outputs=[label_upload_here, celebs_name_label, question_prompt, know_your_celeb_description, celeb_real_photo, celeb_generated_image]
     )
 
 
@@ -830,7 +839,6 @@ with gr.Blocks(css='styles.css') as AskMeTabbedScreen:
     
     generate_variations_button.click(
         create_variation_from_image_handler,
-
         inputs=[input_key, org_id, input_image_variation, input_imagesize, input_num_images],
         outputs=[label_get_variation, output_generated_image, generated_images_gallery]
     )
@@ -864,6 +872,7 @@ with gr.Blocks(css='styles.css') as AskMeTabbedScreen:
         inputs=[input_key, org_id, audio_file],
         outputs=[input_transcriptionprompt, input_prompt]
     )
+
 
 if __name__ == "__main__":
     AskMeTabbedScreen.launch()

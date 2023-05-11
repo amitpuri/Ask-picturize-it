@@ -10,7 +10,10 @@ class CelebDataClient:
         try:
             qry = {'name': {'$regex': keyword.strip()}}
             celeb = self.celebs.find_one(qry)
-            return celeb["name"], celeb["prompt"], celeb["response"], celeb["url"], celeb["g_url"]
+            if celeb is not None:
+                return celeb["name"], celeb["prompt"], celeb["response"], celeb["url"], celeb["g_url"]
+            else:
+                return "", "", "", "",""
         except Exception as err:
             print(f"CelebDataClient get_celebs_response error {err}")
             return "", "", "", "",""
@@ -26,3 +29,4 @@ class CelebDataClient:
             )           
         except Exception as err:
             print(f"CelebDataClient update_describe error {err}")
+
