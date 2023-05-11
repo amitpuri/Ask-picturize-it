@@ -121,7 +121,7 @@ class AskMeUIHandlers:
         if self.stability_api_key:
             stability_api = StabilityAPI(self.stability_api_key)
             #prompt = f"A wallpaper photo of {name} by WLOP"
-            output_generated_image=stability_api.text_to_image(name, prompt)
+            output_generated_image = stability_api.text_to_image(name, prompt)
             return "Image generated using stability AI ", output_generated_image
         else:
             image_utils = ImageUtils()
@@ -164,12 +164,10 @@ class AskMeUIHandlers:
     def ask_chatgpt(self, prompt, keyword, prompttype):
         if not prompt or not keyword:
             return "Prompt or keyword is required!",""
-        try:        
-            state_data_client = StateDataClient(self.connection_string, self.database)
-            if self.mongo_prompt_read_config:
-                database_prompt, database_response = state_data_client.read_description_from_prompt(keyword)
-                if database_response:
-                    return "Response from Database", database_response
+            database_prompt, database_response = self.ask_chatgpt_database_response(prompt, keyword, prompttype)
+            if database_response:
+                return database_prompt, database_response
+        try:
             if self.api_key:
                 operations = TextOperations(self.api_key, self.org_id)
                 response_message, response = operations.chat_completion(prompt)
@@ -179,6 +177,21 @@ class AskMeUIHandlers:
                 return self.NO_API_KEY_ERROR, ""
         except Exception as err:
             return f"Error {err} in AskMeUIHandlers -> ask_chatgpt",""
+
+    def ask_chatgpt_database_response(self, keyword, prompttype):
+        if not keyword:
+            return "Keyword is required!",""
+        try:        
+            state_data_client = StateDataClient(self.connection_string, self.database)
+            try:
+                database_prompt, database_response = state_data_client.read_description_from_prompt(keyword)
+                return "Response from Database", database_response
+            except:
+                database_prompt = None
+                database_response = None
+                pass 
+        except Exception as err:
+            return f"Error {err} in AskMeUIHandlers -> ask_chatgpt_database_response",""
 
 
     def ask_chatgpt_summarize(self, prompt):

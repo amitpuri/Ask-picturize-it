@@ -56,6 +56,7 @@ of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
+
 furnished to do so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in all
@@ -132,9 +133,15 @@ def get_private_mongo_config():
     return os.getenv("P_MONGODB_URI"), os.getenv("P_MONGODB_DATABASE")
 
 
+def use_case_slider_handler(use_case_slider):    
+    use_case_options={      
+      1:'Ask Codex',
+      2:'Awesome ChatGPT Prompts',
+      3:'Product definition'
+      }
+    return use_case_options.get(use_case_slider,"Invalid use case")
+
     
-# Examples fn
-prompt_generator = CelebPromptGenerator()
 
 '''
 Record voice, transcribe, picturize, create variations, and upload
@@ -144,7 +151,6 @@ def get_audio_examples():
     prompt_generator = CelebPromptGenerator()
     return prompt_generator.get_audio_examples()
 
-audio_examples = prompt_generator.get_audio_examples()
 
 def transcribe_handler(api_key, org_id, audio_file):
     uihandlers = AskMeUIHandlers()
@@ -161,7 +167,6 @@ def get_input_examples():
     return prompt_generator.get_input_examples()
 
 
-images_examples = prompt_generator.get_images_examples()
 
 def create_image_from_prompt_handler(api_key, org_id, input_prompt, input_imagesize, input_num_images):
     uihandlers = AskMeUIHandlers()
@@ -178,7 +183,7 @@ def get_images_examples():
     return prompt_generator.get_images_examples()
 
 
-input_examples = prompt_generator.get_input_examples()
+
 
 def create_variation_from_image_handler(api_key, org_id, input_image_variation, input_imagesize, input_num_images):
     uihandlers = AskMeUIHandlers()
@@ -193,13 +198,6 @@ Know your Celebrity
 def create_celeb_prompt(celebs_name_label):
     prompt_generator = CelebPromptGenerator()
     return prompt_generator.create_celeb_prompt(celebs_name_label)
-
-
-celeb_names = prompt_generator.get_celebs()
-
-
-question_prompts = prompt_generator.get_questions()
-
 
 
 def describe_handler(api_key, org_id, mongo_prompt_read_config, cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, cloudinary_folder, mongo_config, mongo_connection_string, mongo_database, celebs_name_label, question_prompt, input_celeb_real_picture, input_celeb_generated_picture):
@@ -272,28 +270,28 @@ def get_saved_prompts(keyword):
     try:
         connection_string, database = get_private_mongo_config()           
         state_data_client = StateDataClient(connection_string, database)
-        prompt, response = state_data_client.read_description_from_prompt(keyword)
-        return prompt
-    except Exception as err:
-        return f"What is {keyword}, and how to use this in Python ? Give an example."
+        prompt, response = state_data_client.read_description_from_prompt(keyword)        
+    except:
+        prompt = ""
+        response = ""
+        pass
+    finally:
+        return prompt, response
 
 
-def get_keyword_prompts():
+def get_keyword_prompts(prompttype):
     connection_string, database = get_private_mongo_config()           
     state_data_client = StateDataClient(connection_string, database)
-    saved_prompts = state_data_client.list_saved_prompts("codex")
+    saved_prompts = state_data_client.list_saved_prompts(prompttype)
     return saved_prompts
 
 
-
-saved_prompts = get_keyword_prompts() 
 
 def ask_chatgpt_handler(api_key, org_id, mongo_prompt_read_config, mongo_config, mongo_connection_string, mongo_database, prompt, keyword):
     uihandlers = AskMeUIHandlers()
     uihandlers.set_mongodb_config(mongo_config, mongo_connection_string, mongo_database)
     uihandlers.set_openai_config(api_key, org_id, mongo_prompt_read_config)
     return uihandlers.ask_chatgpt(prompt, keyword,"codex")
-
 
 '''
 Awesome ChatGPT Prompts
@@ -304,7 +302,7 @@ def get_awesome_chatgpt_prompts(awesome_chatgpt_act):
     awesome_chatgpt_prompt = prompt_generator.get_awesome_chatgpt_prompt(awesome_chatgpt_act)
     return awesome_chatgpt_act, awesome_chatgpt_prompt
 
-awesome_chatgpt_prompts = prompt_generator.get_all_awesome_chatgpt_prompts()
+
 
 def awesome_prompts_handler(api_key, org_id, mongo_prompt_read_config, mongo_config, mongo_connection_string, mongo_database, prompt, keyword):
     uihandlers = AskMeUIHandlers()
@@ -312,22 +310,17 @@ def awesome_prompts_handler(api_key, org_id, mongo_prompt_read_config, mongo_con
     uihandlers.set_mongodb_config(mongo_config, mongo_connection_string, mongo_database)
     return uihandlers.ask_chatgpt(prompt, keyword,"awesome-prompts")
 
+
+
 '''
 Product Definition
 '''
 
-def get_keyword_products():
-    connection_string, database = get_private_mongo_config()           
-    state_data_client = StateDataClient(connection_string, database)
-    saved_products = state_data_client.list_saved_prompts("product")
-    return saved_products
 
-saved_products =  prompt_generator.get_all_awesome_chatgpt_prompts("product")
 
 def ask_product_def_handler(api_key, org_id, mongo_prompt_read_config, mongo_config, mongo_connection_string, mongo_database, prompt, keyword):
     uihandlers = AskMeUIHandlers()
     uihandlers.set_mongodb_config(mongo_config, mongo_connection_string, mongo_database)
-
     uihandlers.set_openai_config(api_key, org_id, mongo_prompt_read_config)
     return uihandlers.ask_chatgpt(prompt, keyword,"product")
 
@@ -344,6 +337,8 @@ def update_final_prompt(product_fact_sheet, product_def_question, product_task_e
 
 
 
+# Examples fn
+
 task_explanation_examples = ["""Your task is to help a marketing team create a description for a retail website of a product based on a technical fact sheet.
            
 Write a product description based on the information provided in the technical specifications delimited by triple backticks."""]
@@ -355,10 +350,18 @@ product_def_question_examples = ["Limit answer to 50 words",
                              "Write the answer in one line TLDR with the fewest words"
                             ]
 
-product_def_keyword_examples = ["A chair Italian furniture definition", 
-                             "A chair Italian furniture definition TLDR" 
-                            ]
 
+prompt_generator = CelebPromptGenerator()
+audio_examples = prompt_generator.get_audio_examples()
+images_examples = prompt_generator.get_images_examples()
+input_examples = prompt_generator.get_input_examples()
+product_def_keyword_examples =  get_keyword_prompts("product") 
+recent_awesome_chatgpt_prompts = get_keyword_prompts("awesome-prompts")
+saved_prompts = get_keyword_prompts("codex") 
+saved_products =  prompt_generator.get_all_awesome_chatgpt_prompts("product")
+awesome_chatgpt_prompts = prompt_generator.get_all_awesome_chatgpt_prompts()
+celeb_names = prompt_generator.get_celebs()
+question_prompts = prompt_generator.get_questions()
 
 '''
 Output and Upload
@@ -380,6 +383,7 @@ def cloudinary_upload(cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_
 Image generation
 '''
 
+
 def generate_image_stability_ai_handler(stability_api_key, celebs_name_label, generate_image_prompt_text):
     uihandlers = AskMeUIHandlers()
     uihandlers.set_stabilityai_config(stability_api_key)
@@ -390,6 +394,7 @@ def generate_image_diffusion_handler(celebs_name_label, generate_image_prompt_te
     uihandlers = AskMeUIHandlers()
     return uihandlers.generate_image_diffusion_handler(celebs_name_label, generate_image_prompt_text)
     
+
 '''
 UI Components
 '''
@@ -401,6 +406,7 @@ def generated_images_gallery_on_select(evt: gr.SelectData, generated_images_gall
         return output_generated_image
     else:        
         return None
+
 
 
 
@@ -444,6 +450,7 @@ with gr.Blocks(css='styles.css') as AskMeTabbedScreen:
                     cloudinary_api_secret = gr.Textbox(
                         label="Cloudinary API Secret", value=os.getenv("CLOUDINARY_API_SECRET"), type="password")
         with gr.Tab("Stability API"):
+
             gr.HTML("Sign up here <a href='https://platform.stability.ai'>https://platform.stability.ai</a>")
             with gr.Row():
                 with gr.Column():
@@ -468,7 +475,6 @@ with gr.Blocks(css='styles.css') as AskMeTabbedScreen:
                         type="filepath"
                     )
                 with gr.Column(scale=2):
-
                     gr.Examples(
                         examples=audio_examples,                   
                         label="Select one from Audio Examples and Transcribe",
@@ -507,148 +513,169 @@ with gr.Blocks(css='styles.css') as AskMeTabbedScreen:
                 label_get_variation = gr.Label(
                         value="Get variation of your favorite celebs", label="Info")                
                 with gr.Column():
-                    generate_variations_button = gr.Button("Generate a variation via DALL-E")            
-    with gr.Tab("Know your Celebrity"):
-        with gr.Row():
-            with gr.Column(scale=4):  
-                celebs_name_label = gr.Textbox(label="Celebrity") 
-                question_prompt = gr.Textbox(label="Prompt", lines=2)
-                with gr.Accordion("Celebrity Examples, select one from here", open=True):
-                    gr.Examples(
-                        fn=create_celeb_prompt,
-                        label="Select one from a celebrity",
-                        examples=celeb_names,
-                        examples_per_page=70,
-                        inputs=[celebs_name_label],
-                        outputs=[question_prompt],                
-                        cache_examples=True,
-                    )
-            with gr.Column(scale=1):
-                clear_celeb_details_button = gr.Button("Clear")                
-                generate_image_prompt_text = gr.Textbox(label="Image generation prompt", value="A realistic photo")
-                label_describe_gpt = gr.Label(value="Generate or Upload Image to Save", label="Info")
-                with gr.Accordion("Options..", open=True):
-                    generate_image_stability_ai_button = gr.Button("via Stability AI")
-                    generate_image_diffusion_button = gr.Button("*via stable-diffusion-2 model")
-                    label_generate_image_diffusion = gr.Label(value="* takes 30-50 mins on CPU", label="Warning") 
-                    celeb_variation_button = gr.Button("variation from the real photo (DALL-E 2)")                                
-        with gr.Row():
-            celeb_real_photo = gr.Image(label="Real Photo",  type="filepath")                        
-            celeb_generated_image = gr.Image(label="AI Generated Image",  type="filepath")
-        with gr.Row():
-            with gr.Column(scale=1):
-
-                know_your_celeb_description_wiki = gr.Textbox(label="Wiki summary", lines=13)
-            with gr.Column(scale=1):
-                know_your_celeb_description = gr.Textbox(label="Description from OpenAI ChatGPT", lines=7)
-                with gr.Row():                    
-                    celeb_summarize_copy_button = gr.Button("Summarize Wiki output, copy to Description")
-                    celeb_save_description_button = gr.Button("Save Description")
-                    describe_button = gr.Button("Describe via ChatGPT and Save")
-                    celeb_upload_save_real_generated_image_button = gr.Button("Upload, Save real & generated image")                    
-        label_upload_here = gr.Label(value=LABEL_GPT_CELEB_SCREEN, label="Info")     
-    with gr.Tab("Ask Codex"):
-        with gr.Row():
-            with gr.Column(scale=4):
-                ask_keyword = gr.Textbox(label="Keyword", lines=1)
-                ask_prompt = gr.Textbox(label="Prompt", lines=5)                
-            with gr.Column(scale=1):
-                gr.Examples(
-                    label="Recent keywords",
-                    fn=get_saved_prompts,
-                    examples=saved_prompts,
-                    examples_per_page=10,
-                    inputs=[ask_keyword],
-                    outputs=[ask_prompt],   
-                    cache_examples=True,
-                )                
-                ask_chatgpt_button = gr.Button("Ask ChatGPT")                
-        with gr.Row():
-            keyword_response_code = gr.Code(label="Code", language="python", lines=7)
-        label_codex_here = gr.Label(value="Ask Codex, Write a better code", label="Info")
-    with gr.Tab("🧠 Awesome ChatGPT Prompts"):
-        gr.HTML(AWESOME_CHATGPT_PROMPTS)
-        with gr.Row():
-            with gr.Column(scale=4):
-                awesome_chatgpt_act = gr.Textbox(label="Act")
-                awesome_chatgpt_prompt = gr.Textbox(label="Awesome ChatGPT Prompt", lines=5)                  
-            with gr.Column(scale=1):
-                label_awesome_chatgpt_here = gr.Label(value="See examples below", label="Info")
-                ask_awesome_chatgpt_button = gr.Button("Ask ChatGPT")                
-        with gr.Row():            
-                awesome_chatgpt_response = gr.Textbox(label="Response", lines=20)
-        with gr.Row():
-            with gr.Column(scale=1):
-                gr.Examples(
-                    label="Awesome ChatGPT Prompts",
-                    fn=get_awesome_chatgpt_prompts,
-                    examples=awesome_chatgpt_prompts,
-                    examples_per_page=50,
-                    inputs=[awesome_chatgpt_act],
-                    outputs=[awesome_chatgpt_act, awesome_chatgpt_prompt],
-                    cache_examples=True,
-                )
-    with gr.Tab("Product definition"):
-        gr.HTML(PRODUCT_DEFINITION)
-        with gr.Row():
-            with gr.Column(scale=4):
-                product_def_keyword = gr.Textbox(label="Keyword")                
-            with gr.Column(scale=1):                
-                with gr.Row():                    
-                    product_def_ask_button = gr.Button("Ask ChatGPT")                    
-        with gr.Row():
-            with gr.Column(scale=4):
-                product_fact_sheet = gr.Textbox(label="Product Fact sheet", lines=25)
-                product_task_explanation = gr.Textbox(label="Task explanation", lines=5)
-                product_def_question = gr.Textbox(label="Question", lines=5)
-            with gr.Column(scale=1):
-                gr.Examples(
-                            label="Product Fact sheet examples",
-
-                            fn=get_awesome_chatgpt_prompts,
-                            examples=saved_products,
-                            examples_per_page=3,
-                            inputs=[product_def_keyword],
-                            outputs=[product_def_keyword,product_fact_sheet],
+                    generate_variations_button = gr.Button("Generate a variation via DALL-E")
+    with gr.Tab("Use cases"):
+        with gr.Tab("Know your Celebrity"):
+            with gr.Row():
+                with gr.Column(scale=4):  
+                    celebs_name_label = gr.Textbox(label="Celebrity") 
+                    question_prompt = gr.Textbox(label="Prompt", lines=2)
+                    with gr.Accordion("Celebrity Examples, select one from here", open=True):
+                        gr.Examples(
+                            fn=create_celeb_prompt,
+                            label="Select one from a celebrity",
+                            examples=celeb_names,
+                            examples_per_page=70,
+                            inputs=[celebs_name_label],
+                            outputs=[question_prompt],                
                             cache_examples=True,
                         )
-                gr.Examples(
-                    label="Task explanation examples",
-                    examples=task_explanation_examples,
-                    examples_per_page=10,
-                    inputs=[product_task_explanation],
-                    outputs=[product_task_explanation],
-                )
-                gr.Examples(
-                    label="Question examples",
-                    examples=product_def_question_examples,
-                    examples_per_page=6,
-                    inputs=[product_def_question],
-                    outputs=[product_def_question],
-                )
-        with gr.Row():
-            with gr.Column(scale=4):
-                product_def_final_prompt = gr.Textbox(label="Prompt", lines=10)
-            with gr.Column(scale=1):                
-                product_def_info_label = gr.Label(value="See examples below", label="Info")
-
-        product_def_response = gr.Textbox(label="Response", lines=10)
-        gr.Examples(
-            label="Recent product definitions",
-            examples=product_def_keyword_examples,
-            examples_per_page=5,
-            inputs=[product_def_keyword],
-            outputs=[product_def_response],
-        )                
-        with gr.Row():
-            with gr.Column(scale=4):
-                product_def_image_prompt = gr.Textbox(label="Enter Image creation Prompt", lines=5)
-                product_def_generated_image = gr.Image(label="AI Generated Image",  type="filepath")
-            with gr.Column(scale=1):                
-                optimize_prompt_product_def_button = gr.Button("Optimize Prompt")
-                product_def_generate_button = gr.Button("Picturize it")
-                product_def_variations_button = gr.Button("More variations")
-                product_def_image_info_label = gr.Label(value="Picturize it info", label="Info")
+                with gr.Column(scale=1):
+                    clear_celeb_details_button = gr.Button("Clear")                
+                    generate_image_prompt_text = gr.Textbox(label="Image generation prompt", value="A realistic photo")
+                    label_describe_gpt = gr.Label(value="Generate or Upload Image to Save", label="Info")
+                    with gr.Accordion("Options..", open=True):
+                        generate_image_stability_ai_button = gr.Button("via Stability AI")
+                        generate_image_diffusion_button = gr.Button("*via stable-diffusion-2 model")
+                        label_generate_image_diffusion = gr.Label(value="* takes 30-50 mins on CPU", label="Warning") 
+                        celeb_variation_button = gr.Button("variation from the real photo (DALL-E 2)")                                
+            with gr.Row():
+                celeb_real_photo = gr.Image(label="Real Photo",  type="filepath")                        
+                celeb_generated_image = gr.Image(label="AI Generated Image",  type="filepath")
+            with gr.Row():
+                with gr.Column(scale=1):
+                    know_your_celeb_description_wiki = gr.Textbox(label="Wiki summary", lines=13)
+                with gr.Column(scale=1):
+                    know_your_celeb_description = gr.Textbox(label="Description from OpenAI ChatGPT", lines=7)
+                    with gr.Row():                    
+                        celeb_summarize_copy_button = gr.Button("Summarize Wiki output, copy to Description")
+                        celeb_save_description_button = gr.Button("Save Description")
+                        describe_button = gr.Button("Describe via ChatGPT and Save")
+                        celeb_upload_save_real_generated_image_button = gr.Button("Upload, Save real & generated image")                    
+            label_upload_here = gr.Label(value=LABEL_GPT_CELEB_SCREEN, label="Info")     
+        with gr.Tab("Ask GPT"):
+            with gr.Row():
+                keyword_search = gr.Textbox(label="Keyword")                
+                keyword_search_prompt = gr.Textbox(label="Prompt")
+                keyword_search_response = gr.Textbox(label="Response")
+                with gr.Column():    
+                    with gr.Tab("Recent Codex"):
+                            with gr.Row():
+                                gr.Examples(
+                                        label="Recent keywords",
+                                        fn=get_saved_prompts,
+                                        examples=saved_prompts,
+                                        examples_per_page=10,
+                                        inputs=[keyword_search],
+                                        outputs=[keyword_search_prompt, keyword_search_response],   
+                                        cache_examples=True,
+                                    )  
+                    with gr.Tab("Recent Awesome Prompts"):
+                        with gr.Row():
+                            gr.Examples(
+                                    label="Recent Prompts",
+                                    fn=get_saved_prompts,
+                                    examples=recent_awesome_chatgpt_prompts,
+                                    examples_per_page=50,
+                                    inputs=[keyword_search],
+                                    outputs=[keyword_search_prompt, keyword_search_response],   
+                                    cache_examples=True,
+                                )
+                    with gr.Tab("Recent Product definition"):
+                        with gr.Row():
+                            gr.Examples(
+                                        label="Recent product definitions",
+                                        fn=get_saved_prompts,
+                                        examples=product_def_keyword_examples,
+                                        examples_per_page=5,
+                                        inputs=[keyword_search],
+                                        outputs=[keyword_search_prompt, keyword_search_response],   
+                                        cache_examples=True,
+                            )                
+            with gr.Tab("Ask Codex"):
+                with gr.Row():
+                    with gr.Column(scale=4):
+                        ask_keyword = gr.Textbox(label="Keyword", lines=1)
+                        ask_prompt = gr.Textbox(label="Prompt", lines=5)                
+                    with gr.Column(scale=1):   
+                        label_codex_here = gr.Label(value="Ask Codex, Write a better code", label="Info")
+                        ask_chatgpt_button = gr.Button("Ask ChatGPT")                
+                with gr.Row():
+                    keyword_response_code = gr.Code(label="Code", language="python", lines=7)               
+            with gr.Tab("🧠 Awesome ChatGPT Prompts"):
+                gr.HTML(AWESOME_CHATGPT_PROMPTS)
+                with gr.Row():
+                    with gr.Column(scale=4):
+                        awesome_chatgpt_act = gr.Textbox(label="Act")
+                        awesome_chatgpt_prompt = gr.Textbox(label="Awesome ChatGPT Prompt", lines=5)                        
+                    with gr.Column(scale=1):
+                        label_awesome_chatgpt_here = gr.Label(value="See examples below", label="Info")
+                        ask_awesome_chatgpt_button = gr.Button("Ask ChatGPT")                
+                with gr.Row():            
+                        awesome_chatgpt_response = gr.Textbox(label="Response", lines=20)
+                with gr.Row():
+                    with gr.Column(scale=1):
+                        gr.Examples(
+                            label="Awesome ChatGPT Prompts",
+                            fn=get_awesome_chatgpt_prompts,
+                            examples=awesome_chatgpt_prompts,
+                            examples_per_page=50,
+                            inputs=[awesome_chatgpt_act],
+                            outputs=[awesome_chatgpt_act, awesome_chatgpt_prompt],
+                            cache_examples=True,
+                        )
+            with gr.Tab("Product definition"):
+                gr.HTML(PRODUCT_DEFINITION)
+                with gr.Row():
+                    with gr.Column(scale=4):
+                        product_def_keyword = gr.Textbox(label="Keyword")
+                        product_def_final_prompt = gr.Textbox(label="Prompt", lines=10)
+                    with gr.Column(scale=1):                
+                        with gr.Row():                            
+                            product_def_info_label = gr.Label(value="See examples below", label="Info")
+                            product_def_ask_button = gr.Button("Ask ChatGPT")  
+                with gr.Row():                    
+                    with gr.Column(scale=4):
+                        product_fact_sheet = gr.Textbox(label="Product Fact sheet", lines=25)
+                        product_task_explanation = gr.Textbox(label="Task explanation", lines=5)
+                        product_def_question = gr.Textbox(label="Question", lines=5)
+                    with gr.Column(scale=1):
+                        gr.HTML("<p>Prompt builder, <br><br> Step 1 - Select a fact sheet, <br><br> Step 2 - Select a task and <br><br> Step 3 - Select a question to build it <br><br> Step 4 - Click Ask ChatGPT</p>")
+                        gr.Examples(
+                                    label="Product Fact sheet examples",
+                                    fn=get_awesome_chatgpt_prompts,
+                                    examples=saved_products,
+                                    examples_per_page=3,
+                                    inputs=[product_def_keyword],
+                                    outputs=[product_def_keyword,product_fact_sheet],
+                                    cache_examples=True,
+                                )
+                        gr.Examples(
+                            label="Task explanation examples",
+                            examples=task_explanation_examples,
+                            examples_per_page=10,
+                            inputs=[product_task_explanation],
+                            outputs=[product_task_explanation],
+                        )
+                        gr.Examples(
+                            label="Question examples",
+                            examples=product_def_question_examples,
+                            examples_per_page=6,
+                            inputs=[product_def_question],
+                            outputs=[product_def_question],
+                        )
+                with gr.Row():
+                    product_def_response = gr.Textbox(label="Response", lines=10)
+                with gr.Tab("Picturize Product"):
+                    with gr.Row():
+                        with gr.Column(scale=4):
+                            product_def_image_prompt = gr.Textbox(label="Enter Image creation Prompt", lines=5)
+                            product_def_generated_image = gr.Image(label="AI Generated Image",  type="filepath")
+                        with gr.Column(scale=1):                
+                            optimize_prompt_product_def_button = gr.Button("Optimize Prompt")
+                            product_def_generate_button = gr.Button("Picturize it")
+                            product_def_variations_button = gr.Button("More variations")
+                            product_def_image_info_label = gr.Label(value="Picturize it info", label="Info")
     with gr.Tab("Output"):
             with gr.Row():            
                 with gr.Column(scale=4):
@@ -666,7 +693,7 @@ with gr.Blocks(css='styles.css') as AskMeTabbedScreen:
         gr.Markdown(DISCLAIMER)
     gr.HTML(FOOTER)
 
-    
+
     celeb_upload_save_real_generated_image_button.click(
         celeb_upload_save_real_generated_image_handler,
         inputs=[cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, cloudinary_folder, mongo_config, mongo_connection_string, mongo_database, celebs_name_label, question_prompt, know_your_celeb_description, celeb_real_photo, celeb_generated_image],
@@ -693,6 +720,7 @@ with gr.Blocks(css='styles.css') as AskMeTabbedScreen:
         outputs=[celebs_name_label, question_prompt, know_your_celeb_description_wiki, know_your_celeb_description, celeb_real_photo, celeb_generated_image, generate_image_prompt_text]
     )
     
+
     celebs_name_label.change(
         fn=get_celebs_response_change_handler,
         inputs=[mongo_config, mongo_connection_string, mongo_database, celebs_name_label, generate_image_prompt_text],
@@ -712,6 +740,7 @@ with gr.Blocks(css='styles.css') as AskMeTabbedScreen:
     )
 
     product_def_question.change(
+
         fn=update_final_prompt,
         inputs=[product_fact_sheet, product_def_question, product_task_explanation],
         outputs=[product_def_final_prompt]        
@@ -751,6 +780,7 @@ with gr.Blocks(css='styles.css') as AskMeTabbedScreen:
         create_image_from_prompt_handler,
         inputs=[input_key, org_id, product_def_image_prompt, input_imagesize, input_num_images],
         outputs=[product_def_info_label, product_def_generated_image, generated_images_gallery]
+
     )
 
     product_def_variations_button.click(
@@ -783,6 +813,7 @@ with gr.Blocks(css='styles.css') as AskMeTabbedScreen:
         outputs=[product_def_info_label, product_def_generated_image, generated_images_gallery]
     )
     
+
     input_prompt.change(
         fn=tokenizer_calc,
         inputs=[input_prompt],
@@ -797,10 +828,10 @@ with gr.Blocks(css='styles.css') as AskMeTabbedScreen:
     )
     
     generate_image_stability_ai_button.click(
-
         generate_image_stability_ai_handler,
         inputs=[stability_api_key, celebs_name_label, generate_image_prompt_text],
         outputs=[label_upload_here,celeb_generated_image]
+
     )
     
     generate_image_diffusion_button.click(
