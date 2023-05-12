@@ -5,6 +5,7 @@ class CelebDataClient:
     def __init__(self, connection_string, database, collection="Celebs"):
         self.client = MongoClient(connection_string)
         self.celebs = self.client[database][collection]
+        self.database = database
 
     def get_celebs_response(self, keyword: str):
         try:
@@ -33,3 +34,10 @@ class CelebDataClient:
         except Exception as err:
             print(f"CelebDataClient update_describe error {err}")
 
+    def celeb_list(self, category: str):
+        celebs_examples = []
+        qry = {'Category': {'$regex': category.strip()}}
+        celeb_list = self.client[self.database]["CelebsList"].find(qry)
+        for celeb in celeb_list:
+            celebs_examples.append([celeb['Celebrity Name'], celeb['Internal Name']])
+        return celebs_examples

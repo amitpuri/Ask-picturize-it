@@ -229,11 +229,11 @@ class AskMeUIHandlers:
             generated_image_url = ""
 
         # uploading real picture
-        if real_picture is not None and len(real_picture_url)==0:
+        if real_picture is not None and real_picture_url is not None and len(real_picture_url)==0:
             cloudinary_client.set_folder_name(folder_name)
             real_picture_url = cloudinary_client.upload_image(real_picture, name)
         # uploading generated picture
-        if generated_picture is not None and len(generated_image_url)==0:
+        if generated_picture is not None and generated_image_url is not None and len(generated_image_url)==0:
             cloudinary_client.set_folder_name("Generated")
             generated_image_url = cloudinary_client.upload_image(generated_picture, name)
 

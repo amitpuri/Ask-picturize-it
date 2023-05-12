@@ -7,6 +7,7 @@ import requests
 import gradio as gr
 from ExamplesUtil.CelebPromptGenerator import *
 from MongoUtil.StateDataClient import *
+from MongoUtil.CelebDataClient import *
 from UIHandlers import AskMeUIHandlers
 from Utils.Optimizers import Prompt_Optimizer
 
@@ -196,10 +197,6 @@ def create_variation_from_image_handler(api_key, org_id, input_image_variation, 
 Know your Celebrity
 '''
 
-def create_celeb_prompt(celebs_name_label):
-    prompt_generator = CelebPromptGenerator()
-    return prompt_generator.create_celeb_prompt(celebs_name_label)
-
 
 def describe_handler(api_key, org_id, mongo_prompt_read_config, cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, cloudinary_folder, mongo_config, mongo_connection_string, mongo_database, celebs_name_label, question_prompt, know_your_celeb_description, input_celeb_real_picture, input_celeb_generated_picture):
     uihandlers = AskMeUIHandlers()
@@ -227,12 +224,25 @@ def get_celebs_response_click_handler(mongo_config, mongo_connection_string, mon
     
 def get_celebs_response_change_handler(mongo_config, mongo_connection_string, mongo_database, celebrity, image_prompt_text):
     return get_celebs_response(mongo_config, mongo_connection_string, mongo_database, celebrity, image_prompt_text)
+
+def get_internal_celeb_name(celebrity):
+    for celeb in IndianFilm_celeb_list:
+        if celeb[0]==celebrity:
+            return celeb[1]
+    for celeb in Hollywood_celeb_list:
+        if celeb[0]==celebrity:
+            return celeb[1]
+    for celeb in Business_celeb_list:
+        if celeb[0]==celebrity:
+            return celeb[1]
     
+
 def get_celebs_response(mongo_config, mongo_connection_string, mongo_database, celebrity, image_prompt_text):
     #try:
     uihandlers = AskMeUIHandlers()
     uihandlers.set_mongodb_config(mongo_config, mongo_connection_string, mongo_database)
-    wiki_summary = get_wiki_page_summary(celebrity)
+    internal_celeb_name = get_internal_celeb_name(celebrity)
+    wiki_summary = get_wiki_page_summary(internal_celeb_name)
     try:
         name, prompt, response, wiki_image, generated_image_url = uihandlers.get_celebs_response_handler(celebrity)
         if wiki_image is None:
@@ -261,6 +271,12 @@ def celeb_save_description_handler(mongo_config, mongo_connection_string, mongo_
         uihandlers.set_mongodb_config(mongo_config, mongo_connection_string, mongo_database)
         uihandlers.update_description(name, prompt, description)
         return f"ChatGPT description saved for {name}", description
+
+def get_celeb_examples(category):
+    connection_string, database = get_private_mongo_config()           
+    celeb_data_client = CelebDataClient(connection_string, database)
+    celeb_list = celeb_data_client.celeb_list(category)
+    return celeb_list
 
 
 '''
@@ -363,6 +379,13 @@ saved_products =  prompt_generator.get_all_awesome_chatgpt_prompts("product")
 awesome_chatgpt_prompts = prompt_generator.get_all_awesome_chatgpt_prompts()
 celeb_names = prompt_generator.get_celebs()
 question_prompts = prompt_generator.get_questions()
+IndianFilm_celeb_list = get_celeb_examples("Indian Film")
+Hollywood_celeb_list = get_celeb_examples("Hollywood")
+Business_celeb_list = get_celeb_examples("Business")
+IndianFilm_celeb_examples = [celeb[0] for celeb in IndianFilm_celeb_list]
+hollywood_celeb_examples = [celeb[0] for celeb in Hollywood_celeb_list]
+business_celeb_examples = [celeb[0] for celeb in Business_celeb_list]
+
 
 '''
 Output and Upload
@@ -521,15 +544,33 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                     celebs_name_label = gr.Textbox(label="Celebrity") 
                     question_prompt = gr.Textbox(label="Prompt", lines=2)
                     with gr.Accordion("Celebrity Examples, select one from here", open=True):
-                        gr.Examples(
-                            fn=create_celeb_prompt,
-                            label="Select one from a celebrity",
-                            examples=celeb_names,
-                            examples_per_page=100,
-                            inputs=[celebs_name_label],
-                            outputs=[question_prompt],                
-                            cache_examples=True,
-                        )
+                        with gr.Tab("Indian Film"):
+                            with gr.Row():
+                                gr.Examples(
+                                    label="Select one from a celebrity",
+                                    examples=IndianFilm_celeb_examples,
+                                    examples_per_page=100,
+                                    inputs=[celebs_name_label],
+                                    outputs=[question_prompt],                
+                                )
+                        with gr.Tab("Hollywood"):
+                            with gr.Row():
+                                gr.Examples(
+                                    label="Select one from a celebrity",
+                                    examples=hollywood_celeb_examples,
+                                    examples_per_page=100,
+                                    inputs=[celebs_name_label],
+                                    outputs=[question_prompt],                
+                                )
+                        with gr.Tab("Business"):
+                            with gr.Row():
+                                gr.Examples(
+                                    label="Select one from a celebrity",
+                                    examples=business_celeb_examples,
+                                    examples_per_page=100,
+                                    inputs=[celebs_name_label],
+                                    outputs=[question_prompt],                
+                                )                        
                 with gr.Column(scale=1):
                     clear_celeb_details_button = gr.Button("Clear")                
                     generate_image_prompt_text = gr.Textbox(label="Image generation prompt", value="A realistic photo")
@@ -556,7 +597,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
         with gr.Tab("Ask GPT"):
             with gr.Row():
                 with gr.Column(): 
-                    keyword_search = gr.Textbox(label="Keyword")                
+                    keyword_search = gr.Textbox(label="Keyword")
                     with gr.Row():
                         keyword_search_prompt = gr.Textbox(label="Prompt")
                         keyword_search_response = gr.Textbox(label="Response")
@@ -593,7 +634,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                                         inputs=[keyword_search],
                                         outputs=[keyword_search_prompt, keyword_search_response],   
                                         cache_examples=True,
-                            )                
+                            )
             with gr.Tab("Ask Codex"):
                 with gr.Row():
                     with gr.Column(scale=4):
