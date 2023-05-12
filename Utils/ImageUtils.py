@@ -14,6 +14,8 @@ class ImageUtils:
         self.fallback_image = "https://plchldr.co/i/336x280"
 
     def url_to_image(self, url):
+        if len(url)==0:
+            return None
         response = requests.get(url)
         if response.status_code == 200:
             img = Image.open(BytesIO(response.content))

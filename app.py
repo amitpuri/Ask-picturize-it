@@ -54,6 +54,7 @@ Copyright (c) 2023 Amit Puri
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
+
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 
@@ -200,12 +201,12 @@ def create_celeb_prompt(celebs_name_label):
     return prompt_generator.create_celeb_prompt(celebs_name_label)
 
 
-def describe_handler(api_key, org_id, mongo_prompt_read_config, cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, cloudinary_folder, mongo_config, mongo_connection_string, mongo_database, celebs_name_label, question_prompt, input_celeb_real_picture, input_celeb_generated_picture):
+def describe_handler(api_key, org_id, mongo_prompt_read_config, cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, cloudinary_folder, mongo_config, mongo_connection_string, mongo_database, celebs_name_label, question_prompt, know_your_celeb_description, input_celeb_real_picture, input_celeb_generated_picture):
     uihandlers = AskMeUIHandlers()
     uihandlers.set_openai_config(api_key, org_id, mongo_prompt_read_config)
     uihandlers.set_mongodb_config(mongo_config, mongo_connection_string, mongo_database)
     uihandlers.set_cloudinary_config(cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret)
-    return uihandlers.describe_handler(celebs_name_label, question_prompt, cloudinary_folder, input_celeb_real_picture, input_celeb_generated_picture)
+    return uihandlers.describe_handler(celebs_name_label, question_prompt, cloudinary_folder, know_your_celeb_description, input_celeb_real_picture, input_celeb_generated_picture)
 
 def celeb_upload_save_real_generated_image_handler(cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, cloudinary_folder, mongo_config, mongo_connection_string, mongo_database, celebs_name_label, question_prompt, know_your_celeb_description, celeb_real_photo, celeb_generated_image):
     uihandlers = AskMeUIHandlers()
@@ -410,7 +411,7 @@ def generated_images_gallery_on_select(evt: gr.SelectData, generated_images_gall
 
 
 
-with gr.Blocks(css='styles.css') as AskMeTabbedScreen:
+with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabbedScreen:
     gr.Markdown(TITLE)
     with gr.Tab("Information"):
         gr.HTML(DESCRIPTION)
@@ -450,7 +451,6 @@ with gr.Blocks(css='styles.css') as AskMeTabbedScreen:
                     cloudinary_api_secret = gr.Textbox(
                         label="Cloudinary API Secret", value=os.getenv("CLOUDINARY_API_SECRET"), type="password")
         with gr.Tab("Stability API"):
-
             gr.HTML("Sign up here <a href='https://platform.stability.ai'>https://platform.stability.ai</a>")
             with gr.Row():
                 with gr.Column():
@@ -525,7 +525,7 @@ with gr.Blocks(css='styles.css') as AskMeTabbedScreen:
                             fn=create_celeb_prompt,
                             label="Select one from a celebrity",
                             examples=celeb_names,
-                            examples_per_page=70,
+                            examples_per_page=100,
                             inputs=[celebs_name_label],
                             outputs=[question_prompt],                
                             cache_examples=True,
@@ -742,7 +742,6 @@ with gr.Blocks(css='styles.css') as AskMeTabbedScreen:
     )
 
     product_def_question.change(
-
         fn=update_final_prompt,
         inputs=[product_fact_sheet, product_def_question, product_task_explanation],
         outputs=[product_def_final_prompt]        
@@ -781,14 +780,14 @@ with gr.Blocks(css='styles.css') as AskMeTabbedScreen:
     product_def_generate_button.click(
         create_image_from_prompt_handler,
         inputs=[input_key, org_id, product_def_image_prompt, input_imagesize, input_num_images],
-        outputs=[product_def_info_label, product_def_generated_image, generated_images_gallery]
+        outputs=[product_def_image_info_label, product_def_generated_image, generated_images_gallery]
 
     )
 
     product_def_variations_button.click(
         create_variation_from_image_handler,
         inputs=[input_key, org_id, product_def_generated_image, input_imagesize, input_num_images],
-        outputs=[product_def_info_label, product_def_generated_image, generated_images_gallery]
+        outputs=[product_def_image_info_label, product_def_generated_image, generated_images_gallery]
     )
 
     question_prompt.change(
@@ -845,7 +844,7 @@ with gr.Blocks(css='styles.css') as AskMeTabbedScreen:
 
     describe_button.click(
         describe_handler,
-        inputs=[input_key, org_id, mongo_prompt_read_config, cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, cloudinary_folder, mongo_config, mongo_connection_string, mongo_database, celebs_name_label, question_prompt, celeb_real_photo,  celeb_generated_image],
+        inputs=[input_key, org_id, mongo_prompt_read_config, cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, cloudinary_folder, mongo_config, mongo_connection_string, mongo_database, celebs_name_label, question_prompt, know_your_celeb_description, celeb_real_photo,  celeb_generated_image],
         outputs=[label_upload_here, celebs_name_label, question_prompt, know_your_celeb_description, celeb_real_photo, celeb_generated_image]
     )
 

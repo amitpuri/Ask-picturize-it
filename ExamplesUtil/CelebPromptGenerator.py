@@ -54,11 +54,15 @@ class CelebPromptGenerator:
         if os.path.exists(self.audio_path):
             audio_examples = [join(self.audio_path, f) for f in os.listdir(self.audio_path) if isfile(join(self.audio_path, f))]
             return audio_examples
+        else:
+            return []
 
     def get_images_examples(self):
         if os.path.exists(self.images_path):
             images_examples = [join(self.images_path, f) for f in os.listdir(self.images_path) if isfile(join(self.images_path, f))]
-        return images_examples
+            return images_examples
+        else:
+            return []
     
     def get_celebs(self):
         celebs = []

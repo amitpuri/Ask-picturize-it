@@ -8,15 +8,18 @@ class CelebDataClient:
 
     def get_celebs_response(self, keyword: str):
         try:
-            qry = {'name': {'$regex': keyword.strip()}}
-            celeb = self.celebs.find_one(qry)
-            if celeb is not None:
-                return celeb["name"], celeb["prompt"], celeb["response"], celeb["url"], celeb["g_url"]
+            if len(keyword)>0:
+                qry = {'name': {'$regex': keyword.strip()}}
+                celeb = self.celebs.find_one(qry)
+                if celeb is not None:
+                    return celeb["name"], celeb["prompt"], celeb["response"], celeb["url"], celeb["g_url"]
+                else:
+                    return keyword, "", "", "",""
             else:
-                return "", "", "", "",""
+                    return keyword, "", "", "",""
         except Exception as err:
             print(f"CelebDataClient get_celebs_response error {err}")
-            return "", "", "", "",""
+            return keyword, "", "", "",""
 
     def update_describe(self, keyword: str, prompt: str, response: str, image_url: str, g_image_url: str):
         try:

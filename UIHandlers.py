@@ -234,43 +234,63 @@ class AskMeUIHandlers:
         return "Uploaded and saved real and generated images", name, prompt, description, real_picture_url, generated_image_url
 
     def update_description(self, name, prompt, description):
+        celeb_client = CelebDataClient(self.connection_string, self.database)
         try:
-            celeb_client = CelebDataClient(self.connection_string, self.database)
-            celeb_client.update_describe(name, prompt, description, "", "")
+            l_name, l_prompt, response, real_picture_url, generated_image_url = celeb_client.get_celebs_response(name)
+        except:
+            l_name = None
+            l_prompt = None
+            response = None
+            real_picture_url = ""
+            generated_image_url = ""
+            pass
+        try:
+            celeb_client.update_describe(name, prompt, description, real_picture_url, generated_image_url)
         except Exception as err:
             print(f"Error {err} in AskMeUIHandlers -> update_description")    
     
-    def describe_handler(self, name, prompt, folder_name, input_celeb_real_picture, input_celeb_generated_picture):
+    def describe_handler(self, name, prompt, folder_name, description, input_celeb_real_picture, input_celeb_generated_picture):
         image_utils = ImageUtils()                  
         name = name.strip()
         if not self.api_key or not prompt or not name :            
             return f"Name or prompt is not entered or {self.NO_API_KEY_ERROR}", "", "", "", None, None
         try:
             celeb_client = CelebDataClient(self.connection_string, self.database)
-            local_name, local_prompt, response, real_picture_url, generated_image_url = celeb_client.get_celebs_response(name)
+            try:
+                l_name, l_prompt, l_description, real_picture_url, generated_image_url = celeb_client.get_celebs_response(name)
+            except:
+                l_name = None
+                l_prompt = None
+                l_description = ""
+                real_picture_url = ""
+                generated_image_url = ""
+                pass
+
                 
-            if self.api_key is not None and response is None and not response:
+            if self.api_key is not None and len(l_description)==0:
                 operations = TextOperations(self.api_key, self.org_id)
-                response_message, response = operations.chat_completion(prompt)   
+                response_message, response = operations.chat_completion(prompt)
+                description = response
+            else:
+                description = l_description
             
             cloudinary_client = CloudinaryClient(self.cloudinary_cloud_name, self.cloudinary_api_key, self.cloudinary_api_secret)
-            if real_picture_url is not None:
+            if len(real_picture_url)==0 and input_celeb_real_picture is not None:
                 cloudinary_client.set_folder_name(folder_name)
                 real_picture_url = cloudinary_client.upload_image(input_celeb_real_picture, name)
-            if generated_image_url is not None:
+            elif real_picture_url is None:
+                real_picture_url = ""
+            if len(generated_image_url)==0 and input_celeb_generated_picture is not None:
                 cloudinary_client.set_folder_name("Generated")
                 generated_image_url = cloudinary_client.upload_image(input_celeb_generated_picture, name)
-
-            if real_picture_url is None:
-                real_picture_url = ""
-            if generated_image_url is None:
+            elif generated_image_url is None:
                 generated_image_url = ""
 
-            if response is not None:
-                celeb_client.update_describe(name, prompt, response, real_picture_url, generated_image_url)
             
+            celeb_client.update_describe(name, prompt, description, real_picture_url, generated_image_url)
+            return f"{self.LABEL_GPT_CELEB_SCREEN} - uploaded and saved", name, prompt, description, image_utils.url_to_image(real_picture_url), image_utils.url_to_image(generated_image_url)
+                
             
-            return f"{self.LABEL_GPT_CELEB_SCREEN} - uploaded and saved", name, prompt, response, image_utils.url_to_image(real_picture_url), image_utils.url_to_image(generated_image_url)
         except Exception as err:
             return f"Error {err} in AskMeUIHandlers -> describe_handler", "", "", "", None, None
     

@@ -23,15 +23,11 @@ class ImageOperations(Operations):
                 )
                 image_url = response['data'][0]['url']
             else:
-                # fallback image
-                image_url = "https://plchldr.co/i/336x280"
-            return label_image_masked_output, self.image_utils.url_to_image(image_url), self.image_utils.parse_image_name(response['data'])
+                return label_image_masked_output, self.image_utils.url_to_image(image_url), self.image_utils.parse_image_name(response['data'])
         except openai.error.OpenAIError as error_except:
             print(f"ImageOperations create_edit_masked_image")
             print(error_except.http_status)
             print(error_except.error)
-            # fallback image
-            image_url = "https://plchldr.co/i/336x280"
             return label_image_masked_output, self.image_utils.url_to_image(image_url), ""
             
 
@@ -51,7 +47,7 @@ class ImageOperations(Operations):
                 image.save(byte_stream, format='PNG')
                 image_byte_array = byte_stream.getvalue()
         except Exception as err:
-             print(f"ImageOperations create_variation_from_image {err}")
+            print(f"ImageOperations create_variation_from_image {err}")
         try:
             response = openai.Image.create_variation(
                 image=image_byte_array,
@@ -64,8 +60,6 @@ class ImageOperations(Operations):
             print(f"ImageOperations create_variation_from_image")
             print(error_except.http_status)
             print(error_except.error)
-            # fallback image
-            image_url = "https://plchldr.co/i/336x280"
             return label_inference_variation, self.image_utils.url_to_image(image_url), ""
 
             
