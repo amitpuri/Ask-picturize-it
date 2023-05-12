@@ -213,19 +213,27 @@ class AskMeUIHandlers:
         celeb_client = CelebDataClient(self.connection_string, self.database)
         cloudinary_client = CloudinaryClient(self.cloudinary_cloud_name, self.cloudinary_api_key, self.cloudinary_api_secret)
         # reading existing details real and generated image URLs, rest ignored
-        l_name, l_prompt, response, real_picture_url, generated_image_url = celeb_client.get_celebs_response(name)
-        
+        try:
+            l_name, l_prompt, l_description, real_picture_url, generated_image_url = celeb_client.get_celebs_response(name)
+        except:
+            l_name = None
+            l_prompt = None
+            l_description = ""
+            real_picture_url = ""
+            generated_image_url = ""
+            pass
+              
         if real_picture_url is not None and len(real_picture_url)==0:
-            real_picture_url = None
+            real_picture_url = ""
         if generated_image_url is not None and len(generated_image_url)==0:
-            generated_image_url = None
+            generated_image_url = ""
 
         # uploading real picture
-        if real_picture_url and real_picture_url is None:
+        if real_picture is not None and len(real_picture_url)==0:
             cloudinary_client.set_folder_name(folder_name)
             real_picture_url = cloudinary_client.upload_image(real_picture, name)
         # uploading generated picture
-        if generated_picture and generated_image_url is None:
+        if generated_picture is not None and len(generated_image_url)==0:
             cloudinary_client.set_folder_name("Generated")
             generated_image_url = cloudinary_client.upload_image(generated_picture, name)
 
