@@ -100,15 +100,31 @@ def get_wikimedia_image(keyword):
     if keyword:
         try:
             result = wikipedia.search(keyword, results = 1)
-            wikipedia.set_lang('en')
-            wkpage = wikipedia.WikipediaPage(title = result[0])
+        except wikipedia.exceptions.WikipediaException as exception:
+            print(f"Exception Name: {type(exception).__name__}")
+            print(exception)
+            result = None
+            pass
+        wikipedia.set_lang('en')
+        try:
+            if result is not None:
+                wkpage = wikipedia.WikipediaPage(title = result[0])
+            else:
+                wkpage = None
+        except wikipedia.exceptions.WikipediaException as exception:
+            print(f"Exception Name: {type(exception).__name__}")
+            print(exception)
+            wkpage = None
+            pass
+        if wkpage is not None:
             title = wkpage.title
             response  = requests.get(WIKI_REQUEST+title)
             json_data = json.loads(response.text)
-            image_link = list(json_data['query']['pages'].values())[0]['original']['source']
-            return image_link
-        except:
-            return None
+            try:
+                image_link = list(json_data['query']['pages'].values())[0]['original']['source']
+                return image_link
+            except:
+                return None
 
 def get_wiki_page_summary(keyword):
     if keyword:
@@ -216,14 +232,9 @@ def get_celebrity_detail_from_wiki(celebrity):
     celebrity_name = f"{celebrity}"
     return get_wiki_page_summary(celebrity_name),get_wikimedia_image(celebrity)
 
-def get_celebs_response_click_handler(mongo_config, mongo_connection_string, mongo_database, celebrity, image_prompt_text):
-    if celebrity:
-        return get_celebs_response(mongo_config, mongo_connection_string, mongo_database, celebrity, image_prompt_text)
-    else:
-        return "", "", "", "", None, None, None
     
-def get_celebs_response_change_handler(mongo_config, mongo_connection_string, mongo_database, celebrity, image_prompt_text):
-    return get_celebs_response(mongo_config, mongo_connection_string, mongo_database, celebrity, image_prompt_text)
+def get_celebs_response_change_handler(mongo_config, mongo_connection_string, mongo_database, celebrity, image_prompt_text, key_traits):
+    return get_celebs_response(mongo_config, mongo_connection_string, mongo_database, celebrity, image_prompt_text, key_traits)
 
 def get_internal_celeb_name(celebrity):
     for celeb in IndianFilm_celeb_list:
@@ -237,27 +248,28 @@ def get_internal_celeb_name(celebrity):
             return celeb[1]
     
 
-def get_celebs_response(mongo_config, mongo_connection_string, mongo_database, celebrity, image_prompt_text):
+def get_celebs_response(mongo_config, mongo_connection_string, mongo_database, celebrity, image_prompt_text, key_traits):
     #try:
     uihandlers = AskMeUIHandlers()
     uihandlers.set_mongodb_config(mongo_config, mongo_connection_string, mongo_database)
     internal_celeb_name = get_internal_celeb_name(celebrity)
     wiki_summary = get_wiki_page_summary(internal_celeb_name)
+    key_traits = get_key_traits(celebrity)
     try:
         name, prompt, response, wiki_image, generated_image_url = uihandlers.get_celebs_response_handler(celebrity)
         if wiki_image is None:
             wiki_image = get_wikimedia_image(celebrity)
-        return name, prompt, wiki_summary, response, wiki_image, generated_image_url, f"A realistic photo of {name}"
+        return name, prompt, wiki_summary, response, wiki_image, generated_image_url, f"A realistic photo of {name}", key_traits
     except:
         response = None
         generated_image_url = None
         wiki_image = get_wikimedia_image(celebrity)
-        return celebrity, f"Write a paragraph on {celebrity}", wiki_summary, "", wiki_image, None, f"A realistic photo of {celebrity}"
+        return celebrity, f"Write a paragraph on {celebrity}", wiki_summary, "", wiki_image, None, f"A realistic photo of {celebrity}", key_traits
         pass
     
 
 def clear_celeb_details():
-    return "", "", "", "", None, None, None
+    return "", "", "", "", None, None, None, None
 
 
 def celeb_summarize_handler(api_key, org_id, prompt):
@@ -277,6 +289,11 @@ def get_celeb_examples(category):
     celeb_data_client = CelebDataClient(connection_string, database)
     celeb_list = celeb_data_client.celeb_list(category)
     return celeb_list
+
+def get_key_traits(name):
+    connection_string, database = get_private_mongo_config()
+    celeb_data_client = CelebDataClient(connection_string, database)
+    return celeb_data_client.get_key_traits(name)
 
 
 '''
@@ -377,15 +394,12 @@ recent_awesome_chatgpt_prompts = get_keyword_prompts("awesome-prompts")
 saved_prompts = get_keyword_prompts("codex") 
 saved_products =  prompt_generator.get_all_awesome_chatgpt_prompts("product")
 awesome_chatgpt_prompts = prompt_generator.get_all_awesome_chatgpt_prompts()
-celeb_names = prompt_generator.get_celebs()
-question_prompts = prompt_generator.get_questions()
 IndianFilm_celeb_list = get_celeb_examples("Indian Film")
 Hollywood_celeb_list = get_celeb_examples("Hollywood")
 Business_celeb_list = get_celeb_examples("Business")
 IndianFilm_celeb_examples = [celeb[0] for celeb in IndianFilm_celeb_list]
 hollywood_celeb_examples = [celeb[0] for celeb in Hollywood_celeb_list]
 business_celeb_examples = [celeb[0] for celeb in Business_celeb_list]
-
 
 '''
 Output and Upload
@@ -399,6 +413,7 @@ def cloudinary_search(cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_
     
 def cloudinary_upload(cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, folder_name, input_celeb_picture, celebrity_name):
     uihandlers = AskMeUIHandlers()
+
     uihandlers.set_cloudinary_config(cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret)
     return uihandlers.cloudinary_upload(folder_name, input_celeb_picture, celebrity_name)
 
@@ -457,11 +472,13 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                     mongo_config = gr.Checkbox(label="MongoDB config", info="Use your own MongoDB", value=os.getenv("USE_MONGODB_CONFIG"))
                     mongo_connection_string = gr.Textbox(
                         label="MongoDB Connection string", value=os.getenv("MONGODB_URI"), type="password")
+
                 with gr.Column():
                     mongo_database = gr.Textbox(
                         label="MongoDB database", value=os.getenv("MONGODB_DATABASE"))
         with gr.Tab("Cloudinary"):
             gr.HTML("Sign up here <a href='https://cloudinary.com'>https://cloudinary.com</a>")
+
             with gr.Row():
                 with gr.Column():
                     cloudinary_cloud_name = gr.Textbox(
@@ -543,6 +560,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                 with gr.Column(scale=4):  
                     celebs_name_label = gr.Textbox(label="Celebrity") 
                     question_prompt = gr.Textbox(label="Prompt", lines=2)
+                    key_traits = gr.Textbox(label="Key traits", lines=5)
                     with gr.Accordion("Celebrity Examples, select one from here", open=True):
                         with gr.Tab("Indian Film"):
                             with gr.Row():
@@ -551,7 +569,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                                     examples=IndianFilm_celeb_examples,
                                     examples_per_page=100,
                                     inputs=[celebs_name_label],
-                                    outputs=[question_prompt],                
+                                    outputs=[question_prompt, key_traits],                
                                 )
                         with gr.Tab("Hollywood"):
                             with gr.Row():
@@ -560,7 +578,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                                     examples=hollywood_celeb_examples,
                                     examples_per_page=100,
                                     inputs=[celebs_name_label],
-                                    outputs=[question_prompt],                
+                                    outputs=[question_prompt, key_traits],                
                                 )
                         with gr.Tab("Business"):
                             with gr.Row():
@@ -569,7 +587,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                                     examples=business_celeb_examples,
                                     examples_per_page=100,
                                     inputs=[celebs_name_label],
-                                    outputs=[question_prompt],                
+                                    outputs=[question_prompt, key_traits],                
                                 )                        
                 with gr.Column(scale=1):
                     clear_celeb_details_button = gr.Button("Clear")                
@@ -760,14 +778,14 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
     clear_celeb_details_button.click(
         clear_celeb_details,
         inputs=[],
-        outputs=[celebs_name_label, question_prompt, know_your_celeb_description_wiki, know_your_celeb_description, celeb_real_photo, celeb_generated_image, generate_image_prompt_text]
+        outputs=[celebs_name_label, question_prompt, know_your_celeb_description_wiki, know_your_celeb_description, celeb_real_photo, celeb_generated_image, generate_image_prompt_text, key_traits]
     )
     
 
     celebs_name_label.change(
         fn=get_celebs_response_change_handler,
-        inputs=[mongo_config, mongo_connection_string, mongo_database, celebs_name_label, generate_image_prompt_text],
-        outputs=[celebs_name_label, question_prompt, know_your_celeb_description_wiki, know_your_celeb_description, celeb_real_photo, celeb_generated_image, generate_image_prompt_text]
+        inputs=[mongo_config, mongo_connection_string, mongo_database, celebs_name_label, generate_image_prompt_text, key_traits],
+        outputs=[celebs_name_label, question_prompt, know_your_celeb_description_wiki, know_your_celeb_description, celeb_real_photo, celeb_generated_image, generate_image_prompt_text, key_traits]
     )
 
     product_def_image_prompt.change(
@@ -860,6 +878,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
         fn=tokenizer_calc,
         inputs=[input_prompt],
         outputs=[label_picturize_it]        
+
     )
     
     ask_prompt.change(

@@ -1,4 +1,4 @@
-openai==0.27.4
+openai
 requests==2.28.2
 gradio
 Pillow==9.3.0
@@ -8,6 +8,6 @@ numpy==1.24.2
 torch==2.0.0
 diffusers
 accelerate
-transformers==4.28.1
+transformers
 gpt3-tokenizer
-wikipedia==1.4.0
+wikipedia

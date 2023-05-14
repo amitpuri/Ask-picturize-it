@@ -5,6 +5,7 @@ class CelebDataClient:
     def __init__(self, connection_string, database, collection="Celebs"):
         self.client = MongoClient(connection_string)
         self.celebs = self.client[database][collection]
+        self.celebslist = self.client[database]["CelebsList"]
         self.database = database
 
     def get_celebs_response(self, keyword: str):
@@ -12,6 +13,7 @@ class CelebDataClient:
             if len(keyword)>0:
                 qry = {'name': {'$regex': keyword.strip()}}
                 celeb = self.celebs.find_one(qry)
+
                 if celeb is not None:
                     return celeb["name"], celeb["prompt"], celeb["response"], celeb["url"], celeb["g_url"]
                 else:
@@ -41,3 +43,15 @@ class CelebDataClient:
         for celeb in celeb_list:
             celebs_examples.append([celeb['Celebrity Name'], celeb['Internal Name']])
         return celebs_examples
+
+    def get_key_traits(self, name: str):
+        qry = {'Celebrity Name': {'$regex': name.strip()}}
+        celeb_list = self.client[self.database]["CelebsList"].find_one(qry)
+        if celeb_list is not None:
+            try:
+                key_traits = celeb_list['Key traits']
+                return key_traits
+            except:
+                return "No key traits recorded yet!"
+        else:
+            return "No key traits recorded yet!"
