@@ -81,6 +81,6 @@ Build advanced search, clustering, topic modeling, and classification functional
     docker run -e P_MONGODB_DATABASE -e P_MONGODB_URI -it --publish 80:80 --publish 27017:27017 ask-picturize-it:latest
     
     az login --use-device-code
-      az acr login --name [Azure Registry Name].azurecr.io
-      docker tag ask-picturize-it [Azure Registry Name].azurecr.io/ask-picturize-it
-      docker push [Azure Registry Name].azurecr.io/ask-picturize-it
+    az acr login --name [Azure Registry Name].azurecr.io
+    docker tag ask-picturize-it [Azure Registry Name].azurecr.io/ask-picturize-it
+    docker push [Azure Registry Name].azurecr.io/ask-picturize-it
