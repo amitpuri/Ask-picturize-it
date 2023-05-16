@@ -1,5 +1,7 @@
 import json
 import os
+import random
+import time
 
 import gpt3_tokenizer
 import wikipedia
@@ -10,6 +12,9 @@ from MongoUtil.StateDataClient import *
 from MongoUtil.CelebDataClient import *
 from UIHandlers import AskMeUIHandlers
 from Utils.Optimizers import Prompt_Optimizer
+from langchain.llms import OpenAI
+from langchain.prompts import PromptTemplate
+
 
 
 #from dotenv import load_dotenv
@@ -31,6 +36,8 @@ DESCRIPTION = """<strong>This space uses following:</strong>
    <li>Uses Prompt optimizer <a href='https://huggingface.co/microsoft/Promptist'>https://huggingface.co/microsoft/Promptist</a></li>
    <li>Uses stabilityai/stable-diffusion-2-1 <a href='https://huggingface.co/stabilityai/stable-diffusion-2-1'>https://huggingface.co/stabilityai/stable-diffusion-2-1</a></li>
    <li>Uses Stability AI <a href='https://stability.ai'>https://stability.ai</a></li>
+   <li>LangChain OpenAI <a href='https://js.langchain.com/docs/getting-started/guide-llm'>https://js.langchain.com/docs/getting-started/guide-llm</a></li>
+   <li>Uses Article Extractor and Summarizer on Rapid API <a href='https://rapidapi.com'>https://rapidapi.com</a></li>   
    </ul>
    </p>
  """
@@ -249,7 +256,6 @@ def get_internal_celeb_name(celebrity):
     
 
 def get_celebs_response(mongo_config, mongo_connection_string, mongo_database, celebrity, image_prompt_text, key_traits):
-    #try:
     uihandlers = AskMeUIHandlers()
     uihandlers.set_mongodb_config(mongo_config, mongo_connection_string, mongo_database)
     internal_celeb_name = get_internal_celeb_name(celebrity)
@@ -384,6 +390,9 @@ product_def_question_examples = ["Limit answer to 50 words",
                              "Write the answer in one line TLDR with the fewest words"
                             ]
 
+article_links_examples = ["https://time.com/6266679/musk-ai-open-letter", 
+                             "https://futureoflife.org/open-letter/ai-open-letter"
+                            ]
 
 prompt_generator = CelebPromptGenerator()
 audio_examples = prompt_generator.get_audio_examples()
@@ -400,7 +409,64 @@ Business_celeb_list = get_celeb_examples("Business")
 IndianFilm_celeb_examples = [celeb[0] for celeb in IndianFilm_celeb_list]
 hollywood_celeb_examples = [celeb[0] for celeb in Hollywood_celeb_list]
 business_celeb_examples = [celeb[0] for celeb in Business_celeb_list]
+#celeb_search_questions = ["What is the name of the actor acted as  in the Mentalist series, answer without any explanation. (Yes/No)"]
+prompt = PromptTemplate(
+    input_variables=["character_name","program_name"],
+    template="What is the name of the actor acted as {character_name} in {program_name}, answer without any explanation and return only actor name?")
 
+
+celeb_search_questions = [prompt.format(character_name="Patrick Jane",program_name="The Mentalist"), 
+                          prompt.format(character_name="Raymond Reddington ",program_name="The Blacklist")]
+
+def celebs_name_search_handler(input_key, search_text, celebs_chat_history):
+    if not input_key or len(input_key.strip())==0:        
+        return None, celebs_chat_history, "Review Configuration tab for keys/settings", "OPENAI_API_KEY is missing"
+
+    if len(search_text.strip())>0:
+        os.environ["OPENAI_API_KEY"] = input_key
+        celebs_chat_history = celebs_chat_history + [(search_text, None)] 
+        llm = OpenAI(temperature=0.7)
+        llm_response = llm(search_text)        
+        return llm_response, celebs_chat_history, "In progress"
+    else:
+        return None, celebs_chat_history, "No Input"
+
+def celebs_name_search_history_handler(search_text, celebs_chat_history):    
+    if search_text:
+        celebrity_name = search_text.replace(".", "").strip()
+        celebs_chat_history[-1][1] = celebrity_name
+        return None, celebrity_name, celebs_chat_history, f"Review Celebrity tab for {celebrity_name} details"
+    else:
+        return None, "John Doe", celebs_chat_history, "Review Configuration tab for keys/settings", "OPENAI_API_KEY is missing or No input"
+
+
+'''
+Rapid API extract and summarize
+'''
+
+def article_rapidapi_api(api_action, rapidapi_api_key, article_link, length=1):
+    querystring = {"url": article_link, "html": True}
+    if api_action == "summarize":
+        querystring = {"url": article_link,"length":length}
+        
+    url = f"https://article-extractor-and-summarizer.p.rapidapi.com/{api_action}"    
+    
+
+    headers = {
+    	"X-RapidAPI-Key": rapidapi_api_key,
+    	"X-RapidAPI-Host": "article-extractor-and-summarizer.p.rapidapi.com"
+    }
+
+    response = requests.get(url, headers=headers, params=querystring)    
+    return  response.json()
+
+def article_summarize_handler(rapidapi_api_key, article_link, length):
+    return article_rapidapi_api("summarize", rapidapi_api_key, article_link, length)
+    
+def article_extract_handler(rapidapi_api_key, article_link):
+    return article_rapidapi_api("extract", rapidapi_api_key, article_link)
+
+                               
 '''
 Output and Upload
 '''
@@ -413,7 +479,6 @@ def cloudinary_search(cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_
     
 def cloudinary_upload(cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, folder_name, input_celeb_picture, celebrity_name):
     uihandlers = AskMeUIHandlers()
-
     uihandlers.set_cloudinary_config(cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret)
     return uihandlers.cloudinary_upload(folder_name, input_celeb_picture, celebrity_name)
 
@@ -472,13 +537,11 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                     mongo_config = gr.Checkbox(label="MongoDB config", info="Use your own MongoDB", value=os.getenv("USE_MONGODB_CONFIG"))
                     mongo_connection_string = gr.Textbox(
                         label="MongoDB Connection string", value=os.getenv("MONGODB_URI"), type="password")
-
                 with gr.Column():
                     mongo_database = gr.Textbox(
                         label="MongoDB database", value=os.getenv("MONGODB_DATABASE"))
         with gr.Tab("Cloudinary"):
             gr.HTML("Sign up here <a href='https://cloudinary.com'>https://cloudinary.com</a>")
-
             with gr.Row():
                 with gr.Column():
                     cloudinary_cloud_name = gr.Textbox(
@@ -493,8 +556,13 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
         with gr.Tab("Stability API"):
             gr.HTML("Sign up here <a href='https://platform.stability.ai'>https://platform.stability.ai</a>")
             with gr.Row():
+               with gr.Column():
+                   stability_api_key = gr.Textbox(label="Stability API Key", value=os.getenv("STABILITY_API_KEY"), type="password")   
+        with gr.Tab("Rapid API"):
+            gr.HTML("Sign up here <a href='https://rapidapi.com'>https://rapidapi.com</a>")
+            with gr.Row():
                 with gr.Column():
-                   stability_api_key = gr.Textbox(label="Stability API Key", value=os.getenv("STABILITY_API_KEY"), type="password")                     
+                   rapidapi_api_key = gr.Textbox(label="Article extractor and summarizer API Key", value=os.getenv("RAPIDAPI_KEY"), type="password")   
         with gr.Row():
                 input_num_images = gr.Slider(minimum=1,maximum=10,step=1,
                     label="Number of Images to generate", value=1, info="OpenAI API supports 1-10 images")
@@ -556,62 +624,78 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                     generate_variations_button = gr.Button("Generate a variation via DALL-E")
     with gr.Tab("Use cases"):
         with gr.Tab("Know your Celebrity"):
-            with gr.Row():
-                with gr.Column(scale=4):  
-                    celebs_name_label = gr.Textbox(label="Celebrity") 
-                    question_prompt = gr.Textbox(label="Prompt", lines=2)
-                    key_traits = gr.Textbox(label="Key traits", lines=5)
-                    with gr.Accordion("Celebrity Examples, select one from here", open=True):
-                        with gr.Tab("Indian Film"):
-                            with gr.Row():
-                                gr.Examples(
-                                    label="Select one from a celebrity",
-                                    examples=IndianFilm_celeb_examples,
-                                    examples_per_page=100,
-                                    inputs=[celebs_name_label],
-                                    outputs=[question_prompt, key_traits],                
-                                )
-                        with gr.Tab("Hollywood"):
-                            with gr.Row():
-                                gr.Examples(
-                                    label="Select one from a celebrity",
-                                    examples=hollywood_celeb_examples,
-                                    examples_per_page=100,
-                                    inputs=[celebs_name_label],
-                                    outputs=[question_prompt, key_traits],                
-                                )
-                        with gr.Tab("Business"):
-                            with gr.Row():
-                                gr.Examples(
-                                    label="Select one from a celebrity",
-                                    examples=business_celeb_examples,
-                                    examples_per_page=100,
-                                    inputs=[celebs_name_label],
-                                    outputs=[question_prompt, key_traits],                
-                                )                        
-                with gr.Column(scale=1):
-                    clear_celeb_details_button = gr.Button("Clear")                
-                    generate_image_prompt_text = gr.Textbox(label="Image generation prompt", value="A realistic photo")
-                    label_describe_gpt = gr.Label(value="Generate or Upload Image to Save", label="Info")
-                    with gr.Accordion("Options..", open=True):
-                        generate_image_stability_ai_button = gr.Button("via Stability AI")
-                        generate_image_diffusion_button = gr.Button("*via stable-diffusion-2 model")
-                        label_generate_image_diffusion = gr.Label(value="* takes 30-50 mins on CPU", label="Warning") 
-                        celeb_variation_button = gr.Button("variation from the real photo (DALL-E 2)")                                
-            with gr.Row():
-                celeb_real_photo = gr.Image(label="Real Photo",  type="filepath")                        
-                celeb_generated_image = gr.Image(label="AI Generated Image",  type="filepath")
-            with gr.Row():
-                with gr.Column(scale=1):
-                    know_your_celeb_description_wiki = gr.Textbox(label="Wiki summary", lines=13)
-                with gr.Column(scale=1):
-                    know_your_celeb_description = gr.Textbox(label="Description from OpenAI ChatGPT", lines=7)
-                    with gr.Row():                    
-                        celeb_summarize_copy_button = gr.Button("Summarize Wiki output, copy to Description")
-                        celeb_save_description_button = gr.Button("Save Description")
-                        describe_button = gr.Button("Describe via ChatGPT and Save")
-                        celeb_upload_save_real_generated_image_button = gr.Button("Upload, Save real & generated image")                    
-            label_upload_here = gr.Label(value=LABEL_GPT_CELEB_SCREEN, label="Info")     
+            with gr.Tab("GPT Search"):
+                with gr.Row():
+                    with gr.Column(scale=7):                        
+                        celebs_name_chatbot = gr.Chatbot()
+                        celebs_name_search = gr.Textbox(label="Question")
+                    with gr.Column(scale=1):    
+                        gr.Examples(
+                            label="Search Questions",
+                            examples=celeb_search_questions,
+                            examples_per_page=6,
+                            inputs=[celebs_name_search],
+                            outputs=[celebs_name_search],
+                        )
+                        celebs_name_search_clear = gr.Button("Clear")
+                        celebs_name_search_label = gr.Label(value="GPT search output info", label="Info")
+            with gr.Tab("Celebrity"):
+                with gr.Row():
+                    with gr.Column(scale=4):
+                        celebs_name_label = gr.Textbox(label="Celebrity") 
+                        question_prompt = gr.Textbox(label="Prompt", lines=2)
+                        key_traits = gr.Textbox(label="Key traits", lines=5)
+                        with gr.Accordion("Celebrity Examples, select one from here", open=True):
+                            with gr.Tab("Indian Film"):
+                                with gr.Row():
+                                    gr.Examples(
+                                        label="Select one from a celebrity",
+                                        examples=IndianFilm_celeb_examples,
+                                        examples_per_page=100,
+                                        inputs=[celebs_name_label],
+                                        outputs=[question_prompt, key_traits],                
+                                    )
+                            with gr.Tab("Hollywood"):
+                                with gr.Row():
+                                    gr.Examples(
+                                        label="Select one from a celebrity",
+                                        examples=hollywood_celeb_examples,
+                                        examples_per_page=100,
+                                        inputs=[celebs_name_label],
+                                        outputs=[question_prompt, key_traits],                
+                                    )
+                            with gr.Tab("Business"):
+                                with gr.Row():
+                                    gr.Examples(
+                                        label="Select one from a celebrity",
+                                        examples=business_celeb_examples,
+                                        examples_per_page=100,
+                                        inputs=[celebs_name_label],
+                                        outputs=[question_prompt, key_traits],                
+                                    )                        
+                    with gr.Column(scale=1):
+                        clear_celeb_details_button = gr.Button("Clear")                
+                        generate_image_prompt_text = gr.Textbox(label="Image generation prompt", value="A realistic photo")
+                        label_describe_gpt = gr.Label(value="Generate or Upload Image to Save", label="Info")
+                        with gr.Accordion("Options..", open=True):
+                            generate_image_stability_ai_button = gr.Button("via Stability AI")
+                            generate_image_diffusion_button = gr.Button("*via stable-diffusion-2 model")
+                            label_generate_image_diffusion = gr.Label(value="* takes 30-50 mins on CPU", label="Warning") 
+                            celeb_variation_button = gr.Button("variation from the real photo (DALL-E 2)")                                
+                with gr.Row():
+                    celeb_real_photo = gr.Image(label="Real Photo",  type="filepath")                        
+                    celeb_generated_image = gr.Image(label="AI Generated Image",  type="filepath")
+                with gr.Row():
+                    with gr.Column(scale=1):
+                        know_your_celeb_description_wiki = gr.Textbox(label="Wiki summary", lines=13)
+                    with gr.Column(scale=1):
+                        know_your_celeb_description = gr.Textbox(label="Description from OpenAI ChatGPT", lines=7)
+                        with gr.Row():                    
+                            celeb_summarize_copy_button = gr.Button("Summarize Wiki output, copy to Description")
+                            celeb_save_description_button = gr.Button("Save Description")
+                            describe_button = gr.Button("Describe via ChatGPT and Save")
+                            celeb_upload_save_real_generated_image_button = gr.Button("Upload, Save real & generated image")                    
+                label_upload_here = gr.Label(value=LABEL_GPT_CELEB_SCREEN, label="Info")     
         with gr.Tab("Ask GPT"):
             with gr.Row():
                 with gr.Column(): 
@@ -737,6 +821,23 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                             product_def_generate_button = gr.Button("Picturize it")
                             product_def_variations_button = gr.Button("More variations")
                             product_def_image_info_label = gr.Label(value="Picturize it info", label="Info")
+        with gr.Tab("Article Extractor and Summarizer"):
+            gr.HTML("Article Extractor and Summarizer API on RapidAPI <a href='https://rapidapi.com/restyler/api/article-extractor-and-summarizer'>https://rapidapi.com/restyler/api/article-extractor-and-summarizer</a>")
+            with gr.Row():                
+                with gr.Column(scale=4):                    
+                    article_link = gr.Textbox(label="Enter Article link")
+                    gr.Examples(
+                            label="Article examples",
+                            examples=article_links_examples,
+                            examples_per_page=6,
+                            inputs=[article_link],
+                            outputs=[article_link],
+                    )
+                with gr.Column(scale=1):                    
+                    article_summarize_length = gr.Slider(minimum=1, maximum=20, step=1, label="Length", value=1, info="Length")
+                    article_article_summarize_button = gr.Button("Summarize")
+                    article_article_extract_button = gr.Button("Extract")
+            article_summary = gr.Textbox(label="Article response", lines=25)
     with gr.Tab("Output"):
             with gr.Row():            
                 with gr.Column(scale=4):
@@ -755,6 +856,29 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
     gr.HTML(FOOTER)
 
 
+    celebs_name_search_clear.click(lambda: None, None, celebs_name_chatbot, queue=False)
+
+    article_article_summarize_button.click(
+        article_summarize_handler,        
+        inputs=[rapidapi_api_key, article_link, article_summarize_length], 
+        outputs=[article_summary]
+    )
+
+    article_article_extract_button.click(
+        article_extract_handler,        
+        inputs=[rapidapi_api_key, article_link], 
+        outputs=[article_summary]
+    )
+    
+    celebs_name_search.submit(
+        celebs_name_search_handler,
+        inputs=[input_key, celebs_name_search, celebs_name_chatbot],
+        outputs=[celebs_name_search, celebs_name_chatbot, celebs_name_search_label]).then(
+        celebs_name_search_history_handler, 
+        inputs=[celebs_name_search, celebs_name_chatbot], 
+        outputs=[celebs_name_search, celebs_name_label, celebs_name_chatbot, celebs_name_search_label]
+    )
+    
     celeb_upload_save_real_generated_image_button.click(
         celeb_upload_save_real_generated_image_handler,
         inputs=[cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, cloudinary_folder, mongo_config, mongo_connection_string, mongo_database, celebs_name_label, question_prompt, know_your_celeb_description, celeb_real_photo, celeb_generated_image],
