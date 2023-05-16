@@ -30,7 +30,7 @@ jobs:
       uses: docker/build-push-action@v3
       with:
         push: true
-        tags: amitpuriindia.azurecr.io/${{ secrets.AzureAppService_ContainerUsername_9d8f40070c0844779df55fe6896aac01 }}/Ask-picturize-it:${{ github.sha }}
+        tags: amitpuriindia.azurecr.io/${{ secrets.AzureAppService_ContainerUsername_9d8f40070c0844779df55fe6896aac01 }}/ask-picturize-it:${{ github.sha }}
         file: ./Dockerfile
 
   deploy:
