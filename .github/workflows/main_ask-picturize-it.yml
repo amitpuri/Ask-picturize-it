@@ -4,9 +4,6 @@
 name: Build and deploy container app to Azure Web App - ask-picturize-it
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 jobs:
