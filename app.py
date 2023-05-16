@@ -14,6 +14,8 @@ from UIHandlers import AskMeUIHandlers
 from Utils.Optimizers import Prompt_Optimizer
 from langchain.llms import OpenAI
 from langchain.prompts import PromptTemplate
+import torch
+from transformers import pipeline
 
 
 
@@ -96,6 +98,27 @@ PRODUCT_DEFINITION = "<p>Define a product by prompt, picturize it, get variation
 
 LABEL_GPT_CELEB_SCREEN = "Select, Describe, Generate AI Image, Upload and Save"
 
+"""
+Whisper
+"""
+MODEL_NAME = "openai/whisper-large-v2"
+device = 0 if torch.cuda.is_available() else "cpu"
+
+pipe = pipeline(
+    task="automatic-speech-recognition",
+    model=MODEL_NAME,
+    chunk_length_s=30,
+    device=device,
+)
+
+all_special_ids = pipe.tokenizer.all_special_ids
+transcribe_token_id = all_special_ids[-5]
+translate_token_id = all_special_ids[-6]
+
+def transcribe_whisper_large_v2(audio_file, task="transcribe"):    
+    pipe.model.config.forced_decoder_ids = [[2, transcribe_token_id if task=="transcribe" else translate_token_id]]
+    text = pipe(audio_file)["text"]
+    return text, text
 
 '''
 Reusable functions
@@ -301,6 +324,27 @@ def get_key_traits(name):
     celeb_data_client = CelebDataClient(connection_string, database)
     return celeb_data_client.get_key_traits(name)
 
+def celebs_name_search_handler(input_key, search_text, celebs_chat_history):
+    if not input_key or len(input_key.strip())==0:        
+        return None, celebs_chat_history, "Review Configuration tab for keys/settings", "OPENAI_API_KEY is missing"
+
+    if len(search_text.strip())>0:
+        os.environ["OPENAI_API_KEY"] = input_key
+        celebs_chat_history = celebs_chat_history + [(search_text, None)] 
+        llm = OpenAI(temperature=0.7)
+        llm_response = llm(search_text)        
+        return llm_response, celebs_chat_history, "In progress"
+    else:
+        return None, celebs_chat_history, "No Input"
+
+def celebs_name_search_history_handler(search_text, celebs_chat_history):    
+    if search_text:
+        celebrity_name = search_text.replace(".", "").strip()
+        celebs_chat_history[-1][1] = celebrity_name
+        return None, celebrity_name, celebs_chat_history, f"Review Celebrity tab for {celebrity_name} details"
+    else:
+        return None, "John Doe", celebs_chat_history, "Review Configuration tab for keys/settings", "OPENAI_API_KEY is missing or No input"
+
 
 '''
 Codex
@@ -357,7 +401,6 @@ Product Definition
 '''
 
 
-
 def ask_product_def_handler(api_key, org_id, mongo_prompt_read_config, mongo_config, mongo_connection_string, mongo_database, prompt, keyword):
     uihandlers = AskMeUIHandlers()
     uihandlers.set_mongodb_config(mongo_config, mongo_connection_string, mongo_database)
@@ -375,8 +418,39 @@ def update_final_prompt(product_fact_sheet, product_def_question, product_task_e
     return final_prompt
 
 
+'''
+Rapid API extract and summarize
+'''
 
+def article_rapidapi_api(api_action, rapidapi_api_key, article_link, length=1):
+    querystring = {"url": article_link, "html": True}
+    if api_action == "summarize":
+        querystring = {"url": article_link,"length":length}
+        
+    url = f"https://article-extractor-and-summarizer.p.rapidapi.com/{api_action}"    
+    
 
+    headers = {
+    	"X-RapidAPI-Key": rapidapi_api_key,
+    	"X-RapidAPI-Host": "article-extractor-and-summarizer.p.rapidapi.com"
+    }
+
+    response = requests.get(url, headers=headers, params=querystring)    
+    return  response.json()
+
+def article_summarize_handler(rapidapi_api_key, article_link, length):
+    if rapidapi_api_key:
+        return article_rapidapi_api("summarize", rapidapi_api_key, article_link, length), ""
+    else:
+        return "","Review Configuration tab for keys/settings", "RAPIDAPI_KEY is missing or No input"
+    
+def article_extract_handler(rapidapi_api_key, article_link):
+    if rapidapi_api_key:
+        return article_rapidapi_api("extract", rapidapi_api_key, article_link), ""
+    else:
+        return "","Review Configuration tab for keys/settings", "RAPIDAPI_KEY is missing or No input"
+
+    
 # Examples fn
 
 task_explanation_examples = ["""Your task is to help a marketing team create a description for a retail website of a product based on a technical fact sheet.
@@ -409,7 +483,6 @@ Business_celeb_list = get_celeb_examples("Business")
 IndianFilm_celeb_examples = [celeb[0] for celeb in IndianFilm_celeb_list]
 hollywood_celeb_examples = [celeb[0] for celeb in Hollywood_celeb_list]
 business_celeb_examples = [celeb[0] for celeb in Business_celeb_list]
-#celeb_search_questions = ["What is the name of the actor acted as  in the Mentalist series, answer without any explanation. (Yes/No)"]
 prompt = PromptTemplate(
     input_variables=["character_name","program_name"],
     template="What is the name of the actor acted as {character_name} in {program_name}, answer without any explanation and return only actor name?")
@@ -418,53 +491,6 @@ prompt = PromptTemplate(
 celeb_search_questions = [prompt.format(character_name="Patrick Jane",program_name="The Mentalist"), 
                           prompt.format(character_name="Raymond Reddington ",program_name="The Blacklist")]
 
-def celebs_name_search_handler(input_key, search_text, celebs_chat_history):
-    if not input_key or len(input_key.strip())==0:        
-        return None, celebs_chat_history, "Review Configuration tab for keys/settings", "OPENAI_API_KEY is missing"
-
-    if len(search_text.strip())>0:
-        os.environ["OPENAI_API_KEY"] = input_key
-        celebs_chat_history = celebs_chat_history + [(search_text, None)] 
-        llm = OpenAI(temperature=0.7)
-        llm_response = llm(search_text)        
-        return llm_response, celebs_chat_history, "In progress"
-    else:
-        return None, celebs_chat_history, "No Input"
-
-def celebs_name_search_history_handler(search_text, celebs_chat_history):    
-    if search_text:
-        celebrity_name = search_text.replace(".", "").strip()
-        celebs_chat_history[-1][1] = celebrity_name
-        return None, celebrity_name, celebs_chat_history, f"Review Celebrity tab for {celebrity_name} details"
-    else:
-        return None, "John Doe", celebs_chat_history, "Review Configuration tab for keys/settings", "OPENAI_API_KEY is missing or No input"
-
-
-'''
-Rapid API extract and summarize
-'''
-
-def article_rapidapi_api(api_action, rapidapi_api_key, article_link, length=1):
-    querystring = {"url": article_link, "html": True}
-    if api_action == "summarize":
-        querystring = {"url": article_link,"length":length}
-        
-    url = f"https://article-extractor-and-summarizer.p.rapidapi.com/{api_action}"    
-    
-
-    headers = {
-    	"X-RapidAPI-Key": rapidapi_api_key,
-    	"X-RapidAPI-Host": "article-extractor-and-summarizer.p.rapidapi.com"
-    }
-
-    response = requests.get(url, headers=headers, params=querystring)    
-    return  response.json()
-
-def article_summarize_handler(rapidapi_api_key, article_link, length):
-    return article_rapidapi_api("summarize", rapidapi_api_key, article_link, length)
-    
-def article_extract_handler(rapidapi_api_key, article_link):
-    return article_rapidapi_api("extract", rapidapi_api_key, article_link)
 
                                
 '''
@@ -510,8 +536,6 @@ def generated_images_gallery_on_select(evt: gr.SelectData, generated_images_gall
         return output_generated_image
     else:        
         return None
-
-
 
 
 with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabbedScreen:
@@ -572,14 +596,10 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
         gr.HTML("<p>Record voice, transcribe a prompt, picturize the prompt, create variations, get description of a celebrity and upload</p>")
         with gr.Tab("Whisper(whisper-1)"):
             with gr.Row():
-                with gr.Column(scale=3):
+                with gr.Column(scale=3):                    
                     audio_file = gr.Audio(
-                        label="Record to describe what you want to picturize? and click on Transcribe",
+                        label="Upload Audio, or Record to describe what you want to picturize and click on Transcribe",
                         source="microphone",
-                        type="filepath"
-                    )
-                    audio_file = gr.Audio(
-                        label="Upload Audio and Transcribe",
                         type="filepath"
                     )
                 with gr.Column(scale=2):
@@ -590,6 +610,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                         examples_per_page=6,
                         inputs=audio_file)
                     transcribe_button = gr.Button("Transcribe via Whisper")  
+                    transcribe_whisper_large_v2_button = gr.Button("Transcribe via openai/whisper-large-v2") 
             input_transcriptionprompt = gr.Label(label="Transcription Text")
         with gr.Tab("Image generation"):
             input_prompt = gr.Textbox(label="Prompt Text to describe what you want to picturize?", lines=7)
@@ -833,7 +854,8 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                             inputs=[article_link],
                             outputs=[article_link],
                     )
-                with gr.Column(scale=1):                    
+                with gr.Column(scale=1):  
+                    article_summarize_extract_info_label = gr.Label(value="Article Extractor and Summarizer Output info", label="Info")
                     article_summarize_length = gr.Slider(minimum=1, maximum=20, step=1, label="Length", value=1, info="Length")
                     article_article_summarize_button = gr.Button("Summarize")
                     article_article_extract_button = gr.Button("Extract")
@@ -861,13 +883,13 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
     article_article_summarize_button.click(
         article_summarize_handler,        
         inputs=[rapidapi_api_key, article_link, article_summarize_length], 
-        outputs=[article_summary]
+        outputs=[article_summary, article_summarize_extract_info_label]
     )
 
     article_article_extract_button.click(
         article_extract_handler,        
         inputs=[rapidapi_api_key, article_link], 
-        outputs=[article_summary]
+        outputs=[article_summary, article_summarize_extract_info_label]
     )
     
     celebs_name_search.submit(
@@ -1089,6 +1111,11 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
         outputs=[input_transcriptionprompt, input_prompt]
     )
 
+    transcribe_whisper_large_v2_button.click(
+        transcribe_whisper_large_v2,
+        inputs=[audio_file],
+        outputs=[input_transcriptionprompt, input_prompt]
+    )
 
 if __name__ == "__main__":
     AskMeTabbedScreen.launch()
