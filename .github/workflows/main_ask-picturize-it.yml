@@ -1,0 +1,51 @@
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+
+name: Build and deploy container app to Azure Web App - ask-picturize-it
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: 'ubuntu-latest'
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Log in to registry
+      uses: docker/login-action@v2
+      with:
+        registry: https://amitpuriindia.azurecr.io/
+        username: ${{ secrets.AzureAppService_ContainerUsername_9d8f40070c0844779df55fe6896aac01 }}
+        password: ${{ secrets.AzureAppService_ContainerPassword_840628b872034a30ab73ac269e1cf05e }}
+
+    - name: Build and push container image to registry
+      uses: docker/build-push-action@v3
+      with:
+        push: true
+        tags: amitpuriindia.azurecr.io/${{ secrets.AzureAppService_ContainerUsername_9d8f40070c0844779df55fe6896aac01 }}/Ask-picturize-it:${{ github.sha }}
+        file: ./Dockerfile
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: 'production'
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+
+    steps:
+    - name: Deploy to Azure Web App
+      id: deploy-to-webapp
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: 'ask-picturize-it'
+        slot-name: 'production'
+        publish-profile: ${{ secrets.AzureAppService_PublishProfile_adc38cc0b92c4987a1627e62d77c5d49 }}
+        images: 'amitpuriindia.azurecr.io/${{ secrets.AzureAppService_ContainerUsername_9d8f40070c0844779df55fe6896aac01 }}/Ask-picturize-it:${{ github.sha }}'
