@@ -6,8 +6,6 @@ Huggingface Space 🤗
 
 [https://huggingface.co/spaces/amitpuri/Ask-picturize-it](https://huggingface.co/spaces/amitpuri/Ask-picturize-it)
 
-[![Colab](https://img.shields.io/badge/Colab-F9AB00?style=for-the-badge&logo=googlecolab&color=525252)](https://colab.research.google.com/github/amitpuri/Ask-me-to-picturize-it/blob/main/app.ipynb)
-
 This uses OpenAI API Whisper(whisper-1), DALL-E, GPT(gpt-3.5-turbo)
 
 Extracted from https://openai.com/pricing
