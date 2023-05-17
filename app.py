@@ -20,6 +20,7 @@ from transformers import pipeline
 
 
 #from dotenv import load_dotenv
+
 #load_dotenv()
 
 TITLE = '# [Ask-me-to-picturize-it](https://github.com/amitpuri/Ask-me-to-picturize-it)'
@@ -29,6 +30,7 @@ TITLE = '# [Ask-me-to-picturize-it](https://github.com/amitpuri/Ask-me-to-pictur
 DESCRIPTION = """<strong>This space uses following:</strong>
    <p>
    <ul>
+
    <li>OpenAI API Whisper(whisper-1) <a href='https://openai.com/research/whisper'>https://openai.com/research/whisper</a></li>
    <li>DALL-E <a href='https://openai.com/product/dall-e-2'>https://openai.com/product/dall-e-2</a></li>
    <li>GPT(gpt-3.5-turbo) <a href='https://openai.com/product/gpt-4'>https://openai.com/product/gpt-4</a></li>
@@ -194,6 +196,7 @@ def use_case_slider_handler(use_case_slider):
 '''
 Record voice, transcribe, picturize, create variations, and upload
 '''
+
 
 def get_audio_examples():
     prompt_generator = CelebPromptGenerator()
@@ -423,9 +426,9 @@ Rapid API extract and summarize
 '''
 
 def article_rapidapi_api(api_action, rapidapi_api_key, article_link, length=1):
-    querystring = {"url": article_link, "html": True}
+    querystring = {"url": article_link}
     if api_action == "summarize":
-        querystring = {"url": article_link,"length":length}
+        querystring = {"url": article_link,"length":length, 'html': "TRUE"}
         
     url = f"https://article-extractor-and-summarizer.p.rapidapi.com/{api_action}"    
     
@@ -435,18 +438,21 @@ def article_rapidapi_api(api_action, rapidapi_api_key, article_link, length=1):
     	"X-RapidAPI-Host": "article-extractor-and-summarizer.p.rapidapi.com"
     }
 
-    response = requests.get(url, headers=headers, params=querystring)    
+    response = requests.get(url, headers=headers, params=querystring)
+    
     return  response.json()
 
 def article_summarize_handler(rapidapi_api_key, article_link, length):
     if rapidapi_api_key:
-        return article_rapidapi_api("summarize", rapidapi_api_key, article_link, length), ""
+        response = article_rapidapi_api("summarize", rapidapi_api_key, article_link, length)
+        return response["summary"], ""
     else:
         return "","Review Configuration tab for keys/settings", "RAPIDAPI_KEY is missing or No input"
     
 def article_extract_handler(rapidapi_api_key, article_link):
     if rapidapi_api_key:
-        return article_rapidapi_api("extract", rapidapi_api_key, article_link), ""
+        response = article_rapidapi_api("extract", rapidapi_api_key, article_link)
+        return response["content"], ""
     else:
         return "","Review Configuration tab for keys/settings", "RAPIDAPI_KEY is missing or No input"
 
@@ -465,8 +471,12 @@ product_def_question_examples = ["Limit answer to 50 words",
                             ]
 
 article_links_examples = ["https://time.com/6266679/musk-ai-open-letter", 
-                             "https://futureoflife.org/open-letter/ai-open-letter"
-                            ]
+                          "https://futureoflife.org/open-letter/ai-open-letter",
+                          "https://github.com/openai/CLIP",
+                          "https://arxiv.org/abs/2103.00020",
+                          "https://spacy.io/usage/spacy-101",
+                          "https://developers.google.com/machine-learning/gan/gan_structure",
+                          "https://developers.google.com/machine-learning/gan/generative"]
 
 prompt_generator = CelebPromptGenerator()
 audio_examples = prompt_generator.get_audio_examples()
@@ -483,15 +493,22 @@ Business_celeb_list = get_celeb_examples("Business")
 IndianFilm_celeb_examples = [celeb[0] for celeb in IndianFilm_celeb_list]
 hollywood_celeb_examples = [celeb[0] for celeb in Hollywood_celeb_list]
 business_celeb_examples = [celeb[0] for celeb in Business_celeb_list]
-prompt = PromptTemplate(
+prompt_character = PromptTemplate(
     input_variables=["character_name","program_name"],
-    template="What is the name of the actor acted as {character_name} in {program_name}, answer without any explanation and return only actor name?")
+    template="What is the name of the actor acted as {character_name} in {program_name}, answer without any explanation and return only the actor's name?")
+
+prompt_bond_girl = PromptTemplate(
+    input_variables=["movie_name"],
+    template="Who was Bond girl co-star in {movie_name}?, answer without any explanation and return only the actor's name?")
 
 
-celeb_search_questions = [prompt.format(character_name="Patrick Jane",program_name="The Mentalist"), 
-                          prompt.format(character_name="Raymond Reddington ",program_name="The Blacklist")]
-
-
+celeb_search_questions = [prompt_character.format(character_name="James Bond",program_name="Casino Royale"),
+                        prompt_character.format(character_name="James Bond",program_name="Die Another Day"),
+                        prompt_character.format(character_name="James Bond",program_name="Never Say Never Again"),
+                        prompt_character.format(character_name="Patrick Jane",program_name="The Mentalist"),
+                        prompt_character.format(character_name="Raymond Reddington",program_name="The Blacklist"),
+                        prompt_bond_girl.format(movie_name="GoldenEye"),
+                        prompt_bond_girl.format(movie_name="Die Another Day")]
                                
 '''
 Output and Upload
@@ -593,7 +610,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                 input_imagesize = gr.Dropdown(["1024x1024", "512x512", "256x256"], value="256x256", label="Image size",
                                               info="Select one, use download for image size from Image generation/variation Output tab")
     with gr.Tab("Record, transcribe, picturize and upload"):
-        gr.HTML("<p>Record voice, transcribe a prompt, picturize the prompt, create variations, get description of a celebrity and upload</p>")
+        gr.HTML("<p>Record voice, transcribe a prompt, picturize the prompt, create variations, and upload in Output tab</p>")
         with gr.Tab("Whisper(whisper-1)"):
             with gr.Row():
                 with gr.Column(scale=3):                    
@@ -651,6 +668,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                         celebs_name_chatbot = gr.Chatbot()
                         celebs_name_search = gr.Textbox(label="Question")
                     with gr.Column(scale=1):    
+
                         gr.Examples(
                             label="Search Questions",
                             examples=celeb_search_questions,
@@ -850,7 +868,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                     gr.Examples(
                             label="Article examples",
                             examples=article_links_examples,
-                            examples_per_page=6,
+                            examples_per_page=15,
                             inputs=[article_link],
                             outputs=[article_link],
                     )
@@ -858,8 +876,8 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                     article_summarize_extract_info_label = gr.Label(value="Article Extractor and Summarizer Output info", label="Info")
                     article_summarize_length = gr.Slider(minimum=1, maximum=20, step=1, label="Length", value=1, info="Length")
                     article_article_summarize_button = gr.Button("Summarize")
-                    article_article_extract_button = gr.Button("Extract")
-            article_summary = gr.Textbox(label="Article response", lines=25)
+                    article_article_extract_button = gr.Button("Extract")            
+            article_summary = gr.Code(label="Article response", language="html", lines=10)
     with gr.Tab("Output"):
             with gr.Row():            
                 with gr.Column(scale=4):
