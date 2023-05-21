@@ -27,8 +27,7 @@ uihandlers = AskMeUIHandlers()
 def generate_optimized_prompt(plain_text):
     return prompt_optimizer.generate_optimized_prompt(plain_text);
 	
-def tokenizer_calc(prompt
-):
+def tokenizer_calc(prompt):
     if prompt:
         return f"Tokenizer (tokens/characters) {gpt3_tokenizer.count_tokens(prompt)}, {len(prompt)}"
 
@@ -126,12 +125,12 @@ def get_celebs_response(mongo_config, mongo_connection_string, mongo_database, c
         name, prompt, response, wiki_image, generated_image_url = uihandlers.get_celebs_response_handler(celebrity)
         if wiki_image is None:
             wiki_image = ask_picturize_it.get_wikimedia_image(celebrity)
-        return name, prompt, wiki_summary, response, wiki_image, generated_image_url, f"A realistic photo of {name}", key_traits
+        return name, prompt, wiki_summary, response, wiki_image, generated_image_url, f"{name}", key_traits
     except:
         response = None
         generated_image_url = None
         wiki_image = ask_picturize_it.get_wikimedia_image(celebrity)
-        return celebrity, f"Write a paragraph on {celebrity}", wiki_summary, "", wiki_image, None, f"A realistic photo of {celebrity}", key_traits
+        return celebrity, f"Write a paragraph on {celebrity}", wiki_summary, "", wiki_image, None, f"{celebrity}", key_traits
         pass
     
 
@@ -276,6 +275,24 @@ def article_extract_handler(rapidapi_api_key, article_link):
     
 # Examples fn
 
+
+
+audio_examples = prompt_generator.get_audio_examples()
+images_examples = prompt_generator.get_images_examples()
+input_examples = prompt_generator.get_input_examples()
+product_def_keyword_examples =  get_keyword_prompts("product") 
+recent_awesome_chatgpt_prompts = get_keyword_prompts("awesome-prompts")
+saved_prompts = get_keyword_prompts("codex") 
+saved_products =  prompt_generator.get_all_awesome_chatgpt_prompts("product")
+awesome_chatgpt_prompts = prompt_generator.get_all_awesome_chatgpt_prompts()
+IndianFilm_celeb_list = get_celeb_examples("Indian Film")
+Hollywood_celeb_list = get_celeb_examples("Hollywood")
+Business_celeb_list = get_celeb_examples("Business")
+IndianFilm_celeb_examples = [celeb[0] for celeb in IndianFilm_celeb_list]
+hollywood_celeb_examples = [celeb[0] for celeb in Hollywood_celeb_list]
+business_celeb_examples = [celeb[0] for celeb in Business_celeb_list]
+
+
 task_explanation_examples = ["""Your task is to help a marketing team create a description for a retail website of a product based on a technical fact sheet.
            
 Write a product description based on the information provided in the technical specifications delimited by triple backticks."""]
@@ -309,20 +326,6 @@ article_links_examples = ["https://time.com/6266679/musk-ai-open-letter",
                           "https://arxiv.org/abs/2010.11929",
                           "https://developers.google.com/machine-learning/gan/generative"]
 
-audio_examples = prompt_generator.get_audio_examples()
-images_examples = prompt_generator.get_images_examples()
-input_examples = prompt_generator.get_input_examples()
-product_def_keyword_examples =  get_keyword_prompts("product") 
-recent_awesome_chatgpt_prompts = get_keyword_prompts("awesome-prompts")
-saved_prompts = get_keyword_prompts("codex") 
-saved_products =  prompt_generator.get_all_awesome_chatgpt_prompts("product")
-awesome_chatgpt_prompts = prompt_generator.get_all_awesome_chatgpt_prompts()
-IndianFilm_celeb_list = get_celeb_examples("Indian Film")
-Hollywood_celeb_list = get_celeb_examples("Hollywood")
-Business_celeb_list = get_celeb_examples("Business")
-IndianFilm_celeb_examples = [celeb[0] for celeb in IndianFilm_celeb_list]
-hollywood_celeb_examples = [celeb[0] for celeb in Hollywood_celeb_list]
-business_celeb_examples = [celeb[0] for celeb in Business_celeb_list]
 prompt_character = PromptTemplate(
     input_variables=["character_name","program_name"],
     template="What is the name of the actor acted as {character_name} in {program_name}, answer without any explanation and return only the actor's name?")
@@ -377,13 +380,16 @@ Image generation
 
 
 def generate_image_stability_ai_handler(stability_api_key, celebs_name_label, generate_image_prompt_text):
-    uihandlers.set_stabilityai_config(stability_api_key)
-    return uihandlers.generate_image_stability_ai_handler(celebs_name_label, generate_image_prompt_text)
+    if generate_image_prompt_text and len(generate_image_prompt_text)>0:
+        uihandlers.set_stabilityai_config(stability_api_key)
+        return uihandlers.generate_image_stability_ai_handler(celebs_name_label, generate_image_prompt_text)
 
     
-def generate_image_diffusion_handler(celebs_name_label, generate_image_prompt_text):
-    return uihandlers.generate_image_diffusion_handler(celebs_name_label, generate_image_prompt_text)
-    
+def generate_image_diffusion_handler(generate_image_prompt_text):
+    if generate_image_prompt_text and len(generate_image_prompt_text)>0:
+        return uihandlers.generate_image_diffusion_handler("ai-generated-image", generate_image_prompt_text)
+    else:
+        return "Please a prompt for image", None
 
 '''
 UI Components
@@ -477,12 +483,14 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                 with gr.Column(scale=1):                    
                     optimize_prompt_chatgpt_button = gr.Button("Optimize Prompt")
                     generate_button = gr.Button("Picture it via DALL-E")
+                    generate_image_diffusion_button = gr.Button("*via stable-diffusion-2 model")
+                    label_generate_image_diffusion = gr.Label(value="* takes 30-50 mins on CPU", label="Warning") 
                 with gr.Column(scale=5):
                     gr.Examples(
                         examples=input_examples,
                         label="Select one from Prompt Examples",
                         fn=get_input_examples,
-                        examples_per_page=5,
+                        examples_per_page=10,
                         inputs=input_prompt
                     )
                     label_picturize_it = gr.Label(value="Prompt in your words and picturize it", label="Info")
@@ -494,11 +502,10 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                     examples=images_examples,
                     label="Select one from Image Examples and get variation",
                     fn=get_images_examples,
-                    examples_per_page=9,
+                    examples_per_page=10,
                     inputs=input_image_variation
                 )
             with gr.Row():
-
                 label_get_variation = gr.Label(
                         value="Get variation of your favorite celebs", label="Info")                
                 with gr.Column():
@@ -510,8 +517,8 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                     with gr.Column(scale=7):                        
                         celebs_name_chatbot = gr.Chatbot()
                         celebs_name_search = gr.Textbox(label="Question")
-                    with gr.Column(scale=1):    
-
+                    with gr.Column(scale=1):   
+                        celebs_name_search_label = gr.Label(value="GPT search output info", label="Info")
                         gr.Examples(
                             label="Search Questions",
                             examples=celeb_search_questions,
@@ -520,7 +527,6 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                             outputs=[celebs_name_search],
                         )
                         celebs_name_search_clear = gr.Button("Clear")
-                        celebs_name_search_label = gr.Label(value="GPT search output info", label="Info")
             with gr.Tab("Celebrity"):
                 with gr.Row():
                     with gr.Column(scale=4):
@@ -557,12 +563,10 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                                     )                        
                     with gr.Column(scale=1):
                         clear_celeb_details_button = gr.Button("Clear")                
-                        generate_image_prompt_text = gr.Textbox(label="Image generation prompt", value="A realistic photo")
+                        generate_image_prompt_text = gr.Textbox(label="Image generation prompt", value="John Doe")
                         label_describe_gpt = gr.Label(value="Generate or Upload Image to Save", label="Info")
                         with gr.Accordion("Options..", open=True):
                             generate_image_stability_ai_button = gr.Button("via Stability AI")
-                            generate_image_diffusion_button = gr.Button("*via stable-diffusion-2 model")
-                            label_generate_image_diffusion = gr.Label(value="* takes 30-50 mins on CPU", label="Warning") 
                             celeb_variation_button = gr.Button("variation from the real photo (DALL-E 2)")                                
                 with gr.Row():
                     celeb_real_photo = gr.Image(label="Real Photo",  type="filepath")                        
@@ -900,14 +904,14 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
     generate_image_stability_ai_button.click(
         generate_image_stability_ai_handler,
         inputs=[stability_api_key, celebs_name_label, generate_image_prompt_text],
-        outputs=[label_upload_here,celeb_generated_image]
+        outputs=[label_describe_gpt, celeb_generated_image]
 
     )
     
     generate_image_diffusion_button.click(
         generate_image_diffusion_handler,
-        inputs=[celebs_name_label, generate_image_prompt_text],
-        outputs=[label_upload_here, celeb_generated_image]
+        inputs=[input_prompt],
+        outputs=[label_picturize_it, output_generated_image]
 
     )
 

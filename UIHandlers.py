@@ -15,8 +15,7 @@ class AskMeUIHandlers:
     def __init__(self):
         self.NO_API_KEY_ERROR="Review Configuration tab for keys/settings"
         self.LABEL_GPT_CELEB_SCREEN = "Name, Describe, Preview and Upload"
-        self.fallback_image = "https://plchldr.co/i/336x280"
-
+        self.image_utils = ImageUtils()
         #self.connection_string, self.database = self.get_private_mongo_config()
         #self.stability_api_key = self.get_stabilityai_config()
         #self.api_key, self.org_id = self.get_openai_config()
@@ -57,8 +56,7 @@ class AskMeUIHandlers:
             self.database = database
         
 
-    def get_celebs_response_handler(self, keyword):
-        image_utils = ImageUtils()
+    def get_celebs_response_handler(self, keyword):        
         celeb_client = CelebDataClient(self.connection_string, self.database)
         name, prompt, response, image_url, generated_image_url = celeb_client.get_celebs_response(keyword)
         try:
@@ -72,13 +70,13 @@ class AskMeUIHandlers:
                 generated_image_url = None
 
             if image_url and generated_image_url and response and prompt:
-                return name, prompt, response, image_utils.url_to_image(image_url), image_utils.url_to_image(generated_image_url)
+                return name, prompt, response, self.image_utils.url_to_image(image_url), self.image_utils.url_to_image(generated_image_url)
             elif image_url is None and generated_image_url is None and response and prompt:
                 return name, prompt, response, None, None            
             elif response and prompt and (image_url and not generated_image_url):
-                return name, prompt, response, image_utils.url_to_image(image_url), None
+                return name, prompt, response, self.image_utils.url_to_image(image_url), None
             elif response and prompt and (not image_url and generated_image_url):
-                return name, prompt, response, None, image_utils.url_to_image(generated_image_url)
+                return name, prompt, response, None, self.image_utils.url_to_image(generated_image_url)
             elif not response and not prompt and not image_url and generated_image_url:
                 return keyword, "", "", None, None
         except Exception as err:
@@ -102,42 +100,42 @@ class AskMeUIHandlers:
     
             
     def cloudinary_upload(self, folder_name, input_celeb_picture, celebrity_name):
-        image_utils = ImageUtils()
         if not self.cloudinary_cloud_name:
-            return "", image_utils.fallback_image_implement()
+            return "", self.image_utils.fallback_image_implement()
         if not self.cloudinary_api_key:
-            return "", image_utils.fallback_image_implement()
+            return "", self.image_utils.fallback_image_implement()
         if not self.cloudinary_api_secret:
-            return "", image_utils.fallback_image_implement()
+            return "", self.image_utils.fallback_image_implement()
         if not folder_name:
-            return "", image_utils.fallback_image_implement()
+            return "", self.image_utils.fallback_image_implement()
         cloudinary_client = CloudinaryClient(self.cloudinary_cloud_name, self.cloudinary_api_key, self.cloudinary_api_secret)
         cloudinary_client.set_folder_name(folder_name)
         url = cloudinary_client.upload_image(input_celeb_picture, celebrity_name)    
     
-        return "Uploaded - Done", image_utils.url_to_image(url)
+        return "Uploaded - Done", self.image_utils.url_to_image(url)
     
     
     def generate_image_stability_ai_handler(self, name, prompt):
         if self.stability_api_key:
-            stability_api = StabilityAPI(self.stability_api_key)
-            output_generated_image = stability_api.text_to_image(name, prompt)
-            return "Image generated using stability AI ", output_generated_image
+            try:
+                stability_api = StabilityAPI(self.stability_api_key)
+                output_generated_image = stability_api.text_to_image(name, prompt)
+                return "Image generated using stability AI ", output_generated_image
+            except Exception as err:
+                return f"{err}", None
         else:
-            image_utils = ImageUtils()
-            return self.NO_API_KEY_ERROR, image_utils.fallback_image_implement()
+            return self.NO_API_KEY_ERROR, None
     
     def generate_image_diffusion_handler(self, name, prompt):
         if name:
-            image_utils = ImageUtils()
             try: 
                 image_generator = DiffusionImageGenerator()
                 output_generated_image = image_generator.generate_image(name, prompt)
                 return "Image generated using stabilityai/stable-diffusion-2 model", output_generated_image
             except Exception as err:
-                return f"Error : {err}", image_utils.fallback_image_implement()
+                return f"Error : {err}", None
         else:
-            return "No Name given", image_utils.fallback_image_implement()
+            return "No Name given", None
             
     def transcribe_handler(self, audio_file):
         if not self.api_key or not audio_file:
@@ -157,8 +155,7 @@ class AskMeUIHandlers:
     
     def create_image_from_prompt_handler(self, input_prompt, input_imagesize, input_num_images):
         if not self.api_key:
-            image_utils = ImageUtils()
-            return self.NO_API_KEY_ERROR, image_utils.fallback_image_implement(),image_utils.fallback_image_array_implement()
+            return self.NO_API_KEY_ERROR, self.image_utils.fallback_image_implement(), self.image_utils.fallback_image_array_implement()
         image_operations = ImageOperations(self.api_key, self.org_id)
         return image_operations.create_image_from_prompt(input_prompt, input_imagesize, input_num_images)
     
@@ -260,7 +257,6 @@ class AskMeUIHandlers:
             print(f"Error {err} in AskMeUIHandlers -> update_description")    
     
     def describe_handler(self, name, prompt, folder_name, description, input_celeb_real_picture, input_celeb_generated_picture):
-        image_utils = ImageUtils()                  
         name = name.strip()
         if not self.api_key or not prompt or not name :            
             return f"Name or prompt is not entered or {self.NO_API_KEY_ERROR}", "", "", "", None, None
@@ -298,7 +294,7 @@ class AskMeUIHandlers:
 
             
             celeb_client.update_describe(name, prompt, description, real_picture_url, generated_image_url)
-            return f"{self.LABEL_GPT_CELEB_SCREEN} - uploaded and saved", name, prompt, description, image_utils.url_to_image(real_picture_url), image_utils.url_to_image(generated_image_url)
+            return f"{self.LABEL_GPT_CELEB_SCREEN} - uploaded and saved", name, prompt, description, self.image_utils.url_to_image(real_picture_url), self.image_utils.url_to_image(generated_image_url)
                 
             
         except Exception as err:

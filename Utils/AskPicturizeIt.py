@@ -51,6 +51,7 @@ class AskPicturizeIt:
        </ul>
        </p>
     """
+
     SECTION_FOOTER = """
        <p>Note: Only PNG is supported here, as of now</p>
        <p>Visit <a href='https://ai.amitpuri.com'>https://ai.amitpuri.com</a></p>
@@ -111,9 +112,12 @@ class AskPicturizeIt:
             wikipedia.set_lang('en')
             try:
                 if result is not None:
-                    wkpage = wikipedia.WikipediaPage(title = result[0])
-                else:
-                    wkpage = None
+                    try:
+                        wkpage = wikipedia.WikipediaPage(title = result[0])
+                    except:
+                        print(result)
+                    finally:
+                        wkpage = None    
             except wikipedia.exceptions.WikipediaException as exception:
                 print(f"Exception Name: {type(exception).__name__}")
                 print(exception)
