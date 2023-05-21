@@ -37,21 +37,38 @@ DESCRIPTION = """<strong>This space uses following:</strong>
 
    <li>Cloudinary <a href='https://cloudinary.com/documentation/python_quickstart'>https://cloudinary.com/documentation/python_quickstart</a></li>
    <li>Gradio App <a href='https://gradio.app/docs'>https://gradio.app/docs</a> in Python and MongoDB</li>
-   <li>Uses Prompt optimizer <a href='https://huggingface.co/microsoft/Promptist'>https://huggingface.co/microsoft/Promptist</a></li>
-   <li>Uses stabilityai/stable-diffusion-2-1 <a href='https://huggingface.co/stabilityai/stable-diffusion-2-1'>https://huggingface.co/stabilityai/stable-diffusion-2-1</a></li>
-   <li>Uses Stability AI <a href='https://stability.ai'>https://stability.ai</a></li>
+   <li>Prompt optimizer <a href='https://huggingface.co/microsoft/Promptist'>https://huggingface.co/microsoft/Promptist</a></li>
+   <li>stabilityai/stable-diffusion-2-1 <a href='https://huggingface.co/stabilityai/stable-diffusion-2-1'>https://huggingface.co/stabilityai/stable-diffusion-2-1</a></li>
+   <li>Stability AI <a href='https://stability.ai'>https://stability.ai</a></li>
    <li>LangChain OpenAI <a href='https://js.langchain.com/docs/getting-started/guide-llm'>https://js.langchain.com/docs/getting-started/guide-llm</a></li>
-   <li>Uses Article Extractor and Summarizer on Rapid API <a href='https://rapidapi.com'>https://rapidapi.com</a></li>   
+   <li>Article Extractor and Summarizer on Rapid API <a href='https://rapidapi.com'>https://rapidapi.com</a></li>   
+   
+   
    </ul>
    </p>
  """
 RESEARCH_SECTION = """
-   <p><strong>Research papers to read</strong>
+   <p><strong>Check it out</strong>
 
    </p>
    <p>
    <ul>
    <li><p>Attention Is All You Need <a href='https://arxiv.org/abs/1706.03762'>https://arxiv.org/abs/1706.03762</a></p></li>
+   <li><p>NLP's ImageNet moment has arrived <a href='https://thegradient.pub/nlp-imagenet'>https://thegradient.pub/nlp-imagenet</a></p></li>   
+   <li><p>Zero-Shot Text-to-Image Generation <a href='https://arxiv.org/abs/2102.12092'>https://arxiv.org/abs/2102.12092</a></p></li>   
+   <li><p>Transformer: A Novel Neural Network Architecture for Language Understanding <a href='https://ai.googleblog.com/2017/08/transformer-novel-neural-network.html'>https://ai.googleblog.com/2017/08/transformer-novel-neural-network.html</a></p></li>
+   <li><p>CS25: Transformers United V2 <a href='https://web.stanford.edu/class/cs25'>https://web.stanford.edu/class/cs25</a></p></li>
+   <li><p>CS25: Stanford Seminar - Transformers United 2023: Introduction to Transformer <a href='https://youtu.be/XfpMkf4rD6E'>https://youtu.be/XfpMkf4rD6E</a></p></li>
+   <li><p>Temperature in NLP <a href='https://lukesalamone.github.io/posts/what-is-temperature'>https://lukesalamone.github.io/posts/what-is-temperature</a></p></li>
+   <li><p>LangChain <a href='https://langchain.com/features.html'>https://langchain.com/features.html</a></p></li>
+   <li><p>LangChain Python <a href='https://python.langchain.com'>https://python.langchain.com</a></p></li>
+   <li><p>An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale <a href='https://arxiv.org/abs/2010.11929'>https://arxiv.org/abs/2010.11929</a></p></li>
+   <li>stable-diffusion-image-variations <a href='https://huggingface.co/spaces/lambdalabs/stable-diffusion-image-variations'>https://huggingface.co/spaces/lambdalabs/stable-diffusion-image-variations</a></li> 
+   <li>text-to-avatar <a href='https://huggingface.co/spaces/lambdalabs/text-to-avatar'>https://huggingface.co/spaces/lambdalabs/text-to-avatar</a></li> 
+   <li>generative-music-visualizer <a href='https://huggingface.co/spaces/lambdalabs/generative-music-visualizer'>https://huggingface.co/spaces/lambdalabs/generative-music-visualizer</a></li> 
+   <li>text-to-pokemon <a href='https://huggingface.co/spaces/lambdalabs/text-to-pokemon'>https://huggingface.co/spaces/lambdalabs/text-to-pokemon</a></li> 
+   <li>image-mixer-demo <a href='https://huggingface.co/spaces/lambdalabs/image-mixer-demo'>https://huggingface.co/spaces/lambdalabs/image-mixer-demo</a></li> 
+   <li>Stable Diffusion <a href='https://huggingface.co/blog/stable_diffusion'>https://huggingface.co/blog/stable_diffusion</a></li> 
    </ul>
    </p>
 """
@@ -85,7 +102,6 @@ SOFTWARE.
 
 """
 FOOTER = """<div class="footer">
-
                     <p>by <a href="https://www.amitpuri.com" style="text-decoration: underline;" target="_blank">Amit Puri</a></p>
             </div>            
         """
@@ -247,9 +263,9 @@ Know your Celebrity
 '''
 
 
-def describe_handler(api_key, org_id, mongo_prompt_read_config, cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, cloudinary_folder, mongo_config, mongo_connection_string, mongo_database, celebs_name_label, question_prompt, know_your_celeb_description, input_celeb_real_picture, input_celeb_generated_picture):
+def describe_handler(api_key, org_id, cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, cloudinary_folder, mongo_config, mongo_connection_string, mongo_database, celebs_name_label, question_prompt, know_your_celeb_description, input_celeb_real_picture, input_celeb_generated_picture):
     uihandlers = AskMeUIHandlers()
-    uihandlers.set_openai_config(api_key, org_id, mongo_prompt_read_config)
+    uihandlers.set_openai_config(api_key, org_id)
     uihandlers.set_mongodb_config(mongo_config, mongo_connection_string, mongo_database)
     uihandlers.set_cloudinary_config(cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret)
     return uihandlers.describe_handler(celebs_name_label, question_prompt, cloudinary_folder, know_your_celeb_description, input_celeb_real_picture, input_celeb_generated_picture)
@@ -313,6 +329,7 @@ def celeb_save_description_handler(mongo_config, mongo_connection_string, mongo_
     if name and know_your_celeb_description:     
         uihandlers = AskMeUIHandlers() 
         uihandlers.set_mongodb_config(mongo_config, mongo_connection_string, mongo_database)
+
         uihandlers.update_description(name, prompt, description)
         return f"ChatGPT description saved for {name}", description
 
@@ -329,24 +346,32 @@ def get_key_traits(name):
 
 def celebs_name_search_handler(input_key, search_text, celebs_chat_history):
     if not input_key or len(input_key.strip())==0:        
-        return None, celebs_chat_history, "Review Configuration tab for keys/settings", "OPENAI_API_KEY is missing"
-
-    if len(search_text.strip())>0:
+        return search_text, celebs_chat_history, "Review Configuration tab for keys/settings, OPENAI_API_KEY is missing."
+    elif len(search_text.strip())>0:
         os.environ["OPENAI_API_KEY"] = input_key
         celebs_chat_history = celebs_chat_history + [(search_text, None)] 
-        llm = OpenAI(temperature=0.7)
-        llm_response = llm(search_text)        
-        return llm_response, celebs_chat_history, "In progress"
+        try:
+            llm = OpenAI(temperature=0.7)
+            llm_response = llm(search_text)        
+            return llm_response, celebs_chat_history, "In progress"
+        except openai.error.AuthenticationError:
+            return None, celebs_chat_history, "Review Configuration tab for keys/settings, OPENAI_API_KEY is invalid."
     else:
         return None, celebs_chat_history, "No Input"
 
-def celebs_name_search_history_handler(search_text, celebs_chat_history):    
-    if search_text:
-        celebrity_name = search_text.replace(".", "").strip()
-        celebs_chat_history[-1][1] = celebrity_name
-        return None, celebrity_name, celebs_chat_history, f"Review Celebrity tab for {celebrity_name} details"
-    else:
-        return None, "John Doe", celebs_chat_history, "Review Configuration tab for keys/settings", "OPENAI_API_KEY is missing or No input"
+def celebs_name_search_history_handler(search_text, celebs_chat_history): 
+    try:
+        if os.environ["OPENAI_API_KEY"] and search_text is not None:
+                celebrity_name = search_text.replace(".", "").strip()
+                if len(celebrity_name)>0:
+                    celebs_chat_history[-1][1] = celebrity_name
+                    return None, celebrity_name, celebs_chat_history, f"Review Celebrity tab for {celebrity_name} details"
+    except Exception as exception:
+        print(f"Exception Name: {type(exception).__name__}")
+        print(exception)
+        pass
+        
+    return search_text, "John Doe", celebs_chat_history, "Review Configuration tab for keys/settings, OPENAI_API_KEY is missing or No input"
 
 
 '''
@@ -374,10 +399,10 @@ def get_keyword_prompts(prompttype):
 
 
 
-def ask_chatgpt_handler(api_key, org_id, mongo_prompt_read_config, mongo_config, mongo_connection_string, mongo_database, prompt, keyword):
+def ask_chatgpt_handler(api_key, org_id, mongo_config, mongo_connection_string, mongo_database, prompt, keyword):
     uihandlers = AskMeUIHandlers()
     uihandlers.set_mongodb_config(mongo_config, mongo_connection_string, mongo_database)
-    uihandlers.set_openai_config(api_key, org_id, mongo_prompt_read_config)
+    uihandlers.set_openai_config(api_key, org_id)
     return uihandlers.ask_chatgpt(prompt, keyword,"codex")
 
 '''
@@ -391,9 +416,9 @@ def get_awesome_chatgpt_prompts(awesome_chatgpt_act):
 
 
 
-def awesome_prompts_handler(api_key, org_id, mongo_prompt_read_config, mongo_config, mongo_connection_string, mongo_database, prompt, keyword):
+def awesome_prompts_handler(api_key, org_id, mongo_config, mongo_connection_string, mongo_database, prompt, keyword):
     uihandlers = AskMeUIHandlers()
-    uihandlers.set_openai_config(api_key, org_id, mongo_prompt_read_config)
+    uihandlers.set_openai_config(api_key, org_id)
     uihandlers.set_mongodb_config(mongo_config, mongo_connection_string, mongo_database)
     return uihandlers.ask_chatgpt(prompt, keyword,"awesome-prompts")
 
@@ -404,10 +429,10 @@ Product Definition
 '''
 
 
-def ask_product_def_handler(api_key, org_id, mongo_prompt_read_config, mongo_config, mongo_connection_string, mongo_database, prompt, keyword):
+def ask_product_def_handler(api_key, org_id, mongo_config, mongo_connection_string, mongo_database, prompt, keyword):
     uihandlers = AskMeUIHandlers()
     uihandlers.set_mongodb_config(mongo_config, mongo_connection_string, mongo_database)
-    uihandlers.set_openai_config(api_key, org_id, mongo_prompt_read_config)
+    uihandlers.set_openai_config(api_key, org_id)
     return uihandlers.ask_chatgpt(prompt, keyword,"product")
 
 
@@ -425,7 +450,7 @@ def update_final_prompt(product_fact_sheet, product_def_question, product_task_e
 Rapid API extract and summarize
 '''
 
-def article_rapidapi_api(api_action, rapidapi_api_key, article_link, length=1):
+def article_rapidapi_api(api_action, rapidapi_api_key, article_link, response_element, length=1):
     querystring = {"url": article_link}
     if api_action == "summarize":
         querystring = {"url": article_link,"length":length, 'html': "TRUE"}
@@ -439,23 +464,25 @@ def article_rapidapi_api(api_action, rapidapi_api_key, article_link, length=1):
     }
 
     response = requests.get(url, headers=headers, params=querystring)
-    
-    return  response.json()
+    try:
+        return response[response_element]
+    except KeyError:
+        return response["error"]    
 
+  
 def article_summarize_handler(rapidapi_api_key, article_link, length):
     if rapidapi_api_key:
-        response = article_rapidapi_api("summarize", rapidapi_api_key, article_link, length)
-        return response["summary"], ""
+        response = article_rapidapi_api("summarize", rapidapi_api_key, article_link, "summary", length)
+        return response, ""
     else:
         return "","Review Configuration tab for keys/settings", "RAPIDAPI_KEY is missing or No input"
-    
+        
 def article_extract_handler(rapidapi_api_key, article_link):
     if rapidapi_api_key:
-        response = article_rapidapi_api("extract", rapidapi_api_key, article_link)
-        return response["content"], ""
+        response = article_rapidapi_api("extract", rapidapi_api_key, article_link, "content")
+        return response, ""
     else:
         return "","Review Configuration tab for keys/settings", "RAPIDAPI_KEY is missing or No input"
-
     
 # Examples fn
 
@@ -474,8 +501,22 @@ article_links_examples = ["https://time.com/6266679/musk-ai-open-letter",
                           "https://futureoflife.org/open-letter/ai-open-letter",
                           "https://github.com/openai/CLIP",
                           "https://arxiv.org/abs/2103.00020",
+                          "https://arxiv.org/abs/2302.14045v2",
+                          "https://arxiv.org/abs/2304.04487",
+                          "https://arxiv.org/abs/2212.09611",
+                          "http://arxiv.org/abs/2305.02897",
+                          "https://arxiv.org/abs/2305.00050",
+                          "https://arxiv.org/abs/2304.14473",
+                          "https://arxiv.org/abs/1607.06450",
+                          "https://arxiv.org/abs/1706.03762",
                           "https://spacy.io/usage/spacy-101",
                           "https://developers.google.com/machine-learning/gan/gan_structure",
+                          "https://thegradient.pub/nlp-imagenet",
+                          "https://arxiv.org/abs/2102.12092",
+                          "https://ai.googleblog.com/2017/08/transformer-novel-neural-network.html",
+                          "https://lukesalamone.github.io/posts/what-is-temperature",
+                          "https://langchain.com/features.html",
+                          "https://arxiv.org/abs/2010.11929",
                           "https://developers.google.com/machine-learning/gan/generative"]
 
 prompt_generator = CelebPromptGenerator()
@@ -499,16 +540,33 @@ prompt_character = PromptTemplate(
 
 prompt_bond_girl = PromptTemplate(
     input_variables=["movie_name"],
-    template="Who was Bond girl co-star in {movie_name}?, answer without any explanation and return only the actor's name?")
+    template="Who was Bond girl co-star in {movie_name}? answer without any explanation and return only the actor's name?")
 
 
 celeb_search_questions = [prompt_character.format(character_name="James Bond",program_name="Casino Royale"),
                         prompt_character.format(character_name="James Bond",program_name="Die Another Day"),
                         prompt_character.format(character_name="James Bond",program_name="Never Say Never Again"),
+                        prompt_character.format(character_name="James Bond",program_name="Spectre"),
+                        prompt_character.format(character_name="James Bond",program_name="Tomorrow Never Dies"),
+                        prompt_character.format(character_name="James Bond",program_name="The World Is Not Enough"),
+                        prompt_character.format(character_name="James Bond",program_name="Goldfinger"),
+                        prompt_character.format(character_name="James Bond",program_name="Octopussy"),
+                        prompt_character.format(character_name="James Bond",program_name="Diamonds Are Forever"),
+                        prompt_character.format(character_name="James Bond",program_name="Licence to Kill"), 
                         prompt_character.format(character_name="Patrick Jane",program_name="The Mentalist"),
                         prompt_character.format(character_name="Raymond Reddington",program_name="The Blacklist"),
+                        prompt_bond_girl.format(movie_name="Casino Royale"),
                         prompt_bond_girl.format(movie_name="GoldenEye"),
-                        prompt_bond_girl.format(movie_name="Die Another Day")]
+                        prompt_bond_girl.format(movie_name="Spectre"),
+                        prompt_bond_girl.format(movie_name="Tomorrow Never Dies"),
+                        prompt_bond_girl.format(movie_name="Goldfinger"),
+                        prompt_bond_girl.format(movie_name="No Time to Die"),
+                        prompt_bond_girl.format(movie_name="Octopussy"),
+                        prompt_bond_girl.format(movie_name="The World Is Not Enough"),
+                        prompt_bond_girl.format(movie_name="Diamonds Are Forever"),
+                        prompt_bond_girl.format(movie_name="Licence to Kill"),                          	
+		                prompt_bond_girl.format(movie_name="Die Another Day")]
+
                                
 '''
 Output and Upload
@@ -570,7 +628,6 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                         label="OpenAI API Key", value=os.getenv("OPENAI_API_KEY"), type="password")
                     org_id = gr.Textbox(
                         label="OpenAI ORG ID (only for org account)", value=os.getenv("OPENAI_ORG_ID"))
-                    mongo_prompt_read_config = gr.Checkbox(label="Read ChatGPT response from MongoDB, if available", info="Prompt read", value="true")
         with gr.Tab("MongoDB"):
             gr.HTML("Sign up here <a href='https://www.mongodb.com/cloud/atlas/register'>https://www.mongodb.com/cloud/atlas/register</a>")            
             with gr.Row():
@@ -603,7 +660,8 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
             gr.HTML("Sign up here <a href='https://rapidapi.com'>https://rapidapi.com</a>")
             with gr.Row():
                 with gr.Column():
-                   rapidapi_api_key = gr.Textbox(label="Article extractor and summarizer API Key", value=os.getenv("RAPIDAPI_KEY"), type="password")   
+                   gr.HTML("Article extractor and summarize <a href='https://rapidapi.com/restyler/api/article-extractor-and-summarizer'>https://rapidapi.com/restyler/api/article-extractor-and-summarizer</a>")
+                   rapidapi_api_key = gr.Textbox(label="API Key", value=os.getenv("RAPIDAPI_KEY"), type="password")   
         with gr.Row():
                 input_num_images = gr.Slider(minimum=1,maximum=10,step=1,
                     label="Number of Images to generate", value=1, info="OpenAI API supports 1-10 images")
@@ -656,6 +714,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                     inputs=input_image_variation
                 )
             with gr.Row():
+
                 label_get_variation = gr.Label(
                         value="Get variation of your favorite celebs", label="Info")                
                 with gr.Column():
@@ -794,9 +853,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                         awesome_chatgpt_prompt = gr.Textbox(label="Awesome ChatGPT Prompt", lines=5)                        
                     with gr.Column(scale=1):
                         label_awesome_chatgpt_here = gr.Label(value="See examples below", label="Info")
-                        ask_awesome_chatgpt_button = gr.Button("Ask ChatGPT")                
-                with gr.Row():            
-                        awesome_chatgpt_response = gr.Textbox(label="Response", lines=20)
+                        ask_awesome_chatgpt_button = gr.Button("Ask ChatGPT")                                
                 with gr.Row():
                     with gr.Column(scale=1):
                         gr.Examples(
@@ -808,6 +865,8 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                             outputs=[awesome_chatgpt_act, awesome_chatgpt_prompt],
                             cache_examples=True,
                         )
+                with gr.Row():            
+                    awesome_chatgpt_response = gr.Textbox(label="Response", lines=20)
             with gr.Tab("Product definition"):
                 gr.HTML(PRODUCT_DEFINITION)
                 with gr.Row():
@@ -850,16 +909,16 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                         )
                 with gr.Row():
                     product_def_response = gr.Textbox(label="Response", lines=10)
-                with gr.Tab("Picturize Product"):
-                    with gr.Row():
-                        with gr.Column(scale=4):
-                            product_def_image_prompt = gr.Textbox(label="Enter Image creation Prompt", lines=5)
-                            product_def_generated_image = gr.Image(label="AI Generated Image",  type="filepath")
-                        with gr.Column(scale=1):                
-                            optimize_prompt_product_def_button = gr.Button("Optimize Prompt")
-                            product_def_generate_button = gr.Button("Picturize it")
-                            product_def_variations_button = gr.Button("More variations")
-                            product_def_image_info_label = gr.Label(value="Picturize it info", label="Info")
+            with gr.Tab("Picturize Product"):
+                with gr.Row():
+                    with gr.Column(scale=4):
+                        product_def_image_prompt = gr.Textbox(label="Enter Image creation Prompt", lines=5)
+                        product_def_generated_image = gr.Image(label="AI Generated Image",  type="filepath")
+                    with gr.Column(scale=1):                
+                        optimize_prompt_product_def_button = gr.Button("Optimize Prompt")
+                        product_def_generate_button = gr.Button("Picturize it")
+                        product_def_variations_button = gr.Button("More variations")
+                        product_def_image_info_label = gr.Label(value="Picturize it info", label="Info")
         with gr.Tab("Article Extractor and Summarizer"):
             gr.HTML("Article Extractor and Summarizer API on RapidAPI <a href='https://rapidapi.com/restyler/api/article-extractor-and-summarizer'>https://rapidapi.com/restyler/api/article-extractor-and-summarizer</a>")
             with gr.Row():                
@@ -868,7 +927,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                     gr.Examples(
                             label="Article examples",
                             examples=article_links_examples,
-                            examples_per_page=15,
+                            examples_per_page=25,
                             inputs=[article_link],
                             outputs=[article_link],
                     )
@@ -936,6 +995,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
         celeb_summarize_handler,
         inputs=[input_key, org_id, know_your_celeb_description_wiki],
         outputs=[label_upload_here, know_your_celeb_description]
+
     )
     
     
@@ -984,19 +1044,19 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
 
     ask_awesome_chatgpt_button.click(
         awesome_prompts_handler,
-        inputs=[input_key, org_id, mongo_prompt_read_config, mongo_config, mongo_connection_string, mongo_database, awesome_chatgpt_prompt, awesome_chatgpt_act],
+        inputs=[input_key, org_id, mongo_config, mongo_connection_string, mongo_database, awesome_chatgpt_prompt, awesome_chatgpt_act],
         outputs=[label_awesome_chatgpt_here, awesome_chatgpt_response]
     )
 
     ask_chatgpt_button.click(
         ask_chatgpt_handler,
-        inputs=[input_key, org_id, mongo_prompt_read_config, mongo_config, mongo_connection_string, mongo_database, ask_prompt, ask_keyword],
+        inputs=[input_key, org_id, mongo_config, mongo_connection_string, mongo_database, ask_prompt, ask_keyword],
         outputs=[label_codex_here, keyword_response_code]
     )    
 
     product_def_ask_button.click(
         ask_product_def_handler,
-        inputs=[input_key, org_id, mongo_prompt_read_config, mongo_config, mongo_connection_string, mongo_database, product_def_final_prompt, product_def_keyword],
+        inputs=[input_key, org_id, mongo_config, mongo_connection_string, mongo_database, product_def_final_prompt, product_def_keyword],
         outputs=[product_def_info_label, product_def_response]
     )   
     
@@ -1035,6 +1095,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
         create_image_from_prompt_handler,
         inputs=[input_key, org_id, product_def_final_prompt, input_imagesize, input_num_images],
         outputs=[product_def_info_label, product_def_generated_image, generated_images_gallery]
+
     )
     
 
@@ -1068,7 +1129,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
 
     describe_button.click(
         describe_handler,
-        inputs=[input_key, org_id, mongo_prompt_read_config, cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, cloudinary_folder, mongo_config, mongo_connection_string, mongo_database, celebs_name_label, question_prompt, know_your_celeb_description, celeb_real_photo,  celeb_generated_image],
+        inputs=[input_key, org_id, cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, cloudinary_folder, mongo_config, mongo_connection_string, mongo_database, celebs_name_label, question_prompt, know_your_celeb_description, celeb_real_photo,  celeb_generated_image],
         outputs=[label_upload_here, celebs_name_label, question_prompt, know_your_celeb_description, celeb_real_photo, celeb_generated_image]
     )
 
@@ -1121,6 +1182,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
         cloudinary_upload,
         inputs=[cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, cloudinary_folder, output_generated_image, name_variation_it],
         outputs=[label_upload_variation,output_generated_image]
+
     )
 
     transcribe_button.click(

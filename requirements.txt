@@ -6,11 +6,15 @@ Pillow
 cloudinary
 pymongo
 numpy
-torch
 diffusers
-accelerate
 transformers
+scipy
+--extra-index-url https://download.pytorch.org/whl/cu113 
+torch
+torchvision
+accelerate
 gpt3-tokenizer
 wikipedia
 langchain
 gradio-tools
+guidance

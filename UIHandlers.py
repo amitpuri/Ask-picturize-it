@@ -16,6 +16,7 @@ class AskMeUIHandlers:
         self.NO_API_KEY_ERROR="Review Configuration tab for keys/settings"
         self.LABEL_GPT_CELEB_SCREEN = "Name, Describe, Preview and Upload"
         self.fallback_image = "https://plchldr.co/i/336x280"
+
         #self.connection_string, self.database = self.get_private_mongo_config()
         #self.stability_api_key = self.get_stabilityai_config()
         #self.api_key, self.org_id = self.get_openai_config()
@@ -43,10 +44,9 @@ class AskMeUIHandlers:
     def set_stabilityai_config(self, stability_api_key):
         self.stability_api_key = stability_api_key
 
-    def set_openai_config(self,api_key, org_id, mongo_prompt_read_config=True):
+    def set_openai_config(self,api_key, org_id):
         self.api_key = api_key
-        self.org_id = org_id
-        self.mongo_prompt_read_config = mongo_prompt_read_config
+        self.org_id = org_id        
 
     def set_mongodb_config(self, mongo_config, connection_string, database):
         if not mongo_config:
@@ -120,7 +120,6 @@ class AskMeUIHandlers:
     def generate_image_stability_ai_handler(self, name, prompt):
         if self.stability_api_key:
             stability_api = StabilityAPI(self.stability_api_key)
-            #prompt = f"A wallpaper photo of {name} by WLOP"
             output_generated_image = stability_api.text_to_image(name, prompt)
             return "Image generated using stability AI ", output_generated_image
         else:
@@ -131,7 +130,6 @@ class AskMeUIHandlers:
         if name:
             image_utils = ImageUtils()
             try: 
-                #prompt = f"A wallpaper photo of {name} by WLOP"
                 image_generator = DiffusionImageGenerator()
                 output_generated_image = image_generator.generate_image(name, prompt)
                 return "Image generated using stabilityai/stable-diffusion-2 model", output_generated_image
@@ -148,8 +146,9 @@ class AskMeUIHandlers:
     
     def create_variation_from_image_handler(self, input_image_variation, input_imagesize, input_num_images):
         if not self.api_key:
-            image_utils = ImageUtils()
-            return self.NO_API_KEY_ERROR, image_utils.fallback_image_implement(),image_utils.fallback_image_array_implement()
+                diffusion_image_generator = DiffusionImageGenerator()
+                label_inference_variation = "Switch to Output tab to review it"
+                return label_inference_variation, diffusion_image_generator.image_variation(input_image_variation),""
         image_operations = ImageOperations(self.api_key, self.org_id)
         return image_operations.create_variation_from_image(input_image_variation, input_imagesize, input_num_images)
     
