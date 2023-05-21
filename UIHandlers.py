@@ -25,6 +25,7 @@ class AskMeUIHandlers:
     def get_cloudinary_config(self):
         return os.getenv("CLOUDINARY_CLOUD_NAME"), os.getenv("CLOUDINARY_API_KEY"), os.getenv("CLOUDINARY_API_SECRET")
 
+
     def get_stabilityai_config(self):
         return os.getenv("STABILITY_API_KEY")
 
@@ -141,7 +142,9 @@ class AskMeUIHandlers:
     def transcribe_handler(self, audio_file):
         if not self.api_key or not audio_file:
             return self.NO_API_KEY_ERROR, self.NO_API_KEY_ERROR
-        transcribe_operations = TranscribeOperations(self.api_key, self.org_id)
+            
+        transcribe_operations = TranscribeOperations()
+        transcribe_operations.setOpenAIConfig(self.api_key, self.org_id)
         return transcribe_operations.transcribe(audio_file)
     
     def create_variation_from_image_handler(self, input_image_variation, input_imagesize, input_num_images):

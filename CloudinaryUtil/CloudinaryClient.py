@@ -26,14 +26,19 @@ class CloudinaryClient:
         print(celebrity_name)
         print(input_celeb_picture)
         print(self.folder_name)
-        response = cloudinary.uploader.upload(input_celeb_picture, public_id=celebrity_name, folder=self.folder_name)
-        return response["url"]
+        try:
+            response = cloudinary.uploader.upload(input_celeb_picture, public_id=celebrity_name, folder=self.folder_name)
+            return response["url"]
+        except cloudinary.exceptions.Error: 
+            raise Exception(result["error"]["message"])
 
     def search_images(self):
-
         if not self.cloud_name or not self.api_key or not self.api_secret or not self.folder_name:
             return None
-        result = cloudinary.Search().expression(f"folder={self.folder_name}").execute()
+        try:         
+            result = cloudinary.Search().expression(f"folder={self.folder_name}").execute()
+        except cloudinary.exceptions.Error: 
+            raise Exception(result["error"]["message"])
         base_url = f"http://res.cloudinary.com/{self.cloud_name}/image/upload/{self.cloudinary_api_version}/{self.folder_name}"
         image_utils = ImageUtils()
         celebs_pictures = [image_utils.write_image(pic["url"], pic["url"][len(base_url)+1:]) for pic in result["resources"]]

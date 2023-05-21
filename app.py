@@ -1,196 +1,34 @@
 import json
 import os
-import random
-import time
 
 import gpt3_tokenizer
-import wikipedia
-import requests
 import gradio as gr
+
 from ExamplesUtil.CelebPromptGenerator import *
 from MongoUtil.StateDataClient import *
 from MongoUtil.CelebDataClient import *
 from UIHandlers import AskMeUIHandlers
 from Utils.Optimizers import Prompt_Optimizer
+from Utils.AskPicturizeIt import *
+from Utils.RapidapiUtil import *
+from OpenAIUtil.TranscribeOperations import *  #transcribe
+
 from langchain.llms import OpenAI
 from langchain.prompts import PromptTemplate
-import torch
-from transformers import pipeline
-
-
 
 #from dotenv import load_dotenv
-
 #load_dotenv()
 
-TITLE = '# [Ask-me-to-picturize-it](https://github.com/amitpuri/Ask-me-to-picturize-it)'
+ask_picturize_it = AskPicturizeIt()
+prompt_optimizer = Prompt_Optimizer()
+prompt_generator = CelebPromptGenerator()
+uihandlers = AskMeUIHandlers()
 
-
-
-DESCRIPTION = """<strong>This space uses following:</strong>
-   <p>
-   <ul>
-
-   <li>OpenAI API Whisper(whisper-1) <a href='https://openai.com/research/whisper'>https://openai.com/research/whisper</a></li>
-   <li>DALL-E <a href='https://openai.com/product/dall-e-2'>https://openai.com/product/dall-e-2</a></li>
-   <li>GPT(gpt-3.5-turbo) <a href='https://openai.com/product/gpt-4'>https://openai.com/product/gpt-4</a></li>
-
-   <li>Cloudinary <a href='https://cloudinary.com/documentation/python_quickstart'>https://cloudinary.com/documentation/python_quickstart</a></li>
-   <li>Gradio App <a href='https://gradio.app/docs'>https://gradio.app/docs</a> in Python and MongoDB</li>
-   <li>Prompt optimizer <a href='https://huggingface.co/microsoft/Promptist'>https://huggingface.co/microsoft/Promptist</a></li>
-   <li>stabilityai/stable-diffusion-2-1 <a href='https://huggingface.co/stabilityai/stable-diffusion-2-1'>https://huggingface.co/stabilityai/stable-diffusion-2-1</a></li>
-   <li>Stability AI <a href='https://stability.ai'>https://stability.ai</a></li>
-   <li>LangChain OpenAI <a href='https://js.langchain.com/docs/getting-started/guide-llm'>https://js.langchain.com/docs/getting-started/guide-llm</a></li>
-   <li>Article Extractor and Summarizer on Rapid API <a href='https://rapidapi.com'>https://rapidapi.com</a></li>   
-   
-   
-   </ul>
-   </p>
- """
-RESEARCH_SECTION = """
-   <p><strong>Check it out</strong>
-
-   </p>
-   <p>
-   <ul>
-   <li><p>Attention Is All You Need <a href='https://arxiv.org/abs/1706.03762'>https://arxiv.org/abs/1706.03762</a></p></li>
-   <li><p>NLP's ImageNet moment has arrived <a href='https://thegradient.pub/nlp-imagenet'>https://thegradient.pub/nlp-imagenet</a></p></li>   
-   <li><p>Zero-Shot Text-to-Image Generation <a href='https://arxiv.org/abs/2102.12092'>https://arxiv.org/abs/2102.12092</a></p></li>   
-   <li><p>Transformer: A Novel Neural Network Architecture for Language Understanding <a href='https://ai.googleblog.com/2017/08/transformer-novel-neural-network.html'>https://ai.googleblog.com/2017/08/transformer-novel-neural-network.html</a></p></li>
-   <li><p>CS25: Transformers United V2 <a href='https://web.stanford.edu/class/cs25'>https://web.stanford.edu/class/cs25</a></p></li>
-   <li><p>CS25: Stanford Seminar - Transformers United 2023: Introduction to Transformer <a href='https://youtu.be/XfpMkf4rD6E'>https://youtu.be/XfpMkf4rD6E</a></p></li>
-   <li><p>Temperature in NLP <a href='https://lukesalamone.github.io/posts/what-is-temperature'>https://lukesalamone.github.io/posts/what-is-temperature</a></p></li>
-   <li><p>LangChain <a href='https://langchain.com/features.html'>https://langchain.com/features.html</a></p></li>
-   <li><p>LangChain Python <a href='https://python.langchain.com'>https://python.langchain.com</a></p></li>
-   <li><p>An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale <a href='https://arxiv.org/abs/2010.11929'>https://arxiv.org/abs/2010.11929</a></p></li>
-   <li>stable-diffusion-image-variations <a href='https://huggingface.co/spaces/lambdalabs/stable-diffusion-image-variations'>https://huggingface.co/spaces/lambdalabs/stable-diffusion-image-variations</a></li> 
-   <li>text-to-avatar <a href='https://huggingface.co/spaces/lambdalabs/text-to-avatar'>https://huggingface.co/spaces/lambdalabs/text-to-avatar</a></li> 
-   <li>generative-music-visualizer <a href='https://huggingface.co/spaces/lambdalabs/generative-music-visualizer'>https://huggingface.co/spaces/lambdalabs/generative-music-visualizer</a></li> 
-   <li>text-to-pokemon <a href='https://huggingface.co/spaces/lambdalabs/text-to-pokemon'>https://huggingface.co/spaces/lambdalabs/text-to-pokemon</a></li> 
-   <li>image-mixer-demo <a href='https://huggingface.co/spaces/lambdalabs/image-mixer-demo'>https://huggingface.co/spaces/lambdalabs/image-mixer-demo</a></li> 
-   <li>Stable Diffusion <a href='https://huggingface.co/blog/stable_diffusion'>https://huggingface.co/blog/stable_diffusion</a></li> 
-   </ul>
-   </p>
-"""
-SECTION_FOOTER = """
-   <p>Note: Only PNG is supported here, as of now</p>
-   <p>Visit <a href='https://ai.amitpuri.com'>https://ai.amitpuri.com</a></p>
-"""
-DISCLAIMER = """MIT License
-
-Copyright (c) 2023 Amit Puri
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-"""
-FOOTER = """<div class="footer">
-                    <p>by <a href="https://www.amitpuri.com" style="text-decoration: underline;" target="_blank">Amit Puri</a></p>
-            </div>            
-        """
-
-
-AWESOME_CHATGPT_PROMPTS = """
-Credits 🧠 Awesome ChatGPT Prompts <a href='https://github.com/f/awesome-chatgpt-prompts'>https://github.com/f/awesome-chatgpt-prompts</a>
-"""
-
-
-PRODUCT_DEFINITION = "<p>Define a product by prompt, picturize it, get variations, save it with a keyword for later retrieval. Credits <a href='https://www.deeplearning.ai/short-courses/chatgpt-prompt-engineering-for-developers'>https://www.deeplearning.ai/short-courses/chatgpt-prompt-engineering-for-developers</a></p>"
-
-LABEL_GPT_CELEB_SCREEN = "Select, Describe, Generate AI Image, Upload and Save"
-
-"""
-Whisper
-"""
-MODEL_NAME = "openai/whisper-large-v2"
-device = 0 if torch.cuda.is_available() else "cpu"
-
-pipe = pipeline(
-    task="automatic-speech-recognition",
-    model=MODEL_NAME,
-    chunk_length_s=30,
-    device=device,
-)
-
-all_special_ids = pipe.tokenizer.all_special_ids
-transcribe_token_id = all_special_ids[-5]
-translate_token_id = all_special_ids[-6]
-
-def transcribe_whisper_large_v2(audio_file, task="transcribe"):    
-    pipe.model.config.forced_decoder_ids = [[2, transcribe_token_id if task=="transcribe" else translate_token_id]]
-    text = pipe(audio_file)["text"]
-    return text, text
-
-'''
-Reusable functions
-'''
-
-WIKI_REQUEST = 'http://en.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&piprop=original&titles='
-
-def get_wikimedia_image(keyword):
-    if keyword:
-        try:
-            result = wikipedia.search(keyword, results = 1)
-        except wikipedia.exceptions.WikipediaException as exception:
-            print(f"Exception Name: {type(exception).__name__}")
-            print(exception)
-            result = None
-            pass
-        wikipedia.set_lang('en')
-        try:
-            if result is not None:
-                wkpage = wikipedia.WikipediaPage(title = result[0])
-            else:
-                wkpage = None
-        except wikipedia.exceptions.WikipediaException as exception:
-            print(f"Exception Name: {type(exception).__name__}")
-            print(exception)
-            wkpage = None
-            pass
-        if wkpage is not None:
-            title = wkpage.title
-            response  = requests.get(WIKI_REQUEST+title)
-            json_data = json.loads(response.text)
-            try:
-                image_link = list(json_data['query']['pages'].values())[0]['original']['source']
-                return image_link
-            except:
-                return None
-
-def get_wiki_page_summary(keyword):
-    if keyword:
-        try:
-            return wikipedia.page(keyword).summary
-        except wikipedia.exceptions.PageError:
-            return f"No page for this keyword {keyword}"
-        except Exception as exception:
-            print(f"Exception Name: {type(exception).__name__}")
-            print(exception)
-
-    
-        
 def generate_optimized_prompt(plain_text):
-    prompt_optimizer = Prompt_Optimizer()
     return prompt_optimizer.generate_optimized_prompt(plain_text);
 	
-def tokenizer_calc(prompt):
+def tokenizer_calc(prompt
+):
     if prompt:
         return f"Tokenizer (tokens/characters) {gpt3_tokenizer.count_tokens(prompt)}, {len(prompt)}"
 
@@ -199,44 +37,30 @@ def get_private_mongo_config():
     return os.getenv("P_MONGODB_URI"), os.getenv("P_MONGODB_DATABASE")
 
 
-def use_case_slider_handler(use_case_slider):    
-    use_case_options={      
-      1:'Ask Codex',
-      2:'Awesome ChatGPT Prompts',
-      3:'Product definition'
-      }
-    return use_case_options.get(use_case_slider,"Invalid use case")
-
-    
-
 '''
 Record voice, transcribe, picturize, create variations, and upload
 '''
 
 
-def get_audio_examples():
-    prompt_generator = CelebPromptGenerator()
-    return prompt_generator.get_audio_examples()
-
-
 def transcribe_handler(api_key, org_id, audio_file):
-    uihandlers = AskMeUIHandlers()
     uihandlers.set_openai_config(api_key, org_id)
     return uihandlers.transcribe_handler(audio_file)
-    
+
+
+def transcribe_whisper_large_v2(audio_file):
+    transcribeOperations = TranscribeOperations()
+    return transcribeOperations.transcribe_whisper_large_v2(audio_file)
 
 '''
 Image generation Examples
 '''
 
 def get_input_examples():
-    prompt_generator = CelebPromptGenerator()
     return prompt_generator.get_input_examples()
 
 
 
 def create_image_from_prompt_handler(api_key, org_id, input_prompt, input_imagesize, input_num_images):
-    uihandlers = AskMeUIHandlers()
     uihandlers.set_openai_config(api_key, org_id)
     return uihandlers.create_image_from_prompt_handler(input_prompt, input_imagesize, input_num_images)
 
@@ -246,14 +70,12 @@ Image variations Examples
 '''
 
 def get_images_examples():
-    prompt_generator = CelebPromptGenerator()
     return prompt_generator.get_images_examples()
 
 
 
 
 def create_variation_from_image_handler(api_key, org_id, input_image_variation, input_imagesize, input_num_images):
-    uihandlers = AskMeUIHandlers()
     uihandlers.set_openai_config(api_key, org_id)
     return uihandlers.create_variation_from_image_handler(input_image_variation, input_imagesize, input_num_images)
 
@@ -264,14 +86,12 @@ Know your Celebrity
 
 
 def describe_handler(api_key, org_id, cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, cloudinary_folder, mongo_config, mongo_connection_string, mongo_database, celebs_name_label, question_prompt, know_your_celeb_description, input_celeb_real_picture, input_celeb_generated_picture):
-    uihandlers = AskMeUIHandlers()
     uihandlers.set_openai_config(api_key, org_id)
     uihandlers.set_mongodb_config(mongo_config, mongo_connection_string, mongo_database)
     uihandlers.set_cloudinary_config(cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret)
     return uihandlers.describe_handler(celebs_name_label, question_prompt, cloudinary_folder, know_your_celeb_description, input_celeb_real_picture, input_celeb_generated_picture)
 
 def celeb_upload_save_real_generated_image_handler(cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, cloudinary_folder, mongo_config, mongo_connection_string, mongo_database, celebs_name_label, question_prompt, know_your_celeb_description, celeb_real_photo, celeb_generated_image):
-    uihandlers = AskMeUIHandlers()
     uihandlers.set_mongodb_config(mongo_config, mongo_connection_string, mongo_database)
     uihandlers.set_cloudinary_config(cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret)
     return uihandlers.celeb_upload_save_real_generated_image(celebs_name_label, question_prompt, know_your_celeb_description, cloudinary_folder, celeb_real_photo, celeb_generated_image)
@@ -279,7 +99,7 @@ def celeb_upload_save_real_generated_image_handler(cloudinary_cloud_name, cloudi
 
 def get_celebrity_detail_from_wiki(celebrity):
     celebrity_name = f"{celebrity}"
-    return get_wiki_page_summary(celebrity_name),get_wikimedia_image(celebrity)
+    return  ask_picturize_it.get_wiki_page_summary(celebrity_name),  ask_picturize_it.get_wikimedia_image(celebrity)
 
     
 def get_celebs_response_change_handler(mongo_config, mongo_connection_string, mongo_database, celebrity, image_prompt_text, key_traits):
@@ -298,20 +118,19 @@ def get_internal_celeb_name(celebrity):
     
 
 def get_celebs_response(mongo_config, mongo_connection_string, mongo_database, celebrity, image_prompt_text, key_traits):
-    uihandlers = AskMeUIHandlers()
     uihandlers.set_mongodb_config(mongo_config, mongo_connection_string, mongo_database)
     internal_celeb_name = get_internal_celeb_name(celebrity)
-    wiki_summary = get_wiki_page_summary(internal_celeb_name)
+    wiki_summary = ask_picturize_it.get_wiki_page_summary(internal_celeb_name)
     key_traits = get_key_traits(celebrity)
     try:
         name, prompt, response, wiki_image, generated_image_url = uihandlers.get_celebs_response_handler(celebrity)
         if wiki_image is None:
-            wiki_image = get_wikimedia_image(celebrity)
+            wiki_image = ask_picturize_it.get_wikimedia_image(celebrity)
         return name, prompt, wiki_summary, response, wiki_image, generated_image_url, f"A realistic photo of {name}", key_traits
     except:
         response = None
         generated_image_url = None
-        wiki_image = get_wikimedia_image(celebrity)
+        wiki_image = ask_picturize_it.get_wikimedia_image(celebrity)
         return celebrity, f"Write a paragraph on {celebrity}", wiki_summary, "", wiki_image, None, f"A realistic photo of {celebrity}", key_traits
         pass
     
@@ -321,15 +140,12 @@ def clear_celeb_details():
 
 
 def celeb_summarize_handler(api_key, org_id, prompt):
-    uihandlers = AskMeUIHandlers()    
     uihandlers.set_openai_config(api_key, org_id)
     return uihandlers.ask_chatgpt_summarize(prompt)
 
 def celeb_save_description_handler(mongo_config, mongo_connection_string, mongo_database, name, prompt, description):
     if name and know_your_celeb_description:     
-        uihandlers = AskMeUIHandlers() 
         uihandlers.set_mongodb_config(mongo_config, mongo_connection_string, mongo_database)
-
         uihandlers.update_description(name, prompt, description)
         return f"ChatGPT description saved for {name}", description
 
@@ -400,7 +216,6 @@ def get_keyword_prompts(prompttype):
 
 
 def ask_chatgpt_handler(api_key, org_id, mongo_config, mongo_connection_string, mongo_database, prompt, keyword):
-    uihandlers = AskMeUIHandlers()
     uihandlers.set_mongodb_config(mongo_config, mongo_connection_string, mongo_database)
     uihandlers.set_openai_config(api_key, org_id)
     return uihandlers.ask_chatgpt(prompt, keyword,"codex")
@@ -410,14 +225,12 @@ Awesome ChatGPT Prompts
 '''
 
 def get_awesome_chatgpt_prompts(awesome_chatgpt_act):
-    prompt_generator = CelebPromptGenerator()
     awesome_chatgpt_prompt = prompt_generator.get_awesome_chatgpt_prompt(awesome_chatgpt_act)
     return awesome_chatgpt_act, awesome_chatgpt_prompt
 
 
 
 def awesome_prompts_handler(api_key, org_id, mongo_config, mongo_connection_string, mongo_database, prompt, keyword):
-    uihandlers = AskMeUIHandlers()
     uihandlers.set_openai_config(api_key, org_id)
     uihandlers.set_mongodb_config(mongo_config, mongo_connection_string, mongo_database)
     return uihandlers.ask_chatgpt(prompt, keyword,"awesome-prompts")
@@ -430,7 +243,6 @@ Product Definition
 
 
 def ask_product_def_handler(api_key, org_id, mongo_config, mongo_connection_string, mongo_database, prompt, keyword):
-    uihandlers = AskMeUIHandlers()
     uihandlers.set_mongodb_config(mongo_config, mongo_connection_string, mongo_database)
     uihandlers.set_openai_config(api_key, org_id)
     return uihandlers.ask_chatgpt(prompt, keyword,"product")
@@ -445,41 +257,19 @@ def update_final_prompt(product_fact_sheet, product_def_question, product_task_e
     final_prompt = final_prompt.replace('\n\n','\n')
     return final_prompt
 
-
-'''
-Rapid API extract and summarize
-'''
-
-def article_rapidapi_api(api_action, rapidapi_api_key, article_link, response_element, length=1):
-    querystring = {"url": article_link}
-    if api_action == "summarize":
-        querystring = {"url": article_link,"length":length, 'html': "TRUE"}
-        
-    url = f"https://article-extractor-and-summarizer.p.rapidapi.com/{api_action}"    
-    
-
-    headers = {
-    	"X-RapidAPI-Key": rapidapi_api_key,
-    	"X-RapidAPI-Host": "article-extractor-and-summarizer.p.rapidapi.com"
-    }
-
-    response = requests.get(url, headers=headers, params=querystring)
-    try:
-        return response[response_element]
-    except KeyError:
-        return response["error"]    
-
   
 def article_summarize_handler(rapidapi_api_key, article_link, length):
+    rapidapi_util = RapidapiUtil()
     if rapidapi_api_key:
-        response = article_rapidapi_api("summarize", rapidapi_api_key, article_link, "summary", length)
+        response = rapidapi_util.article_rapidapi_api("summarize", rapidapi_api_key, article_link, "summary", length)
         return response, ""
     else:
         return "","Review Configuration tab for keys/settings", "RAPIDAPI_KEY is missing or No input"
         
 def article_extract_handler(rapidapi_api_key, article_link):
+    rapidapi_util = RapidapiUtil()
     if rapidapi_api_key:
-        response = article_rapidapi_api("extract", rapidapi_api_key, article_link, "content")
+        response = rapidapi_util.article_rapidapi_api("extract", rapidapi_api_key, article_link, "content")
         return response, ""
     else:
         return "","Review Configuration tab for keys/settings", "RAPIDAPI_KEY is missing or No input"
@@ -519,7 +309,6 @@ article_links_examples = ["https://time.com/6266679/musk-ai-open-letter",
                           "https://arxiv.org/abs/2010.11929",
                           "https://developers.google.com/machine-learning/gan/generative"]
 
-prompt_generator = CelebPromptGenerator()
 audio_examples = prompt_generator.get_audio_examples()
 images_examples = prompt_generator.get_images_examples()
 input_examples = prompt_generator.get_input_examples()
@@ -573,13 +362,11 @@ Output and Upload
 '''
 
 def cloudinary_search(cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, folder_name):
-    uihandlers = AskMeUIHandlers()    
     uihandlers.set_cloudinary_config(cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret)
     return uihandlers.cloudinary_search(folder_name)
 
     
 def cloudinary_upload(cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, folder_name, input_celeb_picture, celebrity_name):
-    uihandlers = AskMeUIHandlers()
     uihandlers.set_cloudinary_config(cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret)
     return uihandlers.cloudinary_upload(folder_name, input_celeb_picture, celebrity_name)
 
@@ -590,13 +377,11 @@ Image generation
 
 
 def generate_image_stability_ai_handler(stability_api_key, celebs_name_label, generate_image_prompt_text):
-    uihandlers = AskMeUIHandlers()
     uihandlers.set_stabilityai_config(stability_api_key)
     return uihandlers.generate_image_stability_ai_handler(celebs_name_label, generate_image_prompt_text)
 
     
 def generate_image_diffusion_handler(celebs_name_label, generate_image_prompt_text):
-    uihandlers = AskMeUIHandlers()
     return uihandlers.generate_image_diffusion_handler(celebs_name_label, generate_image_prompt_text)
     
 
@@ -614,11 +399,11 @@ def generated_images_gallery_on_select(evt: gr.SelectData, generated_images_gall
 
 
 with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabbedScreen:
-    gr.Markdown(TITLE)
+    gr.Markdown(ask_picturize_it.TITLE)
     with gr.Tab("Information"):
-        gr.HTML(DESCRIPTION)
-        gr.HTML(RESEARCH_SECTION)
-        gr.HTML(SECTION_FOOTER)
+        gr.HTML(ask_picturize_it.DESCRIPTION)
+        gr.HTML(ask_picturize_it.RESEARCH_SECTION)
+        gr.HTML(ask_picturize_it.SECTION_FOOTER)
     with gr.Tab("Configuration"):
         with gr.Tab("OpenAI API"):
             gr.HTML("Sign up for API Key here <a href='https://platform.openai.com'>https://platform.openai.com</a>")
@@ -681,7 +466,6 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                     gr.Examples(
                         examples=audio_examples,                   
                         label="Select one from Audio Examples and Transcribe",
-                        fn=get_audio_examples,
                         examples_per_page=6,
                         inputs=audio_file)
                     transcribe_button = gr.Button("Transcribe via Whisper")  
@@ -793,7 +577,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                             celeb_save_description_button = gr.Button("Save Description")
                             describe_button = gr.Button("Describe via ChatGPT and Save")
                             celeb_upload_save_real_generated_image_button = gr.Button("Upload, Save real & generated image")                    
-                label_upload_here = gr.Label(value=LABEL_GPT_CELEB_SCREEN, label="Info")     
+                label_upload_here = gr.Label(value=ask_picturize_it.LABEL_GPT_CELEB_SCREEN, label="Info")     
         with gr.Tab("Ask GPT"):
             with gr.Row():
                 with gr.Column(): 
@@ -846,7 +630,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                 with gr.Row():
                     keyword_response_code = gr.Code(label="Code", language="python", lines=7)               
             with gr.Tab("🧠 Awesome ChatGPT Prompts"):
-                gr.HTML(AWESOME_CHATGPT_PROMPTS)
+                gr.HTML(ask_picturize_it.AWESOME_CHATGPT_PROMPTS)
                 with gr.Row():
                     with gr.Column(scale=4):
                         awesome_chatgpt_act = gr.Textbox(label="Act")
@@ -868,7 +652,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                 with gr.Row():            
                     awesome_chatgpt_response = gr.Textbox(label="Response", lines=20)
             with gr.Tab("Product definition"):
-                gr.HTML(PRODUCT_DEFINITION)
+                gr.HTML(ask_picturize_it.PRODUCT_DEFINITION)
                 with gr.Row():
                     with gr.Column(scale=4):
                         product_def_keyword = gr.Textbox(label="Keyword")
@@ -951,8 +735,8 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                     variation_cloudinary_upload = gr.Button("Upload to Cloudinary")
             label_upload_variation = gr.Label(value="Upload output", label="Output Info")
     with gr.Tab("DISCLAIMER"):
-        gr.Markdown(DISCLAIMER)
-    gr.HTML(FOOTER)
+        gr.Markdown(ask_picturize_it.DISCLAIMER)
+    gr.HTML(ask_picturize_it.FOOTER)
 
 
     celebs_name_search_clear.click(lambda: None, None, celebs_name_chatbot, queue=False)
