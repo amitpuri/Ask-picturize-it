@@ -33,6 +33,23 @@ prompt_optimizer = Prompt_Optimizer()
 prompt_generator = CelebPromptGenerator()
 uihandlers = AskMeUIHandlers()
 
+def get_private_mongo_config():
+    return os.getenv("P_MONGODB_URI"), os.getenv("P_MONGODB_DATABASE")
+   
+def get_searchData_by_uri(uri: str):
+    try:
+        connection_string, database = get_private_mongo_config()           
+        kb_data_client = KBDataClient(connection_string, database)
+        title, summary = kb_data_client.search_data_by_uri(uri)        
+    except Exception as exception:
+        print(f"Exception Name: {type(exception).__name__}")
+        print(exception)
+        title = ""
+        summary = ""
+        pass
+    finally:
+        return title, summary
+
 def extract_youtube_attributes(keyword, output):
     videos = []
     for video in output.videos:
@@ -59,6 +76,15 @@ def extract_arxiv_attributes(keyword, output):
             'summary': pdf.summary
         })
     return papers
+
+def pdf_search_data_by_uri(uri: str):
+    title, summary = get_searchData_by_uri(uri)
+    return uri, title, summary
+    
+def youtube_search_data_by_uri(uri: str):
+    title, summary = get_searchData_by_uri(uri)
+    return uri, title
+
 
 def kb_search(keyword: str, select_medium, max_results: int):
     connection_string, database = get_private_mongo_config()
@@ -139,9 +165,6 @@ def tokenizer_calc(prompt):
     if prompt:
         return f"Tokenizer (tokens/characters) {gpt3_tokenizer.count_tokens(prompt)}, {len(prompt)}"
 
-
-def get_private_mongo_config():
-    return os.getenv("P_MONGODB_URI"), os.getenv("P_MONGODB_DATABASE")
 
 
 '''
@@ -882,12 +905,15 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                     with gr.Row():
                         with gr.Column(scale=4):                    
                             youtube_link = gr.Textbox(label="Enter YouTube link")
+                            youtube_title = gr.Textbox(label="Title")
                             gr.Examples(
                                     label="YouTube examples",
                                     examples=youtube_links_examples,
+                                    fn=youtube_search_data_by_uri,
+                                    cache_examples=True,
                                     examples_per_page=25,
                                     inputs=[youtube_link],
-                                    outputs=[youtube_link],
+                                    outputs=[youtube_link,youtube_title],
                             )
                         with gr.Column(scale=1):  
                             youtube_transcribe_summarize_info_label = gr.Label(value="Transcribe and summarize Output info", label="Info")
@@ -898,12 +924,16 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                     with gr.Row():
                         with gr.Column(scale=4):                    
                             pdf_link = gr.Textbox(label="Enter PDF link")
+                            pdf_title = gr.Textbox(label="Title")
+                            pdf_summary = gr.Textbox(label="Summary")
                             gr.Examples(
                                     label="PDF examples",
+                                    fn=pdf_search_data_by_uri,
+                                    cache_examples=True,
                                     examples=pdf_examples,
                                     examples_per_page=25,
                                     inputs=[pdf_link],
-                                    outputs=[pdf_link],
+                                    outputs=[pdf_link,pdf_title,pdf_summary],
                             )
                         with gr.Column(scale=1):  
                             pdf_summarize_info_label = gr.Label(value="PDF summarize Output info", label="Info")
