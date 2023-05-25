@@ -18,3 +18,13 @@ wikipedia
 langchain
 gradio-tools
 guidance
+youtube-transcript-api
+pytube
+scikit-learn
+unstructured
+pdf2image
+pandas
+chromadb
+tiktoken
+arxiv
+youtube-search

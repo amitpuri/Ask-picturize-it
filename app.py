@@ -7,22 +7,130 @@ import gradio as gr
 from ExamplesUtil.CelebPromptGenerator import *
 from MongoUtil.StateDataClient import *
 from MongoUtil.CelebDataClient import *
+from MongoUtil.KBDataClient import *
 from UIHandlers import AskMeUIHandlers
+
+
 from Utils.Optimizers import Prompt_Optimizer
 from Utils.AskPicturizeIt import *
 from Utils.RapidapiUtil import *
+from Utils.YouTubeSummarizer import *
+from Utils.PDFSummarizer import *
 from OpenAIUtil.TranscribeOperations import *  #transcribe
 
 from langchain.llms import OpenAI
 from langchain.prompts import PromptTemplate
+
+from youtube_search import YoutubeSearch
+import arxiv
 
 #from dotenv import load_dotenv
 #load_dotenv()
 
 ask_picturize_it = AskPicturizeIt()
 prompt_optimizer = Prompt_Optimizer()
+
 prompt_generator = CelebPromptGenerator()
 uihandlers = AskMeUIHandlers()
+
+def extract_youtube_attributes(keyword, output):
+    videos = []
+    for video in output.videos:
+        print(video)
+        video_id = video["id"]
+        url = f"https://www.youtube.com/watch?v={video_id}"
+        videos.append({
+            'kbtype': "youtube",
+            'keyword': keyword ,
+            'title': video["title"],
+            'url': url,
+            'summary': None
+        })
+    return videos
+
+def extract_arxiv_attributes(keyword, output):
+    papers = []
+    for pdf in output.results():
+        papers.append({
+            'kbtype': "pdf",
+            'keyword': keyword ,
+            'title': pdf.title,
+            'url': pdf.pdf_url,
+            'summary': pdf.summary
+        })
+    return papers
+
+def kb_search(keyword: str, select_medium, max_results: int):
+    connection_string, database = get_private_mongo_config()
+    kb_data_client = KBDataClient(connection_string, database)
+    if select_medium == 0:
+        output = YoutubeSearch(keyword, max_results=max_results)
+        try:
+            videos = extract_youtube_attributes(keyword, output)
+            kb_data_client.save_kb_searchdata(videos)
+        except Exception as exception:
+            print(f"Exception Name: {type(exception).__name__}")
+            print(exception)
+            pass
+
+        return output.to_json()
+    elif select_medium == 1:
+        output = arxiv.Search(
+          query = keyword,
+          max_results = max_results,
+          sort_by = arxiv.SortCriterion.SubmittedDate
+        )
+        try:
+            papers = extract_arxiv_attributes(keyword, output)
+            kb_data_client.save_kb_searchdata(papers)
+        except Exception as exception:
+            print(f"Exception Name: {type(exception).__name__}")
+            print(exception)
+            pass
+        return output.results()
+    elif select_medium == 2:
+        outputs = []
+        for page_title in wikipedia.search(keyword, results=max_results):
+            try:
+                page = wikipedia.page(page_title)            
+                outputs.append(page.url)            
+            except (wikipedia.exceptions.PageError, wikipedia.exceptions.DisambiguationError):
+                pass
+        return outputs
+
+def youtube_summarizer_handler(api_key, url):    
+    if api_key:
+        if url and len(url)>0:
+            youtube_summarizer = YouTubeSummarizer()
+            youtube_summarizer.setOpenAIConfig(api_key)
+            return "Transcribe and summarize Output info",  youtube_summarizer.summarize(url)
+        else:
+            return "No URL",  ""
+    else:
+        return AskPicturizeIt.NO_API_KEY_ERROR, ""
+
+def youtube_transcribe_handler(api_key, url):    
+    if api_key:
+        if url and len(url)>0:
+            youtube_summarizer = YouTubeSummarizer()
+            youtube_summarizer.setOpenAIConfig(api_key)
+            return "Transcribe and summarize Output info",  youtube_summarizer.transcribe(url)
+        else:
+            return "No URL",  ""
+    else:
+        return AskPicturizeIt.NO_API_KEY_ERROR, ""
+
+def pdf_summarizer_handler(api_key, url):    
+    if api_key:
+        if url and len(url)>0:
+            pdf_summarizer = PDFSummarizer()
+            pdf_summarizer.setOpenAIConfig(api_key)
+            #TO DO
+            return "PDF summarize Output info", pdf_summarizer.summarize(url)
+        else:
+            return "No URL",  ""
+    else:
+        return AskPicturizeIt.NO_API_KEY_ERROR, ""
 
 def generate_optimized_prompt(plain_text):
     return prompt_optimizer.generate_optimized_prompt(plain_text);
@@ -42,13 +150,15 @@ Record voice, transcribe, picturize, create variations, and upload
 
 
 def transcribe_handler(api_key, org_id, audio_file):
-    uihandlers.set_openai_config(api_key, org_id)
-    return uihandlers.transcribe_handler(audio_file)
+    if audio_file: 
+        uihandlers.set_openai_config(api_key, org_id)
+        return uihandlers.transcribe_handler(audio_file)
 
 
 def transcribe_whisper_large_v2(audio_file):
-    transcribeOperations = TranscribeOperations()
-    return transcribeOperations.transcribe_whisper_large_v2(audio_file)
+    if audio_file: 
+        transcribeOperations = TranscribeOperations()
+        return transcribeOperations.transcribe_whisper_large_v2(audio_file)
 
 '''
 Image generation Examples
@@ -70,8 +180,6 @@ Image variations Examples
 
 def get_images_examples():
     return prompt_generator.get_images_examples()
-
-
 
 
 def create_variation_from_image_handler(api_key, org_id, input_image_variation, input_imagesize, input_num_images):
@@ -260,22 +368,58 @@ def update_final_prompt(product_fact_sheet, product_def_question, product_task_e
 def article_summarize_handler(rapidapi_api_key, article_link, length):
     rapidapi_util = RapidapiUtil()
     if rapidapi_api_key:
-        response = rapidapi_util.article_rapidapi_api("summarize", rapidapi_api_key, article_link, "summary", length)
-        return response, ""
+        if article_link and len(article_link)>0:
+            response = rapidapi_util.article_rapidapi_api("summarize", rapidapi_api_key, article_link, "summary", length)
+            return response, ""
+        else:            
+            return "No URL",  ""
     else:
         return "","Review Configuration tab for keys/settings", "RAPIDAPI_KEY is missing or No input"
         
 def article_extract_handler(rapidapi_api_key, article_link):
     rapidapi_util = RapidapiUtil()
     if rapidapi_api_key:
-        response = rapidapi_util.article_rapidapi_api("extract", rapidapi_api_key, article_link, "content")
-        return response, ""
+        if article_link and len(article_link)>0:
+            response = rapidapi_util.article_rapidapi_api("extract", rapidapi_api_key, article_link, "content")
+            return response, ""
+        else:
+            return "No URL",  ""
     else:
         return "","Review Configuration tab for keys/settings", "RAPIDAPI_KEY is missing or No input"
     
 # Examples fn
 
 
+
+def PDF_Examples():
+    connection_string, database = get_private_mongo_config()           
+    kb_data_client = KBDataClient(connection_string, database)
+    return kb_data_client.list_kb_searchData("pdf")
+
+def YouTube_Examples():
+    connection_string, database = get_private_mongo_config()           
+    kb_data_client = KBDataClient(connection_string, database)
+    return kb_data_client.list_kb_searchData("youtube")
+
+keyword_examples = sorted(["Stable Diffusion", "Zero-shot classification", "Generative AI based Apps ", "Generative AI", "Vector Database",
+                    "Foundation Capital FMOps ", "Foundational models AI", "Prompt Engineering", "Hyperparameter optimization","Embeddings Search"
+                    "Computer Vision","Convolutional Neural Network","Recurrent neural network",
+                    "XGBoost Grid Search", "Random Search" , "Bayesian Optimization", "NLP", "GPT","Reinforcement learning",
+                    "OpenAI embeddings","ChatGPT","Python LangChain LLM", "Popular LLM models", "Hugging Face Transformer",
+                    "Confusion Matrix", "Feature Vector", "Gradient Accumulation","Loss Functions","Cross Entropy",
+                    "Root Mean Square Error", "Cosine similarity", "Euclidean distance","Dot product similarity",
+                    "Machine Learning","Artificial Intelligence","Deep Learning", "Neural Networks", "Data Science","Supervised Learning",
+                    "Unsupervised Learning","Reinforcement Learning", "Natural Language Processing", "Computer Vision", "Big Data",
+                    "Data Mining", "Feature Extraction", "Dimensionality Reduction", "Ensemble Learning", "Transfer Learning",
+                    "Decision Trees","Support Vector Machines", "Clustering","Regression",                    
+                    "Language Models","Transformer","BERT","OpenAI","Text Generation","Text Classification",
+                    "Chatbots","Summarization","Question Answering","Named Entity Recognition","Sentiment Analysis",
+                    "Pretraining","Finetuning","Contextual Embeddings","Attention Mechanism",
+                    "Pinecone, a fully managed vector database", "Weaviate, an open-source vector search engine",
+                    "Redis as a vector database","Qdrant, a vector search engine", "Milvus, a vector database built for scalable similarity search"
+                    "Chroma, an open-source embeddings store","Typesense, fast open source vector search",
+                    "Zilliz, data infrastructure, powered by Milvus", "Lexical-based search","Graph-based search","Embedding-based search"
+                   ])
 
 audio_examples = prompt_generator.get_audio_examples()
 images_examples = prompt_generator.get_images_examples()
@@ -325,6 +469,10 @@ article_links_examples = ["https://time.com/6266679/musk-ai-open-letter",
                           "https://langchain.com/features.html",
                           "https://arxiv.org/abs/2010.11929",
                           "https://developers.google.com/machine-learning/gan/generative"]
+
+pdf_examples = PDF_Examples()
+youtube_links_examples = YouTube_Examples()
+
 
 prompt_character = PromptTemplate(
     input_variables=["character_name","program_name"],
@@ -383,7 +531,8 @@ def generate_image_stability_ai_handler(stability_api_key, celebs_name_label, ge
     if generate_image_prompt_text and len(generate_image_prompt_text)>0:
         uihandlers.set_stabilityai_config(stability_api_key)
         return uihandlers.generate_image_stability_ai_handler(celebs_name_label, generate_image_prompt_text)
-
+    else:
+        return "Please a prompt for image", None
     
 def generate_image_diffusion_handler(generate_image_prompt_text):
     if generate_image_prompt_text and len(generate_image_prompt_text)>0:
@@ -563,7 +712,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                                     )                        
                     with gr.Column(scale=1):
                         clear_celeb_details_button = gr.Button("Clear")                
-                        generate_image_prompt_text = gr.Textbox(label="Image generation prompt", value="John Doe")
+                        generate_image_prompt_text = gr.Textbox(label="Image generation prompt")
                         label_describe_gpt = gr.Label(value="Generate or Upload Image to Save", label="Info")
                         with gr.Accordion("Options..", open=True):
                             generate_image_stability_ai_button = gr.Button("via Stability AI")
@@ -707,24 +856,76 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                         product_def_generate_button = gr.Button("Picturize it")
                         product_def_variations_button = gr.Button("More variations")
                         product_def_image_info_label = gr.Label(value="Picturize it info", label="Info")
-        with gr.Tab("Article Extractor and Summarizer"):
-            gr.HTML("Article Extractor and Summarizer API on RapidAPI <a href='https://rapidapi.com/restyler/api/article-extractor-and-summarizer'>https://rapidapi.com/restyler/api/article-extractor-and-summarizer</a>")
-            with gr.Row():                
-                with gr.Column(scale=4):                    
-                    article_link = gr.Textbox(label="Enter Article link")
-                    gr.Examples(
-                            label="Article examples",
-                            examples=article_links_examples,
-                            examples_per_page=25,
-                            inputs=[article_link],
-                            outputs=[article_link],
-                    )
-                with gr.Column(scale=1):  
-                    article_summarize_extract_info_label = gr.Label(value="Article Extractor and Summarizer Output info", label="Info")
-                    article_summarize_length = gr.Slider(minimum=1, maximum=20, step=1, label="Length", value=1, info="Length")
-                    article_article_summarize_button = gr.Button("Summarize")
-                    article_article_extract_button = gr.Button("Extract")            
-            article_summary = gr.Code(label="Article response", language="html", lines=10)
+        with gr.Tab("Summarizer"):
+            with gr.Tab("Article Extractor and Summarizer"):
+                gr.HTML("Article Extractor and Summarizer API on RapidAPI <a href='https://rapidapi.com/restyler/api/article-extractor-and-summarizer'>https://rapidapi.com/restyler/api/article-extractor-and-summarizer</a>")
+                with gr.Row():                
+                    with gr.Column(scale=4):                    
+                        article_link = gr.Textbox(label="Enter Article link")
+                        gr.Examples(
+                                label="Article examples",
+                                examples=article_links_examples,
+                                examples_per_page=25,
+                                inputs=[article_link],
+                                outputs=[article_link],
+                        )
+                    with gr.Column(scale=1):  
+                        article_summarize_extract_info_label = gr.Label(value="Article Extractor and Summarizer Output info", label="Info")
+                        article_summarize_length = gr.Slider(minimum=1, maximum=20, step=1, label="Length", value=1, info="Length")
+                        article_article_summarize_button = gr.Button("Summarize")
+                        article_article_extract_button = gr.Button("Extract")            
+                article_summary = gr.Code(label="Article response", language="html", lines=10)
+            with gr.Tab("Summarizer via LLM using LangChain"):
+                gr.HTML("Credit <a href='https://github.com/gkamradt/langchain-tutorials'>https://github.com/gkamradt/langchain-tutorials</a>")
+                gr.HTML("Work in progress......")
+                with gr.Tab("YouTube"):                    
+                    with gr.Row():
+                        with gr.Column(scale=4):                    
+                            youtube_link = gr.Textbox(label="Enter YouTube link")
+                            gr.Examples(
+                                    label="YouTube examples",
+                                    examples=youtube_links_examples,
+                                    examples_per_page=25,
+                                    inputs=[youtube_link],
+                                    outputs=[youtube_link],
+                            )
+                        with gr.Column(scale=1):  
+                            youtube_transcribe_summarize_info_label = gr.Label(value="Transcribe and summarize Output info", label="Info")
+                            youtube_transcribe_button = gr.Button("Transcribe")
+                            youtube_summarize_button = gr.Button("Summarize")
+                    youtube_transcribe_summary = gr.Textbox(label="YouTube summary response", lines=10)
+                with gr.Tab("PDF"):
+                    with gr.Row():
+                        with gr.Column(scale=4):                    
+                            pdf_link = gr.Textbox(label="Enter PDF link")
+                            gr.Examples(
+                                    label="PDF examples",
+                                    examples=pdf_examples,
+                                    examples_per_page=25,
+                                    inputs=[pdf_link],
+                                    outputs=[pdf_link],
+                            )
+                        with gr.Column(scale=1):  
+                            pdf_summarize_info_label = gr.Label(value="PDF summarize Output info", label="Info")
+                            pdf_summarize_button = gr.Button("Read PDF")
+                    pdf_summary = gr.Textbox(label="PDF response", lines=10) 
+            with gr.Tab("KB Search"):
+                gr.HTML("Work in progress......")
+                with gr.Row():
+                    with gr.Column(scale=4):                    
+                        keyword_search = gr.Textbox(label="Keyword", placeholder="Search Arxiv, YouTube, wikipedia?")
+                        gr.Examples(
+                                label="Keyword examples",
+                                examples=keyword_examples,
+                                examples_per_page=150,
+                                inputs=[keyword_search],
+                                outputs=[keyword_search],
+                        )
+                    with gr.Column(scale=1):  
+                        max_results = gr.Slider(minimum=10,maximum=100,step=5,label="Max Results", value=10, info="Search results output")
+                        select_medium = gr.Dropdown(["YouTube", "Arxiv","Wikipedia"], label="Search in", value="Arxiv", type="index" )
+                        keyword_search_button = gr.Button("Search")    
+                keyword_search_output = gr.JSON()                        
     with gr.Tab("Output"):
             with gr.Row():            
                 with gr.Column(scale=4):
@@ -745,6 +946,32 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
 
     celebs_name_search_clear.click(lambda: None, None, celebs_name_chatbot, queue=False)
 
+    youtube_transcribe_button.click(
+        youtube_transcribe_handler,
+        inputs=[input_key, youtube_link],
+        outputs=[youtube_transcribe_summarize_info_label, youtube_transcribe_summary]
+    )
+
+    keyword_search_button.click(
+        fn=kb_search, 
+        inputs=[keyword_search,select_medium, max_results], 
+        outputs=keyword_search_output
+    )
+    
+    pdf_summarize_button.click(
+        pdf_summarizer_handler,
+        inputs=[input_key, pdf_link],
+        outputs=[pdf_summarize_info_label, pdf_summary]
+    )
+    
+    
+    youtube_summarize_button.click(
+        youtube_summarizer_handler,
+        inputs=[input_key, youtube_link],
+        outputs=[youtube_transcribe_summarize_info_label, youtube_transcribe_summary]
+    )
+    
+    
     article_article_summarize_button.click(
         article_summarize_handler,        
         inputs=[rapidapi_api_key, article_link, article_summarize_length], 
@@ -879,14 +1106,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
         outputs=[product_def_info_label]
     )
 
-    product_def_generate_button.click(
-        create_image_from_prompt_handler,
-        inputs=[input_key, org_id, product_def_final_prompt, input_imagesize, input_num_images],
-        outputs=[product_def_info_label, product_def_generated_image, generated_images_gallery]
-
-    )
     
-
     input_prompt.change(
         fn=tokenizer_calc,
         inputs=[input_prompt],

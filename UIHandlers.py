@@ -2,6 +2,7 @@ import os
 from CloudinaryUtil.CloudinaryClient import *  #set_folder_name,search_images, upload_image
 from MongoUtil.CelebDataClient import * #get_describe, get_celebs_response
 from MongoUtil.StateDataClient import *
+from MongoUtil.KBDataClient import *
 from OpenAIUtil.ImageOperations import * #create_image_from_prompt, create_variation_from_image
 from OpenAIUtil.TranscribeOperations import *  #transcribe
 from OpenAIUtil.TextOperations import *
@@ -300,3 +301,17 @@ class AskMeUIHandlers:
         except Exception as err:
             return f"Error {err} in AskMeUIHandlers -> describe_handler", "", "", "", None, None
     
+    def save_pdf_kb_searchData(self, keyword: str, title: str, url: str, summary: str):
+        try: 
+            kb_data_client = KBDataClient(self.connection_string, self.database)
+            kb_data_client.save_kb_searchdata("pdf", keyword, title, url, summary)
+        except Exception as err:
+            return print(f"Error {err} in AskMeUIHandlers -> save_pdf_kb_searchData")
+
+    def save_youtube_kb_searchData(self, output):
+        try: 
+            kb_data_client = KBDataClient(self.connection_string, self.database)
+            kb_data_client.save_kb_searchdata(output)   
+        except Exception as err:
+            return print(f"Error {err} in AskMeUIHandlers -> save_youtube_kb_searchData")
+        

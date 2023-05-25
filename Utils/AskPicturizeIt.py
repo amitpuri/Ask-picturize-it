@@ -6,30 +6,22 @@ class AskPicturizeIt:
     TITLE = '# [Ask-me-to-picturize-it](https://github.com/amitpuri/Ask-me-to-picturize-it)'
     DESCRIPTION = """<strong>This space uses following:</strong>
        <p>
-       <ul>
-    
-       <li>OpenAI API Whisper(whisper-1) <a href='https://openai.com/research/whisper'>https://openai.com/research/whisper</a></li>
-    
+       <ul>    
+       <li>OpenAI API Whisper(whisper-1) <a href='https://openai.com/research/whisper'>https://openai.com/research/whisper</a></li>    
        <li>DALL-E <a href='https://openai.com/product/dall-e-2'>https://openai.com/product/dall-e-2</a></li>
-       <li>GPT(gpt-3.5-turbo) <a href='https://openai.com/product/gpt-4'>https://openai.com/product/gpt-4</a></li>
-    
+       <li>GPT(gpt-3.5-turbo) <a href='https://openai.com/product/gpt-4'>https://openai.com/product/gpt-4</a></li>  
        <li>Cloudinary <a href='https://cloudinary.com/documentation/python_quickstart'>https://cloudinary.com/documentation/python_quickstart</a></li>
        <li>Gradio App <a href='https://gradio.app/docs'>https://gradio.app/docs</a> in Python and MongoDB</li>
        <li>Prompt optimizer <a href='https://huggingface.co/microsoft/Promptist'>https://huggingface.co/microsoft/Promptist</a></li>
        <li>stabilityai/stable-diffusion-2-1 <a href='https://huggingface.co/stabilityai/stable-diffusion-2-1'>https://huggingface.co/stabilityai/stable-diffusion-2-1</a></li>
        <li>Stability AI <a href='https://stability.ai'>https://stability.ai</a></li>
-       <li>LangChain OpenAI <a href='https://js.langchain.com/docs/getting-started/guide-llm'>https://js.langchain.com/docs/getting-started/guide-llm</a></li>
+       <li>LangChain OpenAI <a href='https://python.langchain.com/en/latest/modules/models/llms.html'>https://python.langchain.com/en/latest/modules/models/llms.html</a></li>
        <li>Article Extractor and Summarizer on Rapid API <a href='https://rapidapi.com'>https://rapidapi.com</a></li>   
-       
-       
        </ul>
        </p>
      """
     RESEARCH_SECTION = """
-       <p><strong>Check it out</strong>
-    
-       </p>
-
+       <p><strong>Check it out</strong></p>
        <p>
        <ul>
        <li><p>Attention Is All You Need <a href='https://arxiv.org/abs/1706.03762'>https://arxiv.org/abs/1706.03762</a></p></li>
@@ -39,8 +31,12 @@ class AskPicturizeIt:
        <li><p>CS25: Transformers United V2 <a href='https://web.stanford.edu/class/cs25'>https://web.stanford.edu/class/cs25</a></p></li>
        <li><p>CS25: Stanford Seminar - Transformers United 2023: Introduction to Transformer <a href='https://youtu.be/XfpMkf4rD6E'>https://youtu.be/XfpMkf4rD6E</a></p></li>
        <li><p>Temperature in NLP <a href='https://lukesalamone.github.io/posts/what-is-temperature'>https://lukesalamone.github.io/posts/what-is-temperature</a></p></li>
+       <li><p>openai-cookbook <a href='https://github.com/openai/openai-cookbook'>https://github.com/openai/openai-cookbook</a></p></li>       
+       <li><p>Open LLM Leaderboard <a href='https://huggingface.co/spaces/HuggingFaceH4/open_llm_leaderboard'>https://huggingface.co/spaces/HuggingFaceH4/open_llm_leaderboard</a></p></li>
        <li><p>LangChain <a href='https://langchain.com/features.html'>https://langchain.com/features.html</a></p></li>
        <li><p>LangChain Python <a href='https://python.langchain.com'>https://python.langchain.com</a></p></li>
+       <li><p>LangChain for Gen AI and LLMs<a href='https://www.youtube.com/playlist?list=PLIUOU7oqGTLieV9uTIFMm6_4PXg-hlN6F'>https://www.youtube.com/playlist?list=PLIUOU7oqGTLieV9uTIFMm6_4PXg-hlN6F</a></p></li>
+       <li><p>Vector Similarity Explained <a href='https://www.pinecone.io/learn/vector-similarity'>https://www.pinecone.io/learn/vector-similarity</a></p></li>
        <li><p>An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale <a href='https://arxiv.org/abs/2010.11929'>https://arxiv.org/abs/2010.11929</a></p></li>
        <li>stable-diffusion-image-variations <a href='https://huggingface.co/spaces/lambdalabs/stable-diffusion-image-variations'>https://huggingface.co/spaces/lambdalabs/stable-diffusion-image-variations</a></li> 
        <li>text-to-avatar <a href='https://huggingface.co/spaces/lambdalabs/text-to-avatar'>https://huggingface.co/spaces/lambdalabs/text-to-avatar</a></li> 
@@ -48,6 +44,7 @@ class AskPicturizeIt:
        <li>text-to-pokemon <a href='https://huggingface.co/spaces/lambdalabs/text-to-pokemon'>https://huggingface.co/spaces/lambdalabs/text-to-pokemon</a></li> 
        <li>image-mixer-demo <a href='https://huggingface.co/spaces/lambdalabs/image-mixer-demo'>https://huggingface.co/spaces/lambdalabs/image-mixer-demo</a></li> 
        <li>Stable Diffusion <a href='https://huggingface.co/blog/stable_diffusion'>https://huggingface.co/blog/stable_diffusion</a></li> 
+       <li>CoDi: Any-to-Any Generation via Composable Diffusion <a href='https://codi-gen.github.io'>https://codi-gen.github.io</a></li>        
        </ul>
        </p>
     """
@@ -96,6 +93,7 @@ class AskPicturizeIt:
     
     LABEL_GPT_CELEB_SCREEN = "Select, Describe, Generate AI Image, Upload and Save"
 
+    NO_API_KEY_ERROR="Review Configuration tab for keys/settings"
 
    
     def get_wikimedia_image(self, keyword):
