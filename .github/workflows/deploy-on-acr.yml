@@ -1,0 +1,57 @@
+name: Build, use ACR deploy MkDocs pages
+on:
+  workflow_dispatch:
+env:
+  IMAGE_NAME: ask-me-pcturized
+  
+jobs:
+  # Build job
+  build:
+    name: Build Mkdocs pages and upload artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11.2' 
+
+      # mkdocs build
+      - name: mkdocs build
+        run: |
+          pip install -r requirements.txt
+          cd readthedocs
+          mkdocs build -d _site
+      - uses: actions/upload-artifact@v3
+        with:
+              name: mkdocs-artifact
+              path: ${{ github.workspace }}
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v1
+
+  # Containerize job to azure container registry
+  containerize-azure-registry:
+    name: Publish image to Azure Container Registry
+    runs-on: ubuntu-latest
+    env:
+      REGISTRY: azurecr.io
+
+    needs: build
+    permissions: 
+      pages: write
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: mkdocs-artifact
+          path: .
+      - uses: azure/docker-login@v1
+        name: Log in to the Container registry
+        with:
+          login-server: ${{ secrets.AZURE_REGISTRY_NAME}}.azurecr.io
+          username: ${{ secrets.AZURE_REGISTRY_USER}}
+          password: ${{ secrets.AZURE_REGISTRY_PASSWORD}}
+      - name: Deploy image
+        run: |
+          docker build . --file Dockerfile --tag ${{ secrets.AZURE_REGISTRY_USER}}.${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          docker push ${{ secrets.AZURE_REGISTRY_USER}}.${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
