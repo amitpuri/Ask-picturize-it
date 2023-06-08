@@ -1,0 +1,64 @@
+name: Build, use gcloud deploy MkDocs pages
+
+on:
+  workflow_dispatch:
+env:
+  IMAGE_NAME: ask-me-picturize
+  
+jobs:
+  # Build job
+  build:
+    name: Build Mkdocs pages and upload artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11.2' 
+
+      # mkdocs build
+      - name: mkdocs build
+        run: |
+          pip install -r requirements.txt
+          cd readthedocs
+          mkdocs build -d _site
+      - uses: actions/upload-artifact@v3
+        with:
+              name: mkdocs-artifact
+              path: ${{ github.workspace }}
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v1
+
+
+  # Containerize job to gcloud artifactory registry
+  containerize-gcp-registry:
+    name: Publish image to gcloud artifactory Registry
+    runs-on: ubuntu-latest
+    env:
+      GCLOUD_REGISTRY: gcr.io
+      REGISTRY: us-east1-docker.pkg.dev
+      REPO_NAME: "ai-enabled"
+    needs: build
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: mkdocs-artifact
+          path: .
+      - uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GOOGLE_CREDENTIALS }}
+      - name: Set up gcloud Cloud SDK environment
+        uses: google-github-actions/setup-gcloud@v1.1.1
+        with:
+          project_id: ${{ secrets.PROJECT_ID }}
+      - name: Configure Docker
+        run: |
+          gcloud auth configure-docker ${{ env.REGISTRY }}
+      - name: Deploy image
+        run: |
+          docker build . --file Dockerfile --tag ${{ env.REGISTRY }}/${{ secrets.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}
+          docker push ${{ env.REGISTRY }}/${{ secrets.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}
