@@ -215,8 +215,8 @@ Know your Celebrity
 '''
 
 
-def describe_handler(api_key, org_id, cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, cloudinary_folder, mongo_config, mongo_connection_string, mongo_database, celebs_name_label, question_prompt, know_your_celeb_description, input_celeb_real_picture, input_celeb_generated_picture):
-    uihandlers.set_openai_config(api_key, org_id)
+def describe_handler(api_key, org_id, model_name, cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, cloudinary_folder, mongo_config, mongo_connection_string, mongo_database, celebs_name_label, question_prompt, know_your_celeb_description, input_celeb_real_picture, input_celeb_generated_picture):
+    uihandlers.set_openai_config(api_key, model_name, org_id)
     uihandlers.set_mongodb_config(mongo_config, mongo_connection_string, mongo_database)
     uihandlers.set_cloudinary_config(cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret)
     return uihandlers.describe_handler(celebs_name_label, question_prompt, cloudinary_folder, know_your_celeb_description, input_celeb_real_picture, input_celeb_generated_picture)
@@ -345,9 +345,9 @@ def get_keyword_prompts(prompttype):
 
 
 
-def ask_chatgpt_handler(api_key, org_id, mongo_config, mongo_connection_string, mongo_database, prompt, keyword):
+def ask_chatgpt_handler(api_key, org_id, model_name, mongo_config, mongo_connection_string, mongo_database, prompt, keyword):
     uihandlers.set_mongodb_config(mongo_config, mongo_connection_string, mongo_database)
-    uihandlers.set_openai_config(api_key, org_id)
+    uihandlers.set_openai_config(api_key, model_name, org_id)
     return uihandlers.ask_chatgpt(prompt, keyword,"codex")
 
 '''
@@ -360,8 +360,8 @@ def get_awesome_chatgpt_prompts(awesome_chatgpt_act):
 
 
 
-def awesome_prompts_handler(api_key, org_id, mongo_config, mongo_connection_string, mongo_database, prompt, keyword):
-    uihandlers.set_openai_config(api_key, org_id)
+def awesome_prompts_handler(api_key, org_id, model_name,  mongo_config, mongo_connection_string, mongo_database, prompt, keyword):
+    uihandlers.set_openai_config(api_key, model_name, org_id)
     uihandlers.set_mongodb_config(mongo_config, mongo_connection_string, mongo_database)
     return uihandlers.ask_chatgpt(prompt, keyword,"awesome-prompts")
 
@@ -372,9 +372,9 @@ Product Definition
 '''
 
 
-def ask_product_def_handler(api_key, org_id, mongo_config, mongo_connection_string, mongo_database, prompt, keyword):
+def ask_product_def_handler(api_key, org_id, model_name,  mongo_config, mongo_connection_string, mongo_database, prompt, keyword):
     uihandlers.set_mongodb_config(mongo_config, mongo_connection_string, mongo_database)
-    uihandlers.set_openai_config(api_key, org_id)
+    uihandlers.set_openai_config(api_key, model_name, org_id)
     return uihandlers.ask_chatgpt(prompt, keyword,"product")
 
 
@@ -425,14 +425,15 @@ def YouTube_Examples():
     return kb_data_client.list_kb_searchData("youtube")
 
 keyword_examples = sorted(["Stable Diffusion", "Zero-shot classification", "Generative AI based Apps ", "Generative AI", "Vector Database",
-                    "Foundation Capital FMOps ", "Foundational models AI", "Prompt Engineering", "Hyperparameter optimization","Embeddings Search"
-                    "Computer Vision","Convolutional Neural Network","Recurrent neural network",
+                    "Foundation Capital FMOps ", "Foundational models AI", "Prompt Engineering", 
+        		    "Hyperparameter optimization","Embeddings Search",
+                    "Convolutional Neural Network","Recurrent neural network",
                     "XGBoost Grid Search", "Random Search" , "Bayesian Optimization", "NLP", "GPT","Reinforcement learning",
                     "OpenAI embeddings","ChatGPT","Python LangChain LLM", "Popular LLM models", "Hugging Face Transformer",
                     "Confusion Matrix", "Feature Vector", "Gradient Accumulation","Loss Functions","Cross Entropy",
                     "Root Mean Square Error", "Cosine similarity", "Euclidean distance","Dot product similarity",
-                    "Machine Learning","Artificial Intelligence","Deep Learning", "Neural Networks", "Data Science","Supervised Learning",
-                    "Unsupervised Learning","Reinforcement Learning", "Natural Language Processing", "Computer Vision", "Big Data",
+                    "Machine Learning","Artificial Intelligence","Deep Learning", "Neural Networks", "Data Science",
+                    "Supervised Learning","Unsupervised Learning","Reinforcement Learning", "Natural Language Processing", "Computer Vision", "Big Data",
                     "Data Mining", "Feature Extraction", "Dimensionality Reduction", "Ensemble Learning", "Transfer Learning",
                     "Decision Trees","Support Vector Machines", "Clustering","Regression",                    
                     "Language Models","Transformer","BERT","OpenAI","Text Generation","Text Classification",
@@ -590,7 +591,12 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                     input_key = gr.Textbox(
                         label="OpenAI API Key", value=os.getenv("OPENAI_API_KEY"), type="password")
                     org_id = gr.Textbox(
-                        label="OpenAI ORG ID (only for org account)", value=os.getenv("OPENAI_ORG_ID"))
+                        label="OpenAI ORG ID (only for org account)", value=os.getenv("OPENAI_ORG_ID"))  
+                    
+                    openai_model = gr.Dropdown(["gpt-4", "gpt-4-0613", "gpt-4-32k", "gpt-4-32k-0613", "gpt-3.5-turbo", 
+                                                "gpt-3.5-turbo-0613", "gpt-3.5-turbo-16k", "gpt-3.5-turbo-16k-0613", "text-davinci-003", 
+                                                "text-davinci-002", "text-curie-001", "text-babbage-001", "text-ada-001"], 
+                                               value="gpt-3.5-turbo", label="Model", info="Select one, for Natural language")
         with gr.Tab("MongoDB"):
             gr.HTML("Sign up here <a href='https://www.mongodb.com/cloud/atlas/register'>https://www.mongodb.com/cloud/atlas/register</a>")            
             with gr.Row():
@@ -880,24 +886,23 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                         product_def_variations_button = gr.Button("More variations")
                         product_def_image_info_label = gr.Label(value="Picturize it info", label="Info")
         with gr.Tab("Summarizer"):
-            with gr.Tab("Article Extractor and Summarizer"):
-                gr.HTML("Article Extractor and Summarizer API on RapidAPI <a href='https://rapidapi.com/restyler/api/article-extractor-and-summarizer'>https://rapidapi.com/restyler/api/article-extractor-and-summarizer</a>")
-                with gr.Row():                
+            with gr.Tab("KB Search"):
+                gr.HTML("Work in progress......")
+                with gr.Row():
                     with gr.Column(scale=4):                    
-                        article_link = gr.Textbox(label="Enter Article link")
+                        keyword_search = gr.Textbox(label="Keyword", placeholder="Search Arxiv, YouTube, wikipedia?")
                         gr.Examples(
-                                label="Article examples",
-                                examples=article_links_examples,
-                                examples_per_page=25,
-                                inputs=[article_link],
-                                outputs=[article_link],
+                                label="Keyword examples",
+                                examples=keyword_examples,
+                                examples_per_page=150,
+                                inputs=[keyword_search],
+                                outputs=[keyword_search],
                         )
                     with gr.Column(scale=1):  
-                        article_summarize_extract_info_label = gr.Label(value="Article Extractor and Summarizer Output info", label="Info")
-                        article_summarize_length = gr.Slider(minimum=1, maximum=20, step=1, label="Length", value=1, info="Length")
-                        article_article_summarize_button = gr.Button("Summarize")
-                        article_article_extract_button = gr.Button("Extract")            
-                article_summary = gr.Code(label="Article response", language="html", lines=10)
+                        max_results = gr.Slider(minimum=10,maximum=100,step=5,label="Max Results", value=10, info="Search results output")
+                        select_medium = gr.Dropdown(["YouTube", "Arxiv","Wikipedia"], label="Search in", value="Arxiv", type="index" )
+                        keyword_search_button = gr.Button("Search")    
+                keyword_search_output = gr.JSON() 
             with gr.Tab("Summarizer via LLM using LangChain"):
                 gr.HTML("Credit <a href='https://github.com/gkamradt/langchain-tutorials'>https://github.com/gkamradt/langchain-tutorials</a>")
                 gr.HTML("Work in progress......")
@@ -939,23 +944,24 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                             pdf_summarize_info_label = gr.Label(value="PDF summarize Output info", label="Info")
                             pdf_summarize_button = gr.Button("Read PDF")
                     pdf_summary = gr.Textbox(label="PDF response", lines=10) 
-            with gr.Tab("KB Search"):
-                gr.HTML("Work in progress......")
-                with gr.Row():
+            with gr.Tab("Article Extractor and Summarizer"):
+                gr.HTML("Article Extractor and Summarizer API on RapidAPI <a href='https://rapidapi.com/restyler/api/article-extractor-and-summarizer'>https://rapidapi.com/restyler/api/article-extractor-and-summarizer</a>")
+                with gr.Row():                
                     with gr.Column(scale=4):                    
-                        keyword_search = gr.Textbox(label="Keyword", placeholder="Search Arxiv, YouTube, wikipedia?")
+                        article_link = gr.Textbox(label="Enter Article link")
                         gr.Examples(
-                                label="Keyword examples",
-                                examples=keyword_examples,
-                                examples_per_page=150,
-                                inputs=[keyword_search],
-                                outputs=[keyword_search],
+                                label="Article examples",
+                                examples=article_links_examples,
+                                examples_per_page=25,
+                                inputs=[article_link],
+                                outputs=[article_link],
                         )
                     with gr.Column(scale=1):  
-                        max_results = gr.Slider(minimum=10,maximum=100,step=5,label="Max Results", value=10, info="Search results output")
-                        select_medium = gr.Dropdown(["YouTube", "Arxiv","Wikipedia"], label="Search in", value="Arxiv", type="index" )
-                        keyword_search_button = gr.Button("Search")    
-                keyword_search_output = gr.JSON()                        
+                        article_summarize_extract_info_label = gr.Label(value="Article Extractor and Summarizer Output info", label="Info")
+                        article_summarize_length = gr.Slider(minimum=1, maximum=20, step=1, label="Length", value=1, info="Length")
+                        article_article_summarize_button = gr.Button("Summarize")
+                        article_article_extract_button = gr.Button("Extract")            
+                article_summary = gr.Code(label="Article response", language="html", lines=10)                                   
     with gr.Tab("Output"):
             with gr.Row():            
                 with gr.Column(scale=4):
@@ -1089,19 +1095,19 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
 
     ask_awesome_chatgpt_button.click(
         awesome_prompts_handler,
-        inputs=[input_key, org_id, mongo_config, mongo_connection_string, mongo_database, awesome_chatgpt_prompt, awesome_chatgpt_act],
+        inputs=[input_key, org_id, openai_model, mongo_config, mongo_connection_string, mongo_database, awesome_chatgpt_prompt, awesome_chatgpt_act],
         outputs=[label_awesome_chatgpt_here, awesome_chatgpt_response]
     )
 
     ask_chatgpt_button.click(
         ask_chatgpt_handler,
-        inputs=[input_key, org_id, mongo_config, mongo_connection_string, mongo_database, ask_prompt, ask_keyword],
+        inputs=[input_key, org_id, openai_model, mongo_config, mongo_connection_string, mongo_database, ask_prompt, ask_keyword],
         outputs=[label_codex_here, keyword_response_code]
     )    
 
     product_def_ask_button.click(
         ask_product_def_handler,
-        inputs=[input_key, org_id, mongo_config, mongo_connection_string, mongo_database, product_def_final_prompt, product_def_keyword],
+        inputs=[input_key, org_id, openai_model, mongo_config, mongo_connection_string, mongo_database, product_def_final_prompt, product_def_keyword],
         outputs=[product_def_info_label, product_def_response]
     )   
     
@@ -1167,7 +1173,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
 
     describe_button.click(
         describe_handler,
-        inputs=[input_key, org_id, cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, cloudinary_folder, mongo_config, mongo_connection_string, mongo_database, celebs_name_label, question_prompt, know_your_celeb_description, celeb_real_photo,  celeb_generated_image],
+        inputs=[input_key, org_id, openai_model, cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, cloudinary_folder, mongo_config, mongo_connection_string, mongo_database, celebs_name_label, question_prompt, know_your_celeb_description, celeb_real_photo,  celeb_generated_image],
         outputs=[label_upload_here, celebs_name_label, question_prompt, know_your_celeb_description, celeb_real_photo, celeb_generated_image]
     )
 

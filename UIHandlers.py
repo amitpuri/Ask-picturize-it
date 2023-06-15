@@ -10,6 +10,7 @@ from Utils.ImageUtils import * #fallback_image_implement
 from Utils.DiffusionImageGenerator import * #generate_image
 from Utils.StabilityAPI import * #text_to_image
 
+
 # UI Component handlers
 class AskMeUIHandlers:
 
@@ -45,9 +46,10 @@ class AskMeUIHandlers:
     def set_stabilityai_config(self, stability_api_key):
         self.stability_api_key = stability_api_key
 
-    def set_openai_config(self,api_key, org_id):
+    def set_openai_config(self, api_key: str, model_name: str, org_id: str):
         self.api_key = api_key
         self.org_id = org_id        
+        self.model_name = model_name
 
     def set_mongodb_config(self, mongo_config, connection_string, database):
         if not mongo_config:
@@ -169,8 +171,9 @@ class AskMeUIHandlers:
                 return database_prompt, database_response
         try:
             if self.api_key:
-                operations = TextOperations(self.api_key, self.org_id)
+                operations = TextOperations(self.api_key, self.model_name, self.org_id)
                 response_message, response = operations.chat_completion(prompt)
+                state_data_client = StateDataClient(self.connection_string, self.database)
                 state_data_client.save_prompt_response(prompt, keyword, response, prompttype)
                 return response_message, response
             else:
@@ -199,7 +202,7 @@ class AskMeUIHandlers:
             return "Prompt is required!",""
         try:        
             if self.api_key:
-                operations = TextOperations(self.api_key, self.org_id)
+                operations = TextOperations(self.api_key, self.model_name, self.org_id)
                 response_message, response = operations.summarize(prompt)
                 return response_message, response
             else:
@@ -275,7 +278,7 @@ class AskMeUIHandlers:
 
                 
             if self.api_key is not None and len(l_description)==0:
-                operations = TextOperations(self.api_key, self.org_id)
+                operations = TextOperations(self.api_key, self.model_name, self.org_id)
                 response_message, response = operations.chat_completion(prompt)
                 description = response
             else:

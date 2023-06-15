@@ -16,7 +16,8 @@ class AskPicturizeIt:
        <li>stabilityai/stable-diffusion-2-1 <a href='https://huggingface.co/stabilityai/stable-diffusion-2-1'>https://huggingface.co/stabilityai/stable-diffusion-2-1</a></li>
        <li>Stability AI <a href='https://stability.ai'>https://stability.ai</a></li>
        <li>LangChain OpenAI <a href='https://python.langchain.com/en/latest/modules/models/llms.html'>https://python.langchain.com/en/latest/modules/models/llms.html</a></li>
-       <li>Article Extractor and Summarizer on Rapid API <a href='https://rapidapi.com'>https://rapidapi.com</a></li>   
+       <li>Article Extractor and Summarizer on Rapid API <a href='https://rapidapi.com'>https://rapidapi.com</a></li> 
+       <li>A Python package to assess and improve fairness of machine learning models.<a href='https://fairlearn.org'>https://fairlearn.org</a></li>  
        </ul>
        </p>
      """
@@ -31,11 +32,13 @@ class AskPicturizeIt:
        <li><p>CS25: Transformers United V2 <a href='https://web.stanford.edu/class/cs25'>https://web.stanford.edu/class/cs25</a></p></li>
        <li><p>CS25: Stanford Seminar - Transformers United 2023: Introduction to Transformer <a href='https://youtu.be/XfpMkf4rD6E'>https://youtu.be/XfpMkf4rD6E</a></p></li>
        <li><p>Temperature in NLP <a href='https://lukesalamone.github.io/posts/what-is-temperature'>https://lukesalamone.github.io/posts/what-is-temperature</a></p></li>
-       <li><p>openai-cookbook <a href='https://github.com/openai/openai-cookbook'>https://github.com/openai/openai-cookbook</a></p></li>       
+       <li><p>openai-cookbook <a href='https://github.com/openai/openai-cookbook'>https://github.com/openai/openai-cookbook</a></p></li>              
        <li><p>Open LLM Leaderboard <a href='https://huggingface.co/spaces/HuggingFaceH4/open_llm_leaderboard'>https://huggingface.co/spaces/HuggingFaceH4/open_llm_leaderboard</a></p></li>
+       <li><p>Aviary Explorer  <a href='https://aviary.anyscale.com'>https://aviary.anyscale.com</a></p></li>       
        <li><p>LangChain <a href='https://langchain.com/features.html'>https://langchain.com/features.html</a></p></li>
        <li><p>LangChain Python <a href='https://python.langchain.com'>https://python.langchain.com</a></p></li>
-       <li><p>LangChain for Gen AI and LLMs<a href='https://www.youtube.com/playlist?list=PLIUOU7oqGTLieV9uTIFMm6_4PXg-hlN6F'>https://www.youtube.com/playlist?list=PLIUOU7oqGTLieV9uTIFMm6_4PXg-hlN6F</a></p></li>
+       <li><p>LangChain for Gen AI and LLMs <a href='https://www.youtube.com/playlist?list=PLIUOU7oqGTLieV9uTIFMm6_4PXg-hlN6F'>https://www.youtube.com/playlist?list=PLIUOU7oqGTLieV9uTIFMm6_4PXg-hlN6F</a></p></li>
+       <li><p>LangChain's integration with Chroma <a href='https://blog.langchain.dev/langchain-chroma'>https://blog.langchain.dev/langchain-chroma</a></p></li>
        <li><p>Vector Similarity Explained <a href='https://www.pinecone.io/learn/vector-similarity'>https://www.pinecone.io/learn/vector-similarity</a></p></li>
        <li><p>An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale <a href='https://arxiv.org/abs/2010.11929'>https://arxiv.org/abs/2010.11929</a></p></li>
        <li>stable-diffusion-image-variations <a href='https://huggingface.co/spaces/lambdalabs/stable-diffusion-image-variations'>https://huggingface.co/spaces/lambdalabs/stable-diffusion-image-variations</a></li> 
