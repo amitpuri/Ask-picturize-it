@@ -12,17 +12,11 @@ class PromptModeration(Operations):
     def moderation(self, prompt: str):
         try:
             if prompt is not None and openai.api_key is not None:
-                response = openai.Moderation.create(
-                                input=f"{prompt}"
-                            )
-                if response["results"][0]["flagged"]=="true":                    
-                    return true, response["results"][0]["categories"]
-                else:
-                    return false, response["results"][0]["categories"]
+                response = openai.Moderation.create(input=f"{prompt}")
+                return response["results"][0]["flagged"], response["results"][0]["categories"]
         except openai.error.OpenAIError as error_except:
             print("Moderation create")
             print(error_except.http_status)
             print(error_except.error)
             return error_except.error["message"], ""
-                
     
