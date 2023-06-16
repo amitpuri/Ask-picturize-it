@@ -39,23 +39,23 @@ class TextOperations(Operations):
                             )
                 print("Moderation response")
                 print(response)
-                if response["results"][0]["flagged"]=="true":                    
+                if response["results"][0]["flagged"]:
                     return response["results"][0]["categories"], ""
-                
-                if self.model_name in self.models:
-                    completion = openai.ChatCompletion.create(
-                        model=f"{self.model_name}",
-                        messages=[
-                            {"role": "user", "content": f"{prompt}"}
-                        ])
-                    response = completion["choices"][0]["message"].content     
-                else: 
-                    completion = openai.Completion.create(
-                      model=f"{self.model_name}",
-                      prompt=f"{prompt}"
-                    )
-                    response = completion["choices"][0]["text"]
-                return "Response from ChatGPT", response
+                else:
+                    if self.model_name in self.models:
+                        completion = openai.ChatCompletion.create(
+                            model=f"{self.model_name}",
+                            messages=[
+                                {"role": "user", "content": f"{prompt}"}
+                            ])
+                        response = completion["choices"][0]["message"].content     
+                    else: 
+                        completion = openai.Completion.create(
+                          model=f"{self.model_name}",
+                          prompt=f"{prompt}"
+                        )
+                        response = completion["choices"][0]["text"]
+                    return "Response from ChatGPT", response
                 
 
         except openai.error.OpenAIError as error_except:
