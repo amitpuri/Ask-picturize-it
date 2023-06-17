@@ -1,5 +1,5 @@
-Interacting_with_CLIP.ipynb
-07-hugging-face-for-skills.ipynb
-audiocraft-demo.ipynb
-Transformers_can_do_anything.ipynb
+notebooks/Interacting_with_CLIP.ipynb
+notebooks/07-hugging-face-for-skills.ipynb
+notebooks/audiocraft-demo.ipynb
+notebooks/Transformers_can_do_anything.ipynb
 env.example
