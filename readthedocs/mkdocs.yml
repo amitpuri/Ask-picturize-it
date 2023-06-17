@@ -1,6 +1,6 @@
 site_name: AI
 site_url: https://ai.amitpuri.com
-site_description: 'AI for  making a better tomorrow!'
+site_description: 'AI for making a better tomorrow!'
 site_author: 'Amit Puri'
 docs_dir: docs/
 nav:
