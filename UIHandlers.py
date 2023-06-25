@@ -1,5 +1,6 @@
 import os
 from CloudinaryUtil.CloudinaryClient import *  #set_folder_name,search_images, upload_image
+
 from MongoUtil.CelebDataClient import * #get_describe, get_celebs_response
 from MongoUtil.StateDataClient import *
 from MongoUtil.KBDataClient import *
@@ -17,7 +18,13 @@ class AskMeUIHandlers:
     def __init__(self):
         self.NO_API_KEY_ERROR="Review Configuration tab for keys/settings"
         self.LABEL_GPT_CELEB_SCREEN = "Name, Describe, Preview and Upload"
+
         self.image_utils = ImageUtils()
+        self.api_key = None         
+        self.azure_openai_key = None
+        self.azure_openai_deployment_name = None
+        self.org_id = None
+        self.model_name = None
         #self.connection_string, self.database = self.get_private_mongo_config()
         #self.stability_api_key = self.get_stabilityai_config()
         #self.api_key, self.org_id = self.get_openai_config()
@@ -25,7 +32,6 @@ class AskMeUIHandlers:
         
     def get_cloudinary_config(self):
         return os.getenv("CLOUDINARY_CLOUD_NAME"), os.getenv("CLOUDINARY_API_KEY"), os.getenv("CLOUDINARY_API_SECRET")
-
 
     def get_stabilityai_config(self):
         return os.getenv("STABILITY_API_KEY")
@@ -45,12 +51,26 @@ class AskMeUIHandlers:
 
     def set_stabilityai_config(self, stability_api_key):
         self.stability_api_key = stability_api_key
+    
+    def set_org_id(self, org_id: str):
+        self.org_id = org_id
 
-    def set_openai_config(self, api_key: str, model_name: str, org_id: str):
-        self.api_key = api_key
-        self.org_id = org_id        
+    def set_model_name(self, model_name: str):
         self.model_name = model_name
+        
+    def set_openai_config(self, api_key: str):
+        self.api_key = api_key                        
+        self.azure_openai_key = None
+        self.azure_openai_deployment_name = None
+        self.azure_openai_api_base="https://api.openai.com"
 
+    def set_azure_openai_config(self, azure_openai_key: str, azure_openai_api_base: str, azure_openai_deployment_name: str):
+        self.api_key = None                        
+        self.azure_openai_key = azure_openai_key
+        self.azure_openai_api_base = azure_openai_api_base
+        self.azure_openai_deployment_name = azure_openai_deployment_name
+    
+    
     def set_mongodb_config(self, mongo_config, connection_string, database):
         if not mongo_config:
             self.connection_string, self.database = self.get_private_mongo_config()
@@ -149,17 +169,36 @@ class AskMeUIHandlers:
         return transcribe_operations.transcribe(audio_file)
     
     def create_variation_from_image_handler(self, input_image_variation, input_imagesize, input_num_images):
-        if not self.api_key:
-                diffusion_image_generator = DiffusionImageGenerator()
-                label_inference_variation = "Switch to Output tab to review it"
-                return label_inference_variation, diffusion_image_generator.image_variation(input_image_variation),""
-        image_operations = ImageOperations(self.api_key, self.org_id)
+        if self.api_key is None and self.azure_openai_key is None:
+            print("using Diffusion model from api_key and azure_openai_key is set to None")
+            diffusion_image_generator = DiffusionImageGenerator()
+            label_inference_variation = "Switch to Output tab to review it"
+            return label_inference_variation, diffusion_image_generator.image_variation(input_image_variation),""
+
+        
+        image_operations = ImageOperations()
+        if self.azure_openai_deployment_name:
+            image_operations.set_azure_openai_api_key(self.azure_openai_key, self.azure_openai_api_base, self.azure_openai_deployment_name)            
+        else:
+            image_operations.set_openai_api_key(self.api_key)
+            if self.org_id:
+                image_operations.set_org_id(self.org_id)
+        
         return image_operations.create_variation_from_image(input_image_variation, input_imagesize, input_num_images)
     
     def create_image_from_prompt_handler(self, input_prompt, input_imagesize, input_num_images):
-        if not self.api_key:
+        if self.api_key is None and self.azure_openai_key is None:
+            print("exiting from api_key and azure_openai_key is set to None")
             return self.NO_API_KEY_ERROR, self.image_utils.fallback_image_implement(), self.image_utils.fallback_image_array_implement()
-        image_operations = ImageOperations(self.api_key, self.org_id)
+
+        image_operations = ImageOperations()
+        if self.azure_openai_deployment_name:
+            image_operations.set_azure_openai_api_key(self.azure_openai_key, self.azure_openai_api_base, self.azure_openai_deployment_name)
+        else:
+            image_operations.set_openai_api_key(self.api_key)
+            if self.org_id:
+                image_operations.set_org_id(self.org_id)
+            
         return image_operations.create_image_from_prompt(input_prompt, input_imagesize, input_num_images)
     
     
@@ -170,8 +209,16 @@ class AskMeUIHandlers:
             if database_response:
                 return database_prompt, database_response
         try:
-            if self.api_key:
-                operations = TextOperations(self.api_key, self.model_name, self.org_id)
+            if self.api_key or self.azure_openai_key:
+                operations = TextOperations()
+                if self.azure_openai_deployment_name:
+                    operations.set_azure_openai_api_key(self.azure_openai_key, self.azure_openai_api_base, self.azure_openai_deployment_name)
+                else:
+                    operations.set_openai_api_key(self.api_key)
+                    operations.set_model_name(self.model_name)
+                    if self.org_id:
+                        operations.set_org_id(self.org_id)
+                        
                 response_message, response = operations.chat_completion(prompt)
                 state_data_client = StateDataClient(self.connection_string, self.database)
                 state_data_client.save_prompt_response(prompt, keyword, response, prompttype)
@@ -201,8 +248,18 @@ class AskMeUIHandlers:
         if not prompt:
             return "Prompt is required!",""
         try:        
-            if self.api_key:
-                operations = TextOperations(self.api_key, self.model_name, self.org_id)
+            if self.api_key or self.azure_openai_key:
+                operations = TextOperations()
+                if self.azure_openai_deployment_name:
+                    operations.set_azure_openai_api_key(self.azure_openai_key, self.azure_openai_api_base, self.azure_openai_deployment_name)
+                    
+                else:
+                    operations.set_openai_api_key(self.api_key)
+                    operations.set_model_name(self.model_name)
+                    if self.org_id:
+                        operations.set_org_id(self.org_id)
+                    
+                    
                 response_message, response = operations.summarize(prompt)
                 return response_message, response
             else:
@@ -277,8 +334,17 @@ class AskMeUIHandlers:
                 pass
 
                 
-            if self.api_key is not None and len(l_description)==0:
-                operations = TextOperations(self.api_key, self.model_name, self.org_id)
+            if len(l_description)==0:
+                if self.api_key or self.azure_openai_key:
+                    operations = TextOperations()
+                    if self.azure_openai_deployment_name:
+                        operations.set_azure_openai_api_key(self.azure_openai_key, self.azure_openai_api_base, self.azure_openai_deployment_name)                        
+                    else:
+                        operations.set_openai_api_key(self.api_key)                        
+                        operations.set_model_name(self.model_name)
+                        if self.org_id:
+                            operations.set_org_id(self.org_id)
+               
                 response_message, response = operations.chat_completion(prompt)
                 description = response
             else:

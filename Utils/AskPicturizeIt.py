@@ -1,6 +1,7 @@
 import wikipedia
 import requests
 import json
+from langchain.prompts import PromptTemplate
 
 class AskPicturizeIt:
     TITLE = '# [Ask-me-to-picturize-it](https://github.com/amitpuri/Ask-me-to-picturize-it)'
@@ -22,6 +23,7 @@ class AskPicturizeIt:
        </p>
      """
     RESEARCH_SECTION = """
+
        <p><strong>Check it out</strong></p>
        <p>
        <ul>
@@ -96,9 +98,109 @@ class AskPicturizeIt:
     
     LABEL_GPT_CELEB_SCREEN = "Select, Describe, Generate AI Image, Upload and Save"
 
-    NO_API_KEY_ERROR="Review Configuration tab for keys/settings"
+    NO_API_KEY_ERROR = "Review Configuration tab for keys/settings, OPENAI_API_KEY is missing or No input"
 
-   
+    ENTER_A_PROMPT_IMAGE = "Please a prompt for image"
+    
+    PDF_OUTPUT_INFO = "PDF summarize Output info"
+    
+    TRANSCRIBE_OUTPUT_INFO = "Transcribe and summarize Output info"
+    
+    NO_API_KEY_ERROR_INVALID = "Review Configuration tab for keys/settings, OPENAI_API_KEY is invalid."
+    
+    NO_RAPIDAPI_KEY_ERROR = "Review Configuration tab for keys/settings, RAPIDAPI_KEY is missing or No input"
+    
+    TASK_EXPLANATION_EXAMPLES = ["""Your task is to help a marketing team create a description for a retail website of a product based on a technical fact sheet.
+           
+                                Write a product description based on the information provided in the technical specifications delimited by triple backticks."""]
+
+    
+    PRODUCT_DEF_QUESTION_EXAMPLES = ["Limit answer to 50 words", 
+                                 "Limit answer to 100 words", 
+                                 "Write the answer in bullet points",
+                                 "Write the answer in 2/3 sentences",
+                                 "Write the answer in one line TLDR with the fewest words"
+                                ]
+
+    ARTICLE_LINKS_EXAMPLES = ["https://time.com/6266679/musk-ai-open-letter", 
+                              "https://futureoflife.org/open-letter/ai-open-letter",
+                              "https://github.com/openai/CLIP",
+                              "https://arxiv.org/abs/2103.00020",
+                              "https://arxiv.org/abs/2302.14045v2",
+                              "https://arxiv.org/abs/2304.04487",
+                              "https://arxiv.org/abs/2212.09611",
+                              "http://arxiv.org/abs/2305.02897",
+                              "https://arxiv.org/abs/2305.00050",
+                              "https://arxiv.org/abs/2304.14473",
+                              "https://arxiv.org/abs/1607.06450",
+                              "https://arxiv.org/abs/1706.03762",
+                              "https://spacy.io/usage/spacy-101",
+                              "https://developers.google.com/machine-learning/gan/gan_structure",
+                              "https://thegradient.pub/nlp-imagenet",
+                              "https://arxiv.org/abs/2102.12092",
+                              "https://ai.googleblog.com/2017/08/transformer-novel-neural-network.html",
+                              "https://lukesalamone.github.io/posts/what-is-temperature",
+                              "https://langchain.com/features.html",
+                              "https://arxiv.org/abs/2010.11929",
+                              "https://developers.google.com/machine-learning/gan/generative"]
+
+
+
+    KEYWORD_EXAMPLES = sorted(["Stable Diffusion", "Zero-shot classification", "Generative AI based Apps ", "Generative AI", "Vector Database",
+                    "Foundation Capital FMOps ", "Foundational models AI", "Prompt Engineering", 
+        		    "Hyperparameter optimization","Embeddings Search",
+                    "Convolutional Neural Network","Recurrent neural network",
+                    "XGBoost Grid Search", "Random Search" , "Bayesian Optimization", "NLP", "GPT","Reinforcement learning",
+                    "OpenAI embeddings","ChatGPT","Python LangChain LLM", "Popular LLM models", "Hugging Face Transformer",
+                    "Confusion Matrix", "Feature Vector", "Gradient Accumulation","Loss Functions","Cross Entropy",
+                    "Root Mean Square Error", "Cosine similarity", "Euclidean distance","Dot product similarity",
+                    "Machine Learning","Artificial Intelligence","Deep Learning", "Neural Networks", "Data Science",
+                    "Supervised Learning","Unsupervised Learning","Reinforcement Learning", "Natural Language Processing", "Computer Vision", "Big Data",
+                    "Data Mining", "Feature Extraction", "Dimensionality Reduction", "Ensemble Learning", "Transfer Learning",
+                    "Decision Trees","Support Vector Machines", "Clustering","Regression",                    
+                    "Language Models","Transformer","BERT","OpenAI","Text Generation","Text Classification",
+                    "Chatbots","Summarization","Question Answering","Named Entity Recognition","Sentiment Analysis",
+                    "Pretraining","Finetuning","Contextual Embeddings","Attention Mechanism",
+                    "Pinecone, a fully managed vector database", "Weaviate, an open-source vector search engine",
+                    "Redis as a vector database","Qdrant, a vector search engine", "Milvus, a vector database built for scalable similarity search"
+                    "Chroma, an open-source embeddings store","Typesense, fast open source vector search",
+                    "Zilliz, data infrastructure, powered by Milvus", "Lexical-based search","Graph-based search","Embedding-based search"
+                   ])
+
+
+    prompt_character = PromptTemplate(
+    input_variables=["character_name","program_name"],
+    template="What is the name of the actor acted as {character_name} in {program_name}, answer without any explanation and return only the actor's name?")
+
+    prompt_bond_girl = PromptTemplate(
+    input_variables=["movie_name"],
+    template="Who was Bond girl co-star in {movie_name}? answer without any explanation and return only the actor's name?")
+
+
+    CELEB_SEARCH_QUESTIONS_EXAMPLES = [prompt_character.format(character_name="James Bond",program_name="Casino Royale"),
+                        prompt_character.format(character_name="James Bond",program_name="Die Another Day"),
+                        prompt_character.format(character_name="James Bond",program_name="Never Say Never Again"),
+                        prompt_character.format(character_name="James Bond",program_name="Spectre"),
+                        prompt_character.format(character_name="James Bond",program_name="Tomorrow Never Dies"),
+                        prompt_character.format(character_name="James Bond",program_name="The World Is Not Enough"),
+                        prompt_character.format(character_name="James Bond",program_name="Goldfinger"),
+                        prompt_character.format(character_name="James Bond",program_name="Octopussy"),
+                        prompt_character.format(character_name="James Bond",program_name="Diamonds Are Forever"),
+                        prompt_character.format(character_name="James Bond",program_name="Licence to Kill"), 
+                        prompt_character.format(character_name="Patrick Jane",program_name="The Mentalist"),
+                        prompt_character.format(character_name="Raymond Reddington",program_name="The Blacklist"),
+                        prompt_bond_girl.format(movie_name="Casino Royale"),
+                        prompt_bond_girl.format(movie_name="GoldenEye"),
+                        prompt_bond_girl.format(movie_name="Spectre"),
+                        prompt_bond_girl.format(movie_name="Tomorrow Never Dies"),
+                        prompt_bond_girl.format(movie_name="Goldfinger"),
+                        prompt_bond_girl.format(movie_name="No Time to Die"),
+                        prompt_bond_girl.format(movie_name="Octopussy"),
+                        prompt_bond_girl.format(movie_name="The World Is Not Enough"),
+                        prompt_bond_girl.format(movie_name="Diamonds Are Forever"),
+                        prompt_bond_girl.format(movie_name="Licence to Kill"),                          	
+		                prompt_bond_girl.format(movie_name="Die Another Day")]
+    
     def get_wikimedia_image(self, keyword):
         WIKI_REQUEST = 'http://en.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&piprop=original&titles='
 

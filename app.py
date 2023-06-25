@@ -9,32 +9,32 @@ from MongoUtil.StateDataClient import *
 from MongoUtil.CelebDataClient import *
 from MongoUtil.KBDataClient import *
 from UIHandlers import AskMeUIHandlers
-
-
 from Utils.Optimizers import Prompt_Optimizer
 from Utils.AskPicturizeIt import *
 from Utils.RapidapiUtil import *
 from Utils.YouTubeSummarizer import *
 from Utils.PDFSummarizer import *
 from OpenAIUtil.TranscribeOperations import *  #transcribe
+from OpenAIUtil.TextOperations import *
+from OpenAIUtil.PromptModeration import *
 
 from langchain.llms import OpenAI
-from langchain.prompts import PromptTemplate
 
 from youtube_search import YoutubeSearch
 import arxiv
+
 
 #from dotenv import load_dotenv
 #load_dotenv()
 
 ask_picturize_it = AskPicturizeIt()
 prompt_optimizer = Prompt_Optimizer()
-
 prompt_generator = CelebPromptGenerator()
 uihandlers = AskMeUIHandlers()
 
 def get_private_mongo_config():
     return os.getenv("P_MONGODB_URI"), os.getenv("P_MONGODB_DATABASE")
+
    
 def get_searchData_by_uri(uri: str):
     try:
@@ -129,7 +129,7 @@ def youtube_summarizer_handler(api_key, url):
         if url and len(url)>0:
             youtube_summarizer = YouTubeSummarizer()
             youtube_summarizer.setOpenAIConfig(api_key)
-            return "Transcribe and summarize Output info",  youtube_summarizer.summarize(url)
+            return ask_picturize_it.TRANSCRIBE_OUTPUT_INFO,  youtube_summarizer.summarize(url)
         else:
             return "No URL",  ""
     else:
@@ -140,7 +140,7 @@ def youtube_transcribe_handler(api_key, url):
         if url and len(url)>0:
             youtube_summarizer = YouTubeSummarizer()
             youtube_summarizer.setOpenAIConfig(api_key)
-            return "Transcribe and summarize Output info",  youtube_summarizer.transcribe(url)
+            return ask_picturize_it.TRANSCRIBE_OUTPUT_INFO,  youtube_summarizer.transcribe(url)
         else:
             return "No URL",  ""
     else:
@@ -152,7 +152,7 @@ def pdf_summarizer_handler(api_key, url):
             pdf_summarizer = PDFSummarizer()
             pdf_summarizer.setOpenAIConfig(api_key)
             #TO DO
-            return "PDF summarize Output info", pdf_summarizer.summarize(url)
+            return ask_picturize_it.PDF_OUTPUT_INFO, pdf_summarizer.summarize(url)
         else:
             return "No URL",  ""
     else:
@@ -174,7 +174,9 @@ Record voice, transcribe, picturize, create variations, and upload
 
 def transcribe_handler(api_key, org_id, audio_file):
     if audio_file: 
-        uihandlers.set_openai_config(api_key, org_id)
+        uihandlers.set_openai_config(api_key)
+        if org_id:
+            set_org_id(org_id)
         return uihandlers.transcribe_handler(audio_file)
 
 
@@ -192,8 +194,13 @@ def get_input_examples():
 
 
 
-def create_image_from_prompt_handler(api_key, org_id, input_prompt, input_imagesize, input_num_images):
-    uihandlers.set_openai_config(api_key, org_id)
+def create_image_from_prompt_handler(api_key, org_id, optionSelection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, input_prompt, input_imagesize, input_num_images):    
+    if optionSelection == "OpenAI API":
+        uihandlers.set_openai_config(api_key)
+        if org_id:
+            uihandlers.set_org_id(org_id)
+    elif optionSelection == "Azure OpenAI API":
+        uihandlers.set_azure_openai_config(azure_openai_key, azure_openai_api_base, azure_openai_deployment_name)
     return uihandlers.create_image_from_prompt_handler(input_prompt, input_imagesize, input_num_images)
 
 
@@ -205,8 +212,13 @@ def get_images_examples():
     return prompt_generator.get_images_examples()
 
 
-def create_variation_from_image_handler(api_key, org_id, input_image_variation, input_imagesize, input_num_images):
-    uihandlers.set_openai_config(api_key, org_id)
+def create_variation_from_image_handler(api_key, org_id, optionSelection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, input_image_variation, input_imagesize, input_num_images):
+    if optionSelection == "OpenAI API":
+        uihandlers.set_openai_config(api_key)
+        if org_id:
+            uihandlers.set_org_id(org_id)
+    elif optionSelection == "Azure OpenAI API":
+        uihandlers.set_azure_openai_config(azure_openai_key, azure_openai_api_base, azure_openai_deployment_name)
     return uihandlers.create_variation_from_image_handler(input_image_variation, input_imagesize, input_num_images)
 
 
@@ -215,8 +227,14 @@ Know your Celebrity
 '''
 
 
-def describe_handler(api_key, org_id, model_name, cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, cloudinary_folder, mongo_config, mongo_connection_string, mongo_database, celebs_name_label, question_prompt, know_your_celeb_description, input_celeb_real_picture, input_celeb_generated_picture):
-    uihandlers.set_openai_config(api_key, model_name, org_id)
+def describe_handler(api_key, org_id, model_name, optionSelection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, cloudinary_folder, mongo_config, mongo_connection_string, mongo_database, celebs_name_label, question_prompt, know_your_celeb_description, input_celeb_real_picture, input_celeb_generated_picture):
+    if optionSelection == "OpenAI API":
+        uihandlers.set_openai_config(api_key)
+        uihandlers.set_model_name(model_name)
+        if org_id:
+            uihandlers.set_org_id(org_id)
+    elif optionSelection == "Azure OpenAI API":
+        uihandlers.set_azure_openai_config(azure_openai_key, azure_openai_api_base, azure_openai_deployment_name)
     uihandlers.set_mongodb_config(mongo_config, mongo_connection_string, mongo_database)
     uihandlers.set_cloudinary_config(cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret)
     return uihandlers.describe_handler(celebs_name_label, question_prompt, cloudinary_folder, know_your_celeb_description, input_celeb_real_picture, input_celeb_generated_picture)
@@ -228,7 +246,7 @@ def celeb_upload_save_real_generated_image_handler(cloudinary_cloud_name, cloudi
 
 
 def get_celebrity_detail_from_wiki(celebrity):
-    celebrity_name = f"{celebrity}"
+    celebrity_name = get_internal_celeb_name(celebrity)
     return  ask_picturize_it.get_wiki_page_summary(celebrity_name),  ask_picturize_it.get_wikimedia_image(celebrity)
 
     
@@ -270,7 +288,9 @@ def clear_celeb_details():
 
 
 def celeb_summarize_handler(api_key, org_id, prompt):
-    uihandlers.set_openai_config(api_key, org_id)
+    uihandlers.set_openai_config(api_key, None)
+    if org_id:
+        uihandlers.set_org_id(org_id)
     return uihandlers.ask_chatgpt_summarize(prompt)
 
 def celeb_save_description_handler(mongo_config, mongo_connection_string, mongo_database, name, prompt, description):
@@ -292,7 +312,7 @@ def get_key_traits(name):
 
 def celebs_name_search_handler(input_key, search_text, celebs_chat_history):
     if not input_key or len(input_key.strip())==0:        
-        return search_text, celebs_chat_history, "Review Configuration tab for keys/settings, OPENAI_API_KEY is missing."
+        return search_text, celebs_chat_history, ask_picturize_it.NO_API_KEY_ERROR
     elif len(search_text.strip())>0:
         os.environ["OPENAI_API_KEY"] = input_key
         celebs_chat_history = celebs_chat_history + [(search_text, None)] 
@@ -301,7 +321,7 @@ def celebs_name_search_handler(input_key, search_text, celebs_chat_history):
             llm_response = llm(search_text)        
             return llm_response, celebs_chat_history, "In progress"
         except openai.error.AuthenticationError:
-            return None, celebs_chat_history, "Review Configuration tab for keys/settings, OPENAI_API_KEY is invalid."
+            return None, celebs_chat_history, ask_picturize_it.NO_API_KEY_ERROR_INVALID 
     else:
         return None, celebs_chat_history, "No Input"
 
@@ -317,7 +337,7 @@ def celebs_name_search_history_handler(search_text, celebs_chat_history):
         print(exception)
         pass
         
-    return search_text, "John Doe", celebs_chat_history, "Review Configuration tab for keys/settings, OPENAI_API_KEY is missing or No input"
+    return search_text, "John Doe", celebs_chat_history, ask_picturize_it.NO_API_KEY_ERROR
 
 
 '''
@@ -345,9 +365,15 @@ def get_keyword_prompts(prompttype):
 
 
 
-def ask_chatgpt_handler(api_key, org_id, model_name, mongo_config, mongo_connection_string, mongo_database, prompt, keyword):
+def ask_chatgpt_handler(api_key, org_id, model_name, optionSelection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, mongo_config, mongo_connection_string, mongo_database, prompt, keyword):
     uihandlers.set_mongodb_config(mongo_config, mongo_connection_string, mongo_database)
-    uihandlers.set_openai_config(api_key, model_name, org_id)
+    if optionSelection == "OpenAI API":
+        uihandlers.set_openai_config(api_key)
+        uihandlers.set_model_name(model_name)
+        if org_id:
+            uihandlers.set_org_id(org_id)
+    elif optionSelection == "Azure OpenAI API":
+        uihandlers.set_azure_openai_config(azure_openai_key, azure_openai_api_base, azure_openai_deployment_name)
     return uihandlers.ask_chatgpt(prompt, keyword,"codex")
 
 '''
@@ -360,8 +386,14 @@ def get_awesome_chatgpt_prompts(awesome_chatgpt_act):
 
 
 
-def awesome_prompts_handler(api_key, org_id, model_name,  mongo_config, mongo_connection_string, mongo_database, prompt, keyword):
-    uihandlers.set_openai_config(api_key, model_name, org_id)
+def awesome_prompts_handler(api_key, org_id, model_name, optionSelection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, mongo_config, mongo_connection_string, mongo_database, prompt, keyword):    
+    if optionSelection == "OpenAI API":
+        uihandlers.set_openai_config(api_key)
+        uihandlers.set_model_name(model_name)
+        if org_id:
+            uihandlers.set_org_id(org_id)
+    elif optionSelection == "Azure OpenAI API":
+        uihandlers.set_azure_openai_config(azure_openai_key, azure_openai_api_base, azure_openai_deployment_name)
     uihandlers.set_mongodb_config(mongo_config, mongo_connection_string, mongo_database)
     return uihandlers.ask_chatgpt(prompt, keyword,"awesome-prompts")
 
@@ -372,9 +404,15 @@ Product Definition
 '''
 
 
-def ask_product_def_handler(api_key, org_id, model_name,  mongo_config, mongo_connection_string, mongo_database, prompt, keyword):
+def ask_product_def_handler(api_key, org_id, model_name, optionSelection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, mongo_config, mongo_connection_string, mongo_database, prompt, keyword):
     uihandlers.set_mongodb_config(mongo_config, mongo_connection_string, mongo_database)
-    uihandlers.set_openai_config(api_key, model_name, org_id)
+    if optionSelection == "OpenAI API":
+        uihandlers.set_openai_config(api_key)
+        uihandlers.set_model_name(model_name)
+        if org_id:
+            uihandlers.set_org_id(org_id)
+    elif optionSelection == "Azure OpenAI API":
+        uihandlers.set_azure_openai_config(azure_openai_key, azure_openai_api_base, azure_openai_deployment_name)
     return uihandlers.ask_chatgpt(prompt, keyword,"product")
 
 
@@ -397,7 +435,7 @@ def article_summarize_handler(rapidapi_api_key, article_link, length):
         else:            
             return "No URL",  ""
     else:
-        return "","Review Configuration tab for keys/settings", "RAPIDAPI_KEY is missing or No input"
+        return "", ask_picturize_it.NO_RAPIDAPI_KEY_ERROR 
         
 def article_extract_handler(rapidapi_api_key, article_link):
     rapidapi_util = RapidapiUtil()
@@ -408,7 +446,7 @@ def article_extract_handler(rapidapi_api_key, article_link):
         else:
             return "No URL",  ""
     else:
-        return "","Review Configuration tab for keys/settings", "RAPIDAPI_KEY is missing or No input"
+        return "", ask_picturize_it.NO_RAPIDAPI_KEY_ERROR
     
 # Examples fn
 
@@ -424,27 +462,7 @@ def YouTube_Examples():
     kb_data_client = KBDataClient(connection_string, database)
     return kb_data_client.list_kb_searchData("youtube")
 
-keyword_examples = sorted(["Stable Diffusion", "Zero-shot classification", "Generative AI based Apps ", "Generative AI", "Vector Database",
-                    "Foundation Capital FMOps ", "Foundational models AI", "Prompt Engineering", 
-        		    "Hyperparameter optimization","Embeddings Search",
-                    "Convolutional Neural Network","Recurrent neural network",
-                    "XGBoost Grid Search", "Random Search" , "Bayesian Optimization", "NLP", "GPT","Reinforcement learning",
-                    "OpenAI embeddings","ChatGPT","Python LangChain LLM", "Popular LLM models", "Hugging Face Transformer",
-                    "Confusion Matrix", "Feature Vector", "Gradient Accumulation","Loss Functions","Cross Entropy",
-                    "Root Mean Square Error", "Cosine similarity", "Euclidean distance","Dot product similarity",
-                    "Machine Learning","Artificial Intelligence","Deep Learning", "Neural Networks", "Data Science",
-                    "Supervised Learning","Unsupervised Learning","Reinforcement Learning", "Natural Language Processing", "Computer Vision", "Big Data",
-                    "Data Mining", "Feature Extraction", "Dimensionality Reduction", "Ensemble Learning", "Transfer Learning",
-                    "Decision Trees","Support Vector Machines", "Clustering","Regression",                    
-                    "Language Models","Transformer","BERT","OpenAI","Text Generation","Text Classification",
-                    "Chatbots","Summarization","Question Answering","Named Entity Recognition","Sentiment Analysis",
-                    "Pretraining","Finetuning","Contextual Embeddings","Attention Mechanism",
-                    "Pinecone, a fully managed vector database", "Weaviate, an open-source vector search engine",
-                    "Redis as a vector database","Qdrant, a vector search engine", "Milvus, a vector database built for scalable similarity search"
-                    "Chroma, an open-source embeddings store","Typesense, fast open source vector search",
-                    "Zilliz, data infrastructure, powered by Milvus", "Lexical-based search","Graph-based search","Embedding-based search"
-                   ])
-
+keyword_examples = ask_picturize_it.KEYWORD_EXAMPLES
 audio_examples = prompt_generator.get_audio_examples()
 images_examples = prompt_generator.get_images_examples()
 input_examples = prompt_generator.get_input_examples()
@@ -461,76 +479,14 @@ hollywood_celeb_examples = [celeb[0] for celeb in Hollywood_celeb_list]
 business_celeb_examples = [celeb[0] for celeb in Business_celeb_list]
 
 
-task_explanation_examples = ["""Your task is to help a marketing team create a description for a retail website of a product based on a technical fact sheet.
-           
-Write a product description based on the information provided in the technical specifications delimited by triple backticks."""]
-
-product_def_question_examples = ["Limit answer to 50 words", 
-                             "Limit answer to 100 words", 
-                             "Write the answer in bullet points",
-                             "Write the answer in 2/3 sentences",
-                             "Write the answer in one line TLDR with the fewest words"
-                            ]
-
-article_links_examples = ["https://time.com/6266679/musk-ai-open-letter", 
-                          "https://futureoflife.org/open-letter/ai-open-letter",
-                          "https://github.com/openai/CLIP",
-                          "https://arxiv.org/abs/2103.00020",
-                          "https://arxiv.org/abs/2302.14045v2",
-                          "https://arxiv.org/abs/2304.04487",
-                          "https://arxiv.org/abs/2212.09611",
-                          "http://arxiv.org/abs/2305.02897",
-                          "https://arxiv.org/abs/2305.00050",
-                          "https://arxiv.org/abs/2304.14473",
-                          "https://arxiv.org/abs/1607.06450",
-                          "https://arxiv.org/abs/1706.03762",
-                          "https://spacy.io/usage/spacy-101",
-                          "https://developers.google.com/machine-learning/gan/gan_structure",
-                          "https://thegradient.pub/nlp-imagenet",
-                          "https://arxiv.org/abs/2102.12092",
-                          "https://ai.googleblog.com/2017/08/transformer-novel-neural-network.html",
-                          "https://lukesalamone.github.io/posts/what-is-temperature",
-                          "https://langchain.com/features.html",
-                          "https://arxiv.org/abs/2010.11929",
-                          "https://developers.google.com/machine-learning/gan/generative"]
+task_explanation_examples = ask_picturize_it.TASK_EXPLANATION_EXAMPLES
+product_def_question_examples = ask_picturize_it.PRODUCT_DEF_QUESTION_EXAMPLES
+article_links_examples = ask_picturize_it.ARTICLE_LINKS_EXAMPLES
 
 pdf_examples = PDF_Examples()
 youtube_links_examples = YouTube_Examples()
 
-
-prompt_character = PromptTemplate(
-    input_variables=["character_name","program_name"],
-    template="What is the name of the actor acted as {character_name} in {program_name}, answer without any explanation and return only the actor's name?")
-
-prompt_bond_girl = PromptTemplate(
-    input_variables=["movie_name"],
-    template="Who was Bond girl co-star in {movie_name}? answer without any explanation and return only the actor's name?")
-
-
-celeb_search_questions = [prompt_character.format(character_name="James Bond",program_name="Casino Royale"),
-                        prompt_character.format(character_name="James Bond",program_name="Die Another Day"),
-                        prompt_character.format(character_name="James Bond",program_name="Never Say Never Again"),
-                        prompt_character.format(character_name="James Bond",program_name="Spectre"),
-                        prompt_character.format(character_name="James Bond",program_name="Tomorrow Never Dies"),
-                        prompt_character.format(character_name="James Bond",program_name="The World Is Not Enough"),
-                        prompt_character.format(character_name="James Bond",program_name="Goldfinger"),
-                        prompt_character.format(character_name="James Bond",program_name="Octopussy"),
-                        prompt_character.format(character_name="James Bond",program_name="Diamonds Are Forever"),
-                        prompt_character.format(character_name="James Bond",program_name="Licence to Kill"), 
-                        prompt_character.format(character_name="Patrick Jane",program_name="The Mentalist"),
-                        prompt_character.format(character_name="Raymond Reddington",program_name="The Blacklist"),
-                        prompt_bond_girl.format(movie_name="Casino Royale"),
-                        prompt_bond_girl.format(movie_name="GoldenEye"),
-                        prompt_bond_girl.format(movie_name="Spectre"),
-                        prompt_bond_girl.format(movie_name="Tomorrow Never Dies"),
-                        prompt_bond_girl.format(movie_name="Goldfinger"),
-                        prompt_bond_girl.format(movie_name="No Time to Die"),
-                        prompt_bond_girl.format(movie_name="Octopussy"),
-                        prompt_bond_girl.format(movie_name="The World Is Not Enough"),
-                        prompt_bond_girl.format(movie_name="Diamonds Are Forever"),
-                        prompt_bond_girl.format(movie_name="Licence to Kill"),                          	
-		                prompt_bond_girl.format(movie_name="Die Another Day")]
-
+celeb_search_questions = ask_picturize_it.CELEB_SEARCH_QUESTIONS_EXAMPLES
                                
 '''
 Output and Upload
@@ -556,13 +512,13 @@ def generate_image_stability_ai_handler(stability_api_key, celebs_name_label, ge
         uihandlers.set_stabilityai_config(stability_api_key)
         return uihandlers.generate_image_stability_ai_handler(celebs_name_label, generate_image_prompt_text)
     else:
-        return "Please a prompt for image", None
+        return AskPicturizeIt.ENTER_A_PROMPT_IMAGE, None
     
 def generate_image_diffusion_handler(generate_image_prompt_text):
     if generate_image_prompt_text and len(generate_image_prompt_text)>0:
         return uihandlers.generate_image_diffusion_handler("ai-generated-image", generate_image_prompt_text)
     else:
-        return "Please a prompt for image", None
+        return AskPicturizeIt.ENTER_A_PROMPT_IMAGE, None
 
 '''
 UI Components
@@ -576,6 +532,27 @@ def generated_images_gallery_on_select(evt: gr.SelectData, generated_images_gall
     else:        
         return None
 
+def test_handler(api_key, org_id, model_name, optionSelection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, prompt):    
+    if api_key is None and azure_openai_key is None or (len(api_key)==0 and len(azure_openai_key)==0):
+        return ask_picturize_it.NO_API_KEY_ERROR, ""
+    if optionSelection == "OpenAI API":
+        promptmoderation = PromptModeration(api_key, org_id)
+        flagged, results_categories = promptmoderation.moderation(prompt)
+        if flagged:
+            return results_categories, ""
+        else:
+            operations = TextOperations()
+            operations.set_openai_api_key(api_key)
+            operations.set_model_name(model_name)
+            if org_id:
+                operations.set_org_id(org_id) 
+            message, response = operations.chat_completion(prompt)
+            return message, response
+    elif optionSelection == "Azure OpenAI API":
+        operations = TextOperations()        
+        operations.set_azure_openai_api_key(azure_openai_key, azure_openai_api_base, azure_openai_deployment_name)
+        message, response = operations.chat_completion(prompt)
+        return message, response
 
 with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabbedScreen:
     gr.Markdown(ask_picturize_it.TITLE)
@@ -584,19 +561,46 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
         gr.HTML(ask_picturize_it.RESEARCH_SECTION)
         gr.HTML(ask_picturize_it.SECTION_FOOTER)
     with gr.Tab("Configuration"):
-        with gr.Tab("OpenAI API"):
-            gr.HTML("Sign up for API Key here <a href='https://platform.openai.com'>https://platform.openai.com</a>")
-            with gr.Row():
-                with gr.Column():                    
-                    input_key = gr.Textbox(
-                        label="OpenAI API Key", value=os.getenv("OPENAI_API_KEY"), type="password")
-                    org_id = gr.Textbox(
-                        label="OpenAI ORG ID (only for org account)", value=os.getenv("OPENAI_ORG_ID"))  
-                    
-                    openai_model = gr.Dropdown(["gpt-4", "gpt-4-0613", "gpt-4-32k", "gpt-4-32k-0613", "gpt-3.5-turbo", 
-                                                "gpt-3.5-turbo-0613", "gpt-3.5-turbo-16k", "gpt-3.5-turbo-16k-0613", "text-davinci-003", 
-                                                "text-davinci-002", "text-curie-001", "text-babbage-001", "text-ada-001"], 
-                                               value="gpt-3.5-turbo", label="Model", info="Select one, for Natural language")
+        with gr.Tab("OpenAI settings"):
+            openai_selection = gr.Radio(["OpenAI API", "Azure OpenAI API"], label="Select one", info="Which service do you want to use?", value="OpenAI API")            
+            with gr.Tab("OpenAI API"):
+                gr.HTML("Sign up for API Key here <a href='https://platform.openai.com'>https://platform.openai.com</a>")
+                with gr.Row():
+                    with gr.Column():                    
+                        input_key = gr.Textbox(
+                            label="OpenAI API Key", value=os.getenv("OPENAI_API_KEY"), type="password")
+                        org_id = gr.Textbox(
+                            label="OpenAI ORG ID (only for org account)", value=os.getenv("OPENAI_ORG_ID"))  
+                        
+                        openai_model = gr.Dropdown(["gpt-4", "gpt-4-0613", "gpt-4-32k", "gpt-4-32k-0613", "gpt-3.5-turbo", 
+                                                    "gpt-3.5-turbo-0613", "gpt-3.5-turbo-16k", "gpt-3.5-turbo-16k-0613", "text-davinci-003", 
+                                                    "text-davinci-002", "text-curie-001", "text-babbage-001", "text-ada-001"], 
+                                                   value="gpt-3.5-turbo", label="Model", info="Select one, for Natural language")            
+            with gr.Tab("Azure OpenAI API"):
+                gr.HTML("Apply for access to Azure OpenAI Service by completing the form at <a href='https://aka.ms/oai/access?azure-portal=true'>https://aka.ms/oai/access?azure-portal=true</a>")
+                with gr.Row():
+                    with gr.Column():                    
+                        azure_openai_key = gr.Textbox(
+                            label="Azure OpenAI API Key", value=os.getenv("AZURE_OPENAI_KEY"), type="password")
+                        azure_openai_api_base = gr.Textbox(
+                            label="Azure OpenAI API Endpoint", value=os.getenv("AZURE_OPENAI_ENDPOINT"), type="password")
+                        azure_openai_deployment_name = gr.Textbox(
+                            label="Azure OpenAI API Deployment Name", value=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME"), type="password")
+            with gr.Tab("Testing"):
+                with gr.Row():
+                    with gr.Column():                    
+                        test_string = gr.Textbox(
+                            label="Test String", value="Hi, This is a test!")
+                        test_string_response = gr.Textbox(
+                            label="Response")
+                        test_string_output_info = gr.Label(value="Output Info", label="Info")
+                        test_button = gr.Button("Test it")
+            with gr.Group():
+                with gr.Row():
+                    input_num_images = gr.Slider(minimum=1,maximum=10,step=1,
+                        label="Number of Images to generate", value=1, info="OpenAI API supports 1-10 images")
+                    input_imagesize = gr.Dropdown(["1024x1024", "512x512", "256x256"], value="256x256", label="Image size",
+                                                  info="Select one, use download for image size from Image generation/variation Output tab")
         with gr.Tab("MongoDB"):
             gr.HTML("Sign up here <a href='https://www.mongodb.com/cloud/atlas/register'>https://www.mongodb.com/cloud/atlas/register</a>")            
             with gr.Row():
@@ -631,11 +635,6 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                 with gr.Column():
                    gr.HTML("Article extractor and summarize <a href='https://rapidapi.com/restyler/api/article-extractor-and-summarizer'>https://rapidapi.com/restyler/api/article-extractor-and-summarizer</a>")
                    rapidapi_api_key = gr.Textbox(label="API Key", value=os.getenv("RAPIDAPI_KEY"), type="password")   
-        with gr.Row():
-                input_num_images = gr.Slider(minimum=1,maximum=10,step=1,
-                    label="Number of Images to generate", value=1, info="OpenAI API supports 1-10 images")
-                input_imagesize = gr.Dropdown(["1024x1024", "512x512", "256x256"], value="256x256", label="Image size",
-                                              info="Select one, use download for image size from Image generation/variation Output tab")
     with gr.Tab("Record, transcribe, picturize and upload"):
         gr.HTML("<p>Record voice, transcribe a prompt, picturize the prompt, create variations, and upload in Output tab</p>")
         with gr.Tab("Whisper(whisper-1)"):
@@ -667,9 +666,9 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                     gr.Examples(
                         examples=input_examples,
                         label="Select one from Prompt Examples",
-                        fn=get_input_examples,
+                        inputs=[input_prompt],
                         examples_per_page=10,
-                        inputs=input_prompt
+                        outputs=input_prompt,
                     )
                     label_picturize_it = gr.Label(value="Prompt in your words and picturize it", label="Info")
         with gr.Tab("Image variation"):
@@ -679,9 +678,9 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                 gr.Examples(
                     examples=images_examples,
                     label="Select one from Image Examples and get variation",
-                    fn=get_images_examples,
+                    inputs=[input_image_variation],
                     examples_per_page=10,
-                    inputs=input_image_variation
+                    outputs=input_image_variation,
                 )
             with gr.Row():
                 label_get_variation = gr.Label(
@@ -719,7 +718,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                                         examples=IndianFilm_celeb_examples,
                                         examples_per_page=100,
                                         inputs=[celebs_name_label],
-                                        outputs=[question_prompt, key_traits],                
+                                        outputs=[question_prompt, key_traits],                                             
                                     )
                             with gr.Tab("Hollywood"):
                                 with gr.Row():
@@ -728,7 +727,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                                         examples=hollywood_celeb_examples,
                                         examples_per_page=100,
                                         inputs=[celebs_name_label],
-                                        outputs=[question_prompt, key_traits],                
+                                        outputs=[question_prompt, key_traits],                                          
                                     )
                             with gr.Tab("Business"):
                                 with gr.Row():
@@ -777,7 +776,8 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                                         examples_per_page=10,
                                         inputs=[keyword_search],
                                         outputs=[keyword_search_prompt, keyword_search_response],   
-                                        cache_examples=True,
+                                        cache_examples = False,
+                                        run_on_click=True,
                                     )  
                     with gr.Tab("Recent Awesome Prompts"):
                         with gr.Row():
@@ -787,8 +787,9 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                                     examples=recent_awesome_chatgpt_prompts,
                                     examples_per_page=50,
                                     inputs=[keyword_search],
-                                    outputs=[keyword_search_prompt, keyword_search_response],   
-                                    cache_examples=True,
+                                    outputs=[keyword_search_prompt, keyword_search_response],
+                                    cache_examples = False,
+                                    run_on_click=True,
                                 )
                     with gr.Tab("Recent Product definition"):
                         with gr.Row():
@@ -798,8 +799,9 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                                         examples=product_def_keyword_examples,
                                         examples_per_page=5,
                                         inputs=[keyword_search],
-                                        outputs=[keyword_search_prompt, keyword_search_response],   
-                                        cache_examples=True,
+                                        outputs=[keyword_search_prompt, keyword_search_response],  
+                                        cache_examples = False,
+                                        run_on_click=True,
                             )
             with gr.Tab("Ask Codex"):
                 with gr.Row():
@@ -829,7 +831,8 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                             examples_per_page=50,
                             inputs=[awesome_chatgpt_act],
                             outputs=[awesome_chatgpt_act, awesome_chatgpt_prompt],
-                            cache_examples=True,
+                            cache_examples = False,
+                            run_on_click=True,
                         )
                 with gr.Row():            
                     awesome_chatgpt_response = gr.Textbox(label="Response", lines=20)
@@ -857,7 +860,8 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                                     examples_per_page=3,
                                     inputs=[product_def_keyword],
                                     outputs=[product_def_keyword,product_fact_sheet],
-                                    cache_examples=True,
+                                    cache_examples = False,
+                                    run_on_click=True,
                                 )
                         gr.Examples(
                             label="Task explanation examples",
@@ -915,7 +919,8 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                                     label="YouTube examples",
                                     examples=youtube_links_examples,
                                     fn=youtube_search_data_by_uri,
-                                    cache_examples=True,
+                                    run_on_click=True,
+                                    cache_examples = False,
                                     examples_per_page=25,
                                     inputs=[youtube_link],
                                     outputs=[youtube_link,youtube_title],
@@ -934,7 +939,8 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                             gr.Examples(
                                     label="PDF examples",
                                     fn=pdf_search_data_by_uri,
-                                    cache_examples=True,
+                                    run_on_click=True,
+                                    cache_examples = False,
                                     examples=pdf_examples,
                                     examples_per_page=25,
                                     inputs=[pdf_link],
@@ -967,7 +973,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                 with gr.Column(scale=4):
                     with gr.Accordion("Generated Gallery", open=False):
                         generated_images_gallery = gr.Gallery(
-                                        label="Generated Images").style(preview="False", columns=[4])
+                                        label="Generated Images", preview="False", columns=4)
                     output_generated_image = gr.Image(label="Preview Image",  type="filepath")
                 with gr.Column(scale=1):
                     output_cloudinary_button = gr.Button("Get images from Cloudinary")
@@ -982,8 +988,15 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
 
     celebs_name_search_clear.click(lambda: None, None, celebs_name_chatbot, queue=False)
 
+   
+    test_button.click(
+        fn=test_handler,
+        inputs=[input_key, org_id, openai_model, openai_selection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, test_string],
+        outputs=[test_string_output_info, test_string_response]
+    )
+    
     youtube_transcribe_button.click(
-        youtube_transcribe_handler,
+        fn=youtube_transcribe_handler,
         inputs=[input_key, youtube_link],
         outputs=[youtube_transcribe_summarize_info_label, youtube_transcribe_summary]
     )
@@ -1018,6 +1031,13 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
         article_extract_handler,        
         inputs=[rapidapi_api_key, article_link], 
         outputs=[article_summary, article_summarize_extract_info_label]
+    )
+
+
+    optimize_prompt_product_def_button.click(
+        fn=generate_optimized_prompt,
+        inputs=[product_def_image_prompt],
+        outputs=[product_def_image_prompt]
     )
     
     celebs_name_search.submit(
@@ -1087,43 +1107,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
         outputs=[product_def_final_prompt]        
     )
     
-    optimize_prompt_product_def_button.click(
-        generate_optimized_prompt,
-        inputs=[product_def_image_prompt],
-        outputs=[product_def_image_prompt]
-    )
-
-    ask_awesome_chatgpt_button.click(
-        awesome_prompts_handler,
-        inputs=[input_key, org_id, openai_model, mongo_config, mongo_connection_string, mongo_database, awesome_chatgpt_prompt, awesome_chatgpt_act],
-        outputs=[label_awesome_chatgpt_here, awesome_chatgpt_response]
-    )
-
-    ask_chatgpt_button.click(
-        ask_chatgpt_handler,
-        inputs=[input_key, org_id, openai_model, mongo_config, mongo_connection_string, mongo_database, ask_prompt, ask_keyword],
-        outputs=[label_codex_here, keyword_response_code]
-    )    
-
-    product_def_ask_button.click(
-        ask_product_def_handler,
-        inputs=[input_key, org_id, openai_model, mongo_config, mongo_connection_string, mongo_database, product_def_final_prompt, product_def_keyword],
-        outputs=[product_def_info_label, product_def_response]
-    )   
     
-    product_def_generate_button.click(
-        create_image_from_prompt_handler,
-        inputs=[input_key, org_id, product_def_image_prompt, input_imagesize, input_num_images],
-        outputs=[product_def_image_info_label, product_def_generated_image, generated_images_gallery]
-
-    )
-
-    product_def_variations_button.click(
-        create_variation_from_image_handler,
-        inputs=[input_key, org_id, product_def_generated_image, input_imagesize, input_num_images],
-        outputs=[product_def_image_info_label, product_def_generated_image, generated_images_gallery]
-    )
-
     question_prompt.change(
         fn=tokenizer_calc,
         inputs=[generate_image_prompt_text],
@@ -1158,88 +1142,124 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
     )
     
     generate_image_stability_ai_button.click(
-        generate_image_stability_ai_handler,
+        fn=generate_image_stability_ai_handler,
         inputs=[stability_api_key, celebs_name_label, generate_image_prompt_text],
         outputs=[label_describe_gpt, celeb_generated_image]
 
     )
     
     generate_image_diffusion_button.click(
-        generate_image_diffusion_handler,
+        fn=generate_image_diffusion_handler,
         inputs=[input_prompt],
         outputs=[label_picturize_it, output_generated_image]
 
     )
 
-    describe_button.click(
-        describe_handler,
-        inputs=[input_key, org_id, openai_model, cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, cloudinary_folder, mongo_config, mongo_connection_string, mongo_database, celebs_name_label, question_prompt, know_your_celeb_description, celeb_real_photo,  celeb_generated_image],
-        outputs=[label_upload_here, celebs_name_label, question_prompt, know_your_celeb_description, celeb_real_photo, celeb_generated_image]
-    )
-
-
+   
     optimize_prompt_chatgpt_button.click(
-        generate_optimized_prompt,
+        fn=generate_optimized_prompt,
         inputs=[input_prompt],
         outputs=[input_prompt]
     )
-    
-   
-   
-    generate_button.click(
-        create_image_from_prompt_handler,
-        inputs=[input_key, org_id, input_prompt, input_imagesize, input_num_images],
-        outputs=[label_picturize_it, output_generated_image, generated_images_gallery]
-    )
-
-    celeb_variation_button.click(
-        create_variation_from_image_handler,
-        inputs=[input_key, org_id, celeb_real_photo, input_imagesize, input_num_images],
-        outputs=[label_upload_here, celeb_generated_image, generated_images_gallery]
-    )
-    
-    generate_variations_button.click(
-        create_variation_from_image_handler,
-        inputs=[input_key, org_id, input_image_variation, input_imagesize, input_num_images],
-        outputs=[label_get_variation, output_generated_image, generated_images_gallery]
-    )
-
-    generate_more_variations_button.click(
-        create_variation_from_image_handler,
-        inputs=[input_key, org_id, output_generated_image, input_imagesize, input_num_images],
-        outputs=[label_upload_variation, output_generated_image, generated_images_gallery]
-    )
+       
 
     output_cloudinary_button.click(
-        cloudinary_search,
+        fn=cloudinary_search,
         inputs=[cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, cloudinary_folder],
         outputs=[generated_images_gallery]
     )
 
     generated_images_gallery.select(
-        generated_images_gallery_on_select,
+        fn=generated_images_gallery_on_select,
         inputs=[generated_images_gallery],
         outputs=[output_generated_image]
     )
 
     variation_cloudinary_upload.click(
-        cloudinary_upload,
+        fn=cloudinary_upload,
         inputs=[cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, cloudinary_folder, output_generated_image, name_variation_it],
         outputs=[label_upload_variation,output_generated_image]
 
     )
 
     transcribe_button.click(
-        transcribe_handler,
+        fn=transcribe_handler,
         inputs=[input_key, org_id, audio_file],
         outputs=[input_transcriptionprompt, input_prompt]
     )
 
     transcribe_whisper_large_v2_button.click(
-        transcribe_whisper_large_v2,
+        fn=transcribe_whisper_large_v2,
         inputs=[audio_file],
         outputs=[input_transcriptionprompt, input_prompt]
     )
+    
+  
+    generate_button.click(
+        fn=create_image_from_prompt_handler,
+        inputs=[input_key, org_id, openai_selection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, input_prompt, input_imagesize, input_num_images],
+        outputs=[label_picturize_it, output_generated_image, generated_images_gallery]
+    )
+    
+    
+    ask_awesome_chatgpt_button.click(
+        fn=awesome_prompts_handler,
+        inputs=[input_key, org_id, openai_model, openai_selection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, mongo_config, mongo_connection_string, mongo_database, awesome_chatgpt_prompt, awesome_chatgpt_act],
+        outputs=[label_awesome_chatgpt_here, awesome_chatgpt_response]
+    )
+
+    ask_chatgpt_button.click(
+        fn=ask_chatgpt_handler,
+        inputs=[input_key, org_id, openai_model, openai_selection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, mongo_config, mongo_connection_string, mongo_database, ask_prompt, ask_keyword],
+        outputs=[label_codex_here, keyword_response_code]
+    )    
+
+    product_def_ask_button.click(
+        fn=ask_product_def_handler,
+        inputs=[input_key, org_id, openai_model, openai_selection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, mongo_config, mongo_connection_string, mongo_database, product_def_final_prompt, product_def_keyword],
+        outputs=[product_def_info_label, product_def_response]
+    )   
+
+
+    product_def_generate_button.click(
+        fn=create_image_from_prompt_handler,
+        inputs=[input_key, org_id, openai_selection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, product_def_image_prompt, input_imagesize, input_num_images],
+        outputs=[product_def_image_info_label, product_def_generated_image, generated_images_gallery]
+
+    )
+    
+    
+
+    celeb_variation_button.click(
+        fn=create_variation_from_image_handler,
+        inputs=[input_key, org_id, openai_selection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, celeb_real_photo, input_imagesize, input_num_images],
+        outputs=[label_upload_here, celeb_generated_image, generated_images_gallery]
+    )
+    
+    generate_variations_button.click(
+        fn=create_variation_from_image_handler,
+        inputs=[input_key, org_id, openai_selection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, input_image_variation, input_imagesize, input_num_images],
+        outputs=[label_get_variation, output_generated_image, generated_images_gallery]
+    )
+
+    generate_more_variations_button.click(
+        fn=create_variation_from_image_handler,
+        inputs=[input_key, org_id, openai_selection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, output_generated_image, input_imagesize, input_num_images],
+        outputs=[label_upload_variation, output_generated_image, generated_images_gallery]
+    )
+
+    product_def_variations_button.click(
+        fn=create_variation_from_image_handler,
+        inputs=[input_key, org_id, openai_selection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, product_def_generated_image, input_imagesize, input_num_images],
+        outputs=[product_def_image_info_label, product_def_generated_image, generated_images_gallery]
+    )
+
+    describe_button.click(
+        fn=describe_handler,
+        inputs=[input_key, org_id, openai_model, openai_selection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, cloudinary_folder, mongo_config, mongo_connection_string, mongo_database, celebs_name_label, question_prompt, know_your_celeb_description, celeb_real_photo, celeb_generated_image],
+        outputs=[label_upload_here, celebs_name_label, question_prompt, know_your_celeb_description, celeb_real_photo, celeb_generated_image]        
+    )
+    
 
 if __name__ == "__main__":
     AskMeTabbedScreen.launch()
