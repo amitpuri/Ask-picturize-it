@@ -6,7 +6,7 @@ Huggingface Space 🤗
 
 [https://huggingface.co/spaces/amitpuri/Ask-picturize-it](https://huggingface.co/spaces/amitpuri/Ask-picturize-it)
 
-This uses OpenAI API Whisper(whisper-1), DALL-E, GPT(gpt-3.5-turbo)
+This uses OpenAI API Whisper(whisper-1), DALL-E, GPT(gpt-3.5-turbo) and also Azure OpenAI
 
 Extracted from https://openai.com/pricing
 
