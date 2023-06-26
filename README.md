@@ -8,6 +8,9 @@ Huggingface Space 🤗
 
 This uses OpenAI API Whisper(whisper-1), DALL-E, GPT(gpt-3.5-turbo) and also Azure OpenAI
 
+![image](https://github.com/amitpuri/Ask-picturize-it/assets/6460233/5107b5b0-8af8-4c98-aaf2-215c7e1ee950)
+
+
 Extracted from https://openai.com/pricing
 
 Multiple models, each with different capabilities and price points. Prices are per 1,000 tokens. 
