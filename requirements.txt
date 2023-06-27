@@ -1,5 +1,6 @@
 git+https://github.com/huggingface/transformers
 openai
+google-generativeai
 requests
 gradio
 Pillow

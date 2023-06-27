@@ -17,6 +17,7 @@ from Utils.PDFSummarizer import *
 from OpenAIUtil.TranscribeOperations import *  #transcribe
 from OpenAIUtil.TextOperations import *
 from OpenAIUtil.PromptModeration import *
+from PalmUtil.PaLMTextOperations import *
 
 from langchain.llms import OpenAI
 
@@ -315,6 +316,8 @@ def celebs_name_search_handler(input_key, search_text, celebs_chat_history):
         return search_text, celebs_chat_history, ask_picturize_it.NO_API_KEY_ERROR
     elif len(search_text.strip())>0:
         os.environ["OPENAI_API_KEY"] = input_key
+        os.environ["OPENAI_API_VERSION"] = "2020-11-07"
+
         celebs_chat_history = celebs_chat_history + [(search_text, None)] 
         try:
             llm = OpenAI(temperature=0.7)
@@ -532,27 +535,38 @@ def generated_images_gallery_on_select(evt: gr.SelectData, generated_images_gall
     else:        
         return None
 
-def test_handler(api_key, org_id, model_name, optionSelection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, prompt):    
-    if api_key is None and azure_openai_key is None or (len(api_key)==0 and len(azure_openai_key)==0):
-        return ask_picturize_it.NO_API_KEY_ERROR, ""
+def test_handler(api_key, org_id, model_name, optionSelection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, google_generative_api_key, prompt):        
     if optionSelection == "OpenAI API":
-        promptmoderation = PromptModeration(api_key, org_id)
-        flagged, results_categories = promptmoderation.moderation(prompt)
-        if flagged:
-            return results_categories, ""
+        if api_key is None or len(api_key)==0:
+            return ask_picturize_it.NO_API_KEY_ERROR, ""
         else:
-            operations = TextOperations()
-            operations.set_openai_api_key(api_key)
-            operations.set_model_name(model_name)
-            if org_id:
-                operations.set_org_id(org_id) 
+            promptmoderation = PromptModeration(api_key, org_id)
+            flagged, results_categories = promptmoderation.moderation(prompt)
+            if flagged:
+                return results_categories, ""
+            else:
+                operations = TextOperations()
+                operations.set_openai_api_key(api_key)
+                operations.set_model_name(model_name)
+                if org_id:
+                    operations.set_org_id(org_id) 
+                message, response = operations.chat_completion(prompt)
+                return message, response
+    elif optionSelection == "Azure OpenAI API":
+        if azure_openai_key is None or len(azure_openai_key)==0:
+            return ask_picturize_it.NO_API_KEY_ERROR, ""
+        else:
+            operations = TextOperations()        
+            operations.set_azure_openai_api_key(azure_openai_key, azure_openai_api_base, azure_openai_deployment_name)
             message, response = operations.chat_completion(prompt)
             return message, response
-    elif optionSelection == "Azure OpenAI API":
-        operations = TextOperations()        
-        operations.set_azure_openai_api_key(azure_openai_key, azure_openai_api_base, azure_openai_deployment_name)
-        message, response = operations.chat_completion(prompt)
-        return message, response
+    elif optionSelection == "Google PaLM API":
+        if google_generative_api_key is None or len(google_generative_api_key)==0:
+            return ask_picturize_it.NO_GOOGLE_PALM_AI_API_KEY_ERROR, ""    
+        else:
+            operations = PaLMTextOperations(google_generative_api_key)        
+            response = operations.generate_text(prompt)
+            return "Response from Google PaLM API", response
 
 with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabbedScreen:
     gr.Markdown(ask_picturize_it.TITLE)
@@ -562,7 +576,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
         gr.HTML(ask_picturize_it.SECTION_FOOTER)
     with gr.Tab("Configuration"):
         with gr.Tab("OpenAI settings"):
-            openai_selection = gr.Radio(["OpenAI API", "Azure OpenAI API"], label="Select one", info="Which service do you want to use?", value="OpenAI API")            
+            openai_selection = gr.Radio(["OpenAI API", "Azure OpenAI API", "Google PaLM API"], label="Select one", info="Which service do you want to use?", value="OpenAI API")
             with gr.Tab("OpenAI API"):
                 gr.HTML("Sign up for API Key here <a href='https://platform.openai.com'>https://platform.openai.com</a>")
                 with gr.Row():
@@ -586,11 +600,17 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                             label="Azure OpenAI API Endpoint", value=os.getenv("AZURE_OPENAI_ENDPOINT"), type="password")
                         azure_openai_deployment_name = gr.Textbox(
                             label="Azure OpenAI API Deployment Name", value=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME"), type="password")
+            with gr.Tab("Google PaLM API"):
+                gr.HTML("Visit <a href='https://makersuite.google.com'>https://makersuite.google.com</a> and <a href='https://developers.generativeai.google/develop/sample-apps'>https://developers.generativeai.google/develop/sample-apps</a>")
+                with gr.Row():
+                    with gr.Column():
+                        google_generative_api_key = gr.Textbox(
+                                label="Google Generative AI API Key", value=os.getenv("GOOGLE_PALM_AI_API_KEY"), type="password")
             with gr.Tab("Testing"):
                 with gr.Row():
                     with gr.Column():                    
                         test_string = gr.Textbox(
-                            label="Test String", value="Hi, This is a test!")
+                            label="Test String", value=ask_picturize_it.TEST_MESSAGE, lines=15)
                         test_string_response = gr.Textbox(
                             label="Response")
                         test_string_output_info = gr.Label(value="Output Info", label="Info")
@@ -991,7 +1011,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
    
     test_button.click(
         fn=test_handler,
-        inputs=[input_key, org_id, openai_model, openai_selection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, test_string],
+        inputs=[input_key, org_id, openai_model, openai_selection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, google_generative_api_key, test_string],
         outputs=[test_string_output_info, test_string_response]
     )
     

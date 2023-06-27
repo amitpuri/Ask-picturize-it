@@ -4,13 +4,14 @@ import json
 from langchain.prompts import PromptTemplate
 
 class AskPicturizeIt:
-    TITLE = '# [Ask-me-to-picturize-it](https://github.com/amitpuri/Ask-me-to-picturize-it)'
+    TITLE = '# [Ask-picturize-it](https://github.com/amitpuri/Ask-picturize-it)'
     DESCRIPTION = """<strong>This space uses following:</strong>
        <p>
        <ul>    
        <li>OpenAI API Whisper(whisper-1) <a href='https://openai.com/research/whisper'>https://openai.com/research/whisper</a></li>    
        <li>DALL-E <a href='https://openai.com/product/dall-e-2'>https://openai.com/product/dall-e-2</a></li>
        <li>GPT(gpt-3.5-turbo) <a href='https://openai.com/product/gpt-4'>https://openai.com/product/gpt-4</a></li>  
+       <li>Azure OpenAI <a href='https://azure.microsoft.com/products/cognitive-services/openai-service'>https://azure.microsoft.com/products/cognitive-services/openai-service</a></li>  
        <li>Cloudinary <a href='https://cloudinary.com/documentation/python_quickstart'>https://cloudinary.com/documentation/python_quickstart</a></li>
        <li>Gradio App <a href='https://gradio.app/docs'>https://gradio.app/docs</a> in Python and MongoDB</li>
        <li>Prompt optimizer <a href='https://huggingface.co/microsoft/Promptist'>https://huggingface.co/microsoft/Promptist</a></li>
@@ -23,7 +24,6 @@ class AskPicturizeIt:
        </p>
      """
     RESEARCH_SECTION = """
-
        <p><strong>Check it out</strong></p>
        <p>
        <ul>
@@ -100,6 +100,8 @@ class AskPicturizeIt:
 
     NO_API_KEY_ERROR = "Review Configuration tab for keys/settings, OPENAI_API_KEY is missing or No input"
 
+    NO_GOOGLE_PALM_AI_API_KEY_ERROR = "Review Configuration tab for keys/settings, PaLM Generative AI API Key (or GOOGLE_PALM_AI_API_KEY) is missing or No input"
+
     ENTER_A_PROMPT_IMAGE = "Please a prompt for image"
     
     PDF_OUTPUT_INFO = "PDF summarize Output info"
@@ -146,25 +148,24 @@ class AskPicturizeIt:
 
 
 
-    KEYWORD_EXAMPLES = sorted(["Stable Diffusion", "Zero-shot classification", "Generative AI based Apps ", "Generative AI", "Vector Database",
-                    "Foundation Capital FMOps ", "Foundational models AI", "Prompt Engineering", 
-        		    "Hyperparameter optimization","Embeddings Search",
-                    "Convolutional Neural Network","Recurrent neural network",
-                    "XGBoost Grid Search", "Random Search" , "Bayesian Optimization", "NLP", "GPT","Reinforcement learning",
+    KEYWORD_EXAMPLES = sorted(["Stable Diffusion", "Zero-shot classification", "Generative AI based Apps ", 
+                    "Foundation Capital FMOps ", "Foundational models AI", "Prompt Engineering", "Generative AI", 
+        		    "Hyperparameter optimization","Embeddings Search","Convolutional Neural Network","Recurrent neural network",
+                    "XGBoost Grid Search", "Random Search" , "Bayesian Optimization", "NLP", "GPT", "Vector Database",
                     "OpenAI embeddings","ChatGPT","Python LangChain LLM", "Popular LLM models", "Hugging Face Transformer",
                     "Confusion Matrix", "Feature Vector", "Gradient Accumulation","Loss Functions","Cross Entropy",
                     "Root Mean Square Error", "Cosine similarity", "Euclidean distance","Dot product similarity",
                     "Machine Learning","Artificial Intelligence","Deep Learning", "Neural Networks", "Data Science",
-                    "Supervised Learning","Unsupervised Learning","Reinforcement Learning", "Natural Language Processing", "Computer Vision", "Big Data",
+                    "Supervised Learning","Unsupervised Learning","Reinforcement Learning", "Natural Language Processing", 
                     "Data Mining", "Feature Extraction", "Dimensionality Reduction", "Ensemble Learning", "Transfer Learning",
-                    "Decision Trees","Support Vector Machines", "Clustering","Regression",                    
+                    "Decision Trees","Support Vector Machines", "Clustering","Regression", "Computer Vision", "Big Data",                   
                     "Language Models","Transformer","BERT","OpenAI","Text Generation","Text Classification",
                     "Chatbots","Summarization","Question Answering","Named Entity Recognition","Sentiment Analysis",
-                    "Pretraining","Finetuning","Contextual Embeddings","Attention Mechanism",
+                    "Pretraining","Finetuning","Contextual Embeddings","Attention Mechanism","Reinforcement learning",
                     "Pinecone, a fully managed vector database", "Weaviate, an open-source vector search engine",
-                    "Redis as a vector database","Qdrant, a vector search engine", "Milvus, a vector database built for scalable similarity search"
-                    "Chroma, an open-source embeddings store","Typesense, fast open source vector search",
-                    "Zilliz, data infrastructure, powered by Milvus", "Lexical-based search","Graph-based search","Embedding-based search"
+                    "Redis as a vector database","Qdrant, a vector search engine", "Milvus", "Embedding-based search",
+                    "Chroma, an open-source embeddings store","Typesense, fast open source vector search", "Low-code No-code",
+                    "Zilliz, data infrastructure, powered by Milvus", "Lexical-based search","Graph-based search"                            
                    ])
 
 
@@ -184,6 +185,7 @@ class AskPicturizeIt:
                         prompt_character.format(character_name="James Bond",program_name="Tomorrow Never Dies"),
                         prompt_character.format(character_name="James Bond",program_name="The World Is Not Enough"),
                         prompt_character.format(character_name="James Bond",program_name="Goldfinger"),
+
                         prompt_character.format(character_name="James Bond",program_name="Octopussy"),
                         prompt_character.format(character_name="James Bond",program_name="Diamonds Are Forever"),
                         prompt_character.format(character_name="James Bond",program_name="Licence to Kill"), 
@@ -200,6 +202,23 @@ class AskPicturizeIt:
                         prompt_bond_girl.format(movie_name="Diamonds Are Forever"),
                         prompt_bond_girl.format(movie_name="Licence to Kill"),                          	
 		                prompt_bond_girl.format(movie_name="Die Another Day")]
+
+
+    TEST_MESSAGE = """Rewrite this into a casual email:
+        
+Tis but thy name that is my enemy;
+Thou art thyself, though not a Montague.
+What’s Montague? It is nor hand, nor foot,
+Nor arm, nor face, nor any other part
+Belonging to a man. O, be some other name!
+What’s in a name? That which we call a rose
+By any other name would smell as sweet;
+So Romeo would, were he not Romeo call’d,
+Retain that dear perfection which he owes
+Without that title. Romeo, doff thy name,
+And for that name which is no part of thee
+Take all myself."""
+
     
     def get_wikimedia_image(self, keyword):
         WIKI_REQUEST = 'http://en.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&piprop=original&titles='
