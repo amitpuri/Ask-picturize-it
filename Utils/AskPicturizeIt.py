@@ -12,6 +12,7 @@ class AskPicturizeIt:
        <li>DALL-E <a href='https://openai.com/product/dall-e-2'>https://openai.com/product/dall-e-2</a></li>
        <li>GPT(gpt-3.5-turbo) <a href='https://openai.com/product/gpt-4'>https://openai.com/product/gpt-4</a></li>  
        <li>Azure OpenAI <a href='https://azure.microsoft.com/products/cognitive-services/openai-service'>https://azure.microsoft.com/products/cognitive-services/openai-service</a></li>  
+       <li>Google Generative AI (PaLM API)<a href='https://developers.generativeai.google'>https://developers.generativeai.google</a></li>               
        <li>Cloudinary <a href='https://cloudinary.com/documentation/python_quickstart'>https://cloudinary.com/documentation/python_quickstart</a></li>
        <li>Gradio App <a href='https://gradio.app/docs'>https://gradio.app/docs</a> in Python and MongoDB</li>
        <li>Prompt optimizer <a href='https://huggingface.co/microsoft/Promptist'>https://huggingface.co/microsoft/Promptist</a></li>
