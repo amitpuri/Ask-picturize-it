@@ -6,7 +6,7 @@ Huggingface Space 🤗
 
 [https://huggingface.co/spaces/amitpuri/Ask-picturize-it](https://huggingface.co/spaces/amitpuri/Ask-picturize-it)
 
-This uses OpenAI API Whisper(whisper-1), DALL-E, GPT(gpt-3.5-turbo), also Azure OpenAI and Google PaLM
+This uses OpenAI API Whisper(whisper-1), DALL-E, GPT(gpt-3.5-turbo), also Azure OpenAI and Google PaLM (https://developers.generativeai.google)
 
 ![image](https://github.com/amitpuri/Ask-picturize-it/assets/6460233/f756c026-0e59-40a3-915a-2e433eef2660)
 
