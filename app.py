@@ -610,7 +610,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                 with gr.Row():
                     with gr.Column():                    
                         test_string = gr.Textbox(
-                            label="Test String", value=ask_picturize_it.TEST_MESSAGE, lines=15)
+                            label="Test String", value=ask_picturize_it.TEST_MESSAGE, lines=2)
                         test_string_response = gr.Textbox(
                             label="Response")
                         test_string_output_info = gr.Label(value="Output Info", label="Info")
