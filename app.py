@@ -3,162 +3,32 @@ import os
 
 import gpt3_tokenizer
 import gradio as gr
+from langchain.llms import OpenAI
 
 from ExamplesUtil.CelebPromptGenerator import *
 from MongoUtil.StateDataClient import *
 from MongoUtil.CelebDataClient import *
-from MongoUtil.KBDataClient import *
-from UIHandlers import AskMeUIHandlers
+from UIHandlers.AskMeUI import AskMeUI
+from UIHandlers.Test import Test
+from UIHandlers.KnowledgeBase import KnowledgeBase
 from Utils.Optimizers import Prompt_Optimizer
 from Utils.AskPicturizeIt import *
-from Utils.RapidapiUtil import *
-from Utils.YouTubeSummarizer import *
-from Utils.PDFSummarizer import *
 from OpenAIUtil.TranscribeOperations import *  #transcribe
-from OpenAIUtil.TextOperations import *
-from OpenAIUtil.PromptModeration import *
-from PalmUtil.PaLMTextOperations import *
-
-from langchain.llms import OpenAI
-
-from youtube_search import YoutubeSearch
-import arxiv
 
 
 #from dotenv import load_dotenv
 #load_dotenv()
 
 ask_picturize_it = AskPicturizeIt()
+kb = KnowledgeBase()
 prompt_optimizer = Prompt_Optimizer()
 prompt_generator = CelebPromptGenerator()
-uihandlers = AskMeUIHandlers()
+uihandlers = AskMeUI()
+test = Test()
 
 def get_private_mongo_config():
     return os.getenv("P_MONGODB_URI"), os.getenv("P_MONGODB_DATABASE")
-
-   
-def get_searchData_by_uri(uri: str):
-    try:
-        connection_string, database = get_private_mongo_config()           
-        kb_data_client = KBDataClient(connection_string, database)
-        title, summary = kb_data_client.search_data_by_uri(uri)        
-    except Exception as exception:
-        print(f"Exception Name: {type(exception).__name__}")
-        print(exception)
-        title = ""
-        summary = ""
-        pass
-    finally:
-        return title, summary
-
-def extract_youtube_attributes(keyword, output):
-    videos = []
-    for video in output.videos:
-        print(video)
-        video_id = video["id"]
-        url = f"https://www.youtube.com/watch?v={video_id}"
-        videos.append({
-            'kbtype': "youtube",
-            'keyword': keyword ,
-            'title': video["title"],
-            'url': url,
-            'summary': None
-        })
-    return videos
-
-def extract_arxiv_attributes(keyword, output):
-    papers = []
-    for pdf in output.results():
-        papers.append({
-            'kbtype': "pdf",
-            'keyword': keyword ,
-            'title': pdf.title,
-            'url': pdf.pdf_url,
-            'summary': pdf.summary
-        })
-    return papers
-
-def pdf_search_data_by_uri(uri: str):
-    title, summary = get_searchData_by_uri(uri)
-    return uri, title, summary
     
-def youtube_search_data_by_uri(uri: str):
-    title, summary = get_searchData_by_uri(uri)
-    return uri, title
-
-
-def kb_search(keyword: str, select_medium, max_results: int):
-    connection_string, database = get_private_mongo_config()
-    kb_data_client = KBDataClient(connection_string, database)
-    if select_medium == 0:
-        output = YoutubeSearch(keyword, max_results=max_results)
-        try:
-            videos = extract_youtube_attributes(keyword, output)
-            kb_data_client.save_kb_searchdata(videos)
-        except Exception as exception:
-            print(f"Exception Name: {type(exception).__name__}")
-            print(exception)
-            pass
-
-        return output.to_json()
-    elif select_medium == 1:
-        output = arxiv.Search(
-          query = keyword,
-          max_results = max_results,
-          sort_by = arxiv.SortCriterion.SubmittedDate
-        )
-        try:
-            papers = extract_arxiv_attributes(keyword, output)
-            kb_data_client.save_kb_searchdata(papers)
-        except Exception as exception:
-            print(f"Exception Name: {type(exception).__name__}")
-            print(exception)
-            pass
-        return output.results()
-    elif select_medium == 2:
-        outputs = []
-        for page_title in wikipedia.search(keyword, results=max_results):
-            try:
-                page = wikipedia.page(page_title)            
-                outputs.append(page.url)            
-            except (wikipedia.exceptions.PageError, wikipedia.exceptions.DisambiguationError):
-                pass
-        return outputs
-
-def youtube_summarizer_handler(api_key, url):    
-    if api_key:
-        if url and len(url)>0:
-            youtube_summarizer = YouTubeSummarizer()
-            youtube_summarizer.setOpenAIConfig(api_key)
-            return ask_picturize_it.TRANSCRIBE_OUTPUT_INFO,  youtube_summarizer.summarize(url)
-        else:
-            return "No URL",  ""
-    else:
-        return AskPicturizeIt.NO_API_KEY_ERROR, ""
-
-def youtube_transcribe_handler(api_key, url):    
-    if api_key:
-        if url and len(url)>0:
-            youtube_summarizer = YouTubeSummarizer()
-            youtube_summarizer.setOpenAIConfig(api_key)
-            return ask_picturize_it.TRANSCRIBE_OUTPUT_INFO,  youtube_summarizer.transcribe(url)
-        else:
-            return "No URL",  ""
-    else:
-        return AskPicturizeIt.NO_API_KEY_ERROR, ""
-
-def pdf_summarizer_handler(api_key, url):    
-    if api_key:
-        if url and len(url)>0:
-            pdf_summarizer = PDFSummarizer()
-            pdf_summarizer.setOpenAIConfig(api_key)
-            #TO DO
-            return ask_picturize_it.PDF_OUTPUT_INFO, pdf_summarizer.summarize(url)
-        else:
-            return "No URL",  ""
-    else:
-        return AskPicturizeIt.NO_API_KEY_ERROR, ""
-
 def generate_optimized_prompt(plain_text):
     return prompt_optimizer.generate_optimized_prompt(plain_text);
 	
@@ -167,11 +37,9 @@ def tokenizer_calc(prompt):
         return f"Tokenizer (tokens/characters) {gpt3_tokenizer.count_tokens(prompt)}, {len(prompt)}"
 
 
-
 '''
 Record voice, transcribe, picturize, create variations, and upload
 '''
-
 
 def transcribe_handler(api_key, org_id, audio_file):
     if audio_file: 
@@ -187,13 +55,8 @@ def transcribe_whisper_large_v2(audio_file):
         return transcribeOperations.transcribe_whisper_large_v2(audio_file)
 
 '''
-Image generation Examples
+Image generation 
 '''
-
-def get_input_examples():
-    return prompt_generator.get_input_examples()
-
-
 
 def create_image_from_prompt_handler(api_key, org_id, optionSelection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, input_prompt, input_imagesize, input_num_images):    
     if optionSelection == "OpenAI API":
@@ -206,12 +69,8 @@ def create_image_from_prompt_handler(api_key, org_id, optionSelection, azure_ope
 
 
 '''
-Image variations Examples
+Image variations 
 '''
-
-def get_images_examples():
-    return prompt_generator.get_images_examples()
-
 
 def create_variation_from_image_handler(api_key, org_id, optionSelection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, input_image_variation, input_imagesize, input_num_images):
     if optionSelection == "OpenAI API":
@@ -300,16 +159,6 @@ def celeb_save_description_handler(mongo_config, mongo_connection_string, mongo_
         uihandlers.update_description(name, prompt, description)
         return f"ChatGPT description saved for {name}", description
 
-def get_celeb_examples(category):
-    connection_string, database = get_private_mongo_config()           
-    celeb_data_client = CelebDataClient(connection_string, database)
-    celeb_list = celeb_data_client.celeb_list(category)
-    return celeb_list
-
-def get_key_traits(name):
-    connection_string, database = get_private_mongo_config()
-    celeb_data_client = CelebDataClient(connection_string, database)
-    return celeb_data_client.get_key_traits(name)
 
 def celebs_name_search_handler(input_key, search_text, celebs_chat_history):
     if not input_key or len(input_key.strip())==0:        
@@ -342,31 +191,15 @@ def celebs_name_search_history_handler(search_text, celebs_chat_history):
         
     return search_text, "John Doe", celebs_chat_history, ask_picturize_it.NO_API_KEY_ERROR
 
+def get_key_traits(name):
+    connection_string, database = get_private_mongo_config()
+    celeb_data_client = CelebDataClient(connection_string, database)
+    return celeb_data_client.get_key_traits(name)
+
 
 '''
 Codex
 '''
-
-def get_saved_prompts(keyword): 
-    try:
-        connection_string, database = get_private_mongo_config()           
-        state_data_client = StateDataClient(connection_string, database)
-        prompt, response = state_data_client.read_description_from_prompt(keyword)        
-    except:
-        prompt = ""
-        response = ""
-        pass
-    finally:
-        return prompt, response
-
-
-def get_keyword_prompts(prompttype):
-    connection_string, database = get_private_mongo_config()           
-    state_data_client = StateDataClient(connection_string, database)
-    saved_prompts = state_data_client.list_saved_prompts(prompttype)
-    return saved_prompts
-
-
 
 def ask_chatgpt_handler(api_key, org_id, model_name, optionSelection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, mongo_config, mongo_connection_string, mongo_database, prompt, keyword):
     uihandlers.set_mongodb_config(mongo_config, mongo_connection_string, mongo_database)
@@ -383,12 +216,6 @@ def ask_chatgpt_handler(api_key, org_id, model_name, optionSelection, azure_open
 Awesome ChatGPT Prompts
 '''
 
-def get_awesome_chatgpt_prompts(awesome_chatgpt_act):
-    awesome_chatgpt_prompt = prompt_generator.get_awesome_chatgpt_prompt(awesome_chatgpt_act)
-    return awesome_chatgpt_act, awesome_chatgpt_prompt
-
-
-
 def awesome_prompts_handler(api_key, org_id, model_name, optionSelection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, mongo_config, mongo_connection_string, mongo_database, prompt, keyword):    
     if optionSelection == "OpenAI API":
         uihandlers.set_openai_config(api_key)
@@ -399,7 +226,6 @@ def awesome_prompts_handler(api_key, org_id, model_name, optionSelection, azure_
         uihandlers.set_azure_openai_config(azure_openai_key, azure_openai_api_base, azure_openai_deployment_name)
     uihandlers.set_mongodb_config(mongo_config, mongo_connection_string, mongo_database)
     return uihandlers.ask_chatgpt(prompt, keyword,"awesome-prompts")
-
 
 
 '''
@@ -428,42 +254,79 @@ def update_final_prompt(product_fact_sheet, product_def_question, product_task_e
     final_prompt = final_prompt.replace('\n\n','\n')
     return final_prompt
 
-  
-def article_summarize_handler(rapidapi_api_key, article_link, length):
-    rapidapi_util = RapidapiUtil()
-    if rapidapi_api_key:
-        if article_link and len(article_link)>0:
-            response = rapidapi_util.article_rapidapi_api("summarize", rapidapi_api_key, article_link, "summary", length)
-            return response, ""
-        else:            
-            return "No URL",  ""
+
+'''
+Output and Upload
+'''
+
+def cloudinary_search(cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, folder_name):
+    uihandlers.set_cloudinary_config(cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret)
+    return uihandlers.cloudinary_search(folder_name)
+
+    
+def cloudinary_upload(cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, folder_name, input_celeb_picture, celebrity_name):
+    uihandlers.set_cloudinary_config(cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret)
+    return uihandlers.cloudinary_upload(folder_name, input_celeb_picture, celebrity_name)
+
+
+'''
+Image generation
+'''
+
+def generate_image_stability_ai_handler(stability_api_key, celebs_name_label, generate_image_prompt_text):
+    if generate_image_prompt_text and len(generate_image_prompt_text)>0:
+        uihandlers.set_stabilityai_config(stability_api_key)
+        return uihandlers.generate_image_stability_ai_handler(celebs_name_label, generate_image_prompt_text)
     else:
-        return "", ask_picturize_it.NO_RAPIDAPI_KEY_ERROR 
-        
-def article_extract_handler(rapidapi_api_key, article_link):
-    rapidapi_util = RapidapiUtil()
-    if rapidapi_api_key:
-        if article_link and len(article_link)>0:
-            response = rapidapi_util.article_rapidapi_api("extract", rapidapi_api_key, article_link, "content")
-            return response, ""
-        else:
-            return "No URL",  ""
+        return ask_picturize_it.ENTER_A_PROMPT_IMAGE, None
+    
+def generate_image_diffusion_handler(generate_image_prompt_text):
+    if generate_image_prompt_text and len(generate_image_prompt_text)>0:
+        return uihandlers.generate_image_diffusion_handler("ai-generated-image", generate_image_prompt_text)
     else:
-        return "", ask_picturize_it.NO_RAPIDAPI_KEY_ERROR
+        return ask_picturize_it.ENTER_A_PROMPT_IMAGE, None
+
     
 # Examples fn
 
-
-
-def PDF_Examples():
+def get_celeb_examples(category):
     connection_string, database = get_private_mongo_config()           
-    kb_data_client = KBDataClient(connection_string, database)
-    return kb_data_client.list_kb_searchData("pdf")
+    celeb_data_client = CelebDataClient(connection_string, database)
+    celeb_list = celeb_data_client.celeb_list(category)
+    return celeb_list
 
-def YouTube_Examples():
+
+def get_awesome_chatgpt_prompts(awesome_chatgpt_act):
+    awesome_chatgpt_prompt = prompt_generator.get_awesome_chatgpt_prompt(awesome_chatgpt_act)
+    return awesome_chatgpt_act, awesome_chatgpt_prompt
+
+
+def get_saved_prompts(keyword): 
+    try:
+        connection_string, database = get_private_mongo_config()           
+        state_data_client = StateDataClient(connection_string, database)
+        prompt, response = state_data_client.read_description_from_prompt(keyword)        
+    except:
+        prompt = ""
+        response = ""
+        pass
+    finally:
+        return prompt, response
+
+
+def get_keyword_prompts(prompttype):
     connection_string, database = get_private_mongo_config()           
-    kb_data_client = KBDataClient(connection_string, database)
-    return kb_data_client.list_kb_searchData("youtube")
+    state_data_client = StateDataClient(connection_string, database)
+    saved_prompts = state_data_client.list_saved_prompts(prompttype)
+    return saved_prompts
+
+def get_input_examples():
+    return prompt_generator.get_input_examples()
+
+
+def get_images_examples():
+    return prompt_generator.get_images_examples()
+
 
 keyword_examples = ask_picturize_it.KEYWORD_EXAMPLES
 audio_examples = prompt_generator.get_audio_examples()
@@ -486,42 +349,12 @@ task_explanation_examples = ask_picturize_it.TASK_EXPLANATION_EXAMPLES
 product_def_question_examples = ask_picturize_it.PRODUCT_DEF_QUESTION_EXAMPLES
 article_links_examples = ask_picturize_it.ARTICLE_LINKS_EXAMPLES
 
-pdf_examples = PDF_Examples()
-youtube_links_examples = YouTube_Examples()
+pdf_examples = kb.PDF_Examples()
+youtube_links_examples = kb.YouTube_Examples()
 
 celeb_search_questions = ask_picturize_it.CELEB_SEARCH_QUESTIONS_EXAMPLES
                                
-'''
-Output and Upload
-'''
 
-def cloudinary_search(cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, folder_name):
-    uihandlers.set_cloudinary_config(cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret)
-    return uihandlers.cloudinary_search(folder_name)
-
-    
-def cloudinary_upload(cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, folder_name, input_celeb_picture, celebrity_name):
-    uihandlers.set_cloudinary_config(cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret)
-    return uihandlers.cloudinary_upload(folder_name, input_celeb_picture, celebrity_name)
-
-
-'''
-Image generation
-'''
-
-
-def generate_image_stability_ai_handler(stability_api_key, celebs_name_label, generate_image_prompt_text):
-    if generate_image_prompt_text and len(generate_image_prompt_text)>0:
-        uihandlers.set_stabilityai_config(stability_api_key)
-        return uihandlers.generate_image_stability_ai_handler(celebs_name_label, generate_image_prompt_text)
-    else:
-        return AskPicturizeIt.ENTER_A_PROMPT_IMAGE, None
-    
-def generate_image_diffusion_handler(generate_image_prompt_text):
-    if generate_image_prompt_text and len(generate_image_prompt_text)>0:
-        return uihandlers.generate_image_diffusion_handler("ai-generated-image", generate_image_prompt_text)
-    else:
-        return AskPicturizeIt.ENTER_A_PROMPT_IMAGE, None
 
 '''
 UI Components
@@ -535,38 +368,6 @@ def generated_images_gallery_on_select(evt: gr.SelectData, generated_images_gall
     else:        
         return None
 
-def test_handler(api_key, org_id, model_name, optionSelection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, google_generative_api_key, prompt):        
-    if optionSelection == "OpenAI API":
-        if api_key is None or len(api_key)==0:
-            return ask_picturize_it.NO_API_KEY_ERROR, ""
-        else:
-            promptmoderation = PromptModeration(api_key, org_id)
-            flagged, results_categories = promptmoderation.moderation(prompt)
-            if flagged:
-                return results_categories, ""
-            else:
-                operations = TextOperations()
-                operations.set_openai_api_key(api_key)
-                operations.set_model_name(model_name)
-                if org_id:
-                    operations.set_org_id(org_id) 
-                message, response = operations.chat_completion(prompt)
-                return message, response
-    elif optionSelection == "Azure OpenAI API":
-        if azure_openai_key is None or len(azure_openai_key)==0:
-            return ask_picturize_it.NO_API_KEY_ERROR, ""
-        else:
-            operations = TextOperations()        
-            operations.set_azure_openai_api_key(azure_openai_key, azure_openai_api_base, azure_openai_deployment_name)
-            message, response = operations.chat_completion(prompt)
-            return message, response
-    elif optionSelection == "Google PaLM API":
-        if google_generative_api_key is None or len(google_generative_api_key)==0:
-            return ask_picturize_it.NO_GOOGLE_PALM_AI_API_KEY_ERROR, ""    
-        else:
-            operations = PaLMTextOperations(google_generative_api_key)        
-            response = operations.generate_text(prompt)
-            return "Response from Google PaLM API", response
 
 with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabbedScreen:
     gr.Markdown(ask_picturize_it.TITLE)
@@ -938,7 +739,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                             gr.Examples(
                                     label="YouTube examples",
                                     examples=youtube_links_examples,
-                                    fn=youtube_search_data_by_uri,
+                                    fn=kb.youtube_search_data_by_uri,
                                     run_on_click=True,
                                     cache_examples = False,
                                     examples_per_page=25,
@@ -958,7 +759,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                             pdf_summary = gr.Textbox(label="Summary")
                             gr.Examples(
                                     label="PDF examples",
-                                    fn=pdf_search_data_by_uri,
+                                    fn=kb.pdf_search_data_by_uri,
                                     run_on_click=True,
                                     cache_examples = False,
                                     examples=pdf_examples,
@@ -1010,45 +811,45 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
 
    
     test_button.click(
-        fn=test_handler,
+        fn=test.test_handler,
         inputs=[input_key, org_id, openai_model, openai_selection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, google_generative_api_key, test_string],
         outputs=[test_string_output_info, test_string_response]
     )
     
     youtube_transcribe_button.click(
-        fn=youtube_transcribe_handler,
+        fn=kb.youtube_transcribe_handler,
         inputs=[input_key, youtube_link],
         outputs=[youtube_transcribe_summarize_info_label, youtube_transcribe_summary]
     )
 
     keyword_search_button.click(
-        fn=kb_search, 
+        fn=kb.kb_search, 
         inputs=[keyword_search,select_medium, max_results], 
         outputs=keyword_search_output
     )
     
     pdf_summarize_button.click(
-        pdf_summarizer_handler,
+        kb.pdf_summarizer_handler,
         inputs=[input_key, pdf_link],
         outputs=[pdf_summarize_info_label, pdf_summary]
     )
     
     
     youtube_summarize_button.click(
-        youtube_summarizer_handler,
+        kb.youtube_summarizer_handler,
         inputs=[input_key, youtube_link],
         outputs=[youtube_transcribe_summarize_info_label, youtube_transcribe_summary]
     )
     
     
     article_article_summarize_button.click(
-        article_summarize_handler,        
+        kb.article_summarize_handler,        
         inputs=[rapidapi_api_key, article_link, article_summarize_length], 
         outputs=[article_summary, article_summarize_extract_info_label]
     )
 
     article_article_extract_button.click(
-        article_extract_handler,        
+        kb.article_extract_handler,        
         inputs=[rapidapi_api_key, article_link], 
         outputs=[article_summary, article_summarize_extract_info_label]
     )
