@@ -8,5 +8,12 @@ class AssemblyAITranscriber:
         if self.api_key and audio_file:
             aai.settings.api_key = self.api_key
             transcriber = aai.Transcriber()
-            transcript = transcriber.transcribe(audio_file)
+            
+            config = aai.TranscriptionConfig(
+                punctuate = True,
+
+                format_text = True
+            )
+            transcript = transcriber.transcribe(audio_file, config)
+                        
             return transcript.text

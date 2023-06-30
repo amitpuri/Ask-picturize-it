@@ -9,7 +9,7 @@ class AskPicturizeIt:
            <ul>    
                <li>Whisper(whisper-1) <a href='https://openai.com/research/whisper'>https://openai.com/research/whisper</a></li>    
                <li>DALL-E <a href='https://openai.com/product/dall-e-2'>https://openai.com/product/dall-e-2</a></li>
-               <li>GPT(gpt-3.5-turbo) <a href='https://openai.com/product/gpt-4'>https://openai.com/product/gpt-4</a></li>  
+               <li>GPT <a href='https://openai.com/product/gpt-4'>https://openai.com/product/gpt-4</a></li>  
            </ul>
        <li>Azure OpenAI <a href='https://azure.microsoft.com/products/cognitive-services/openai-service'>https://azure.microsoft.com/products/cognitive-services/openai-service</a></li>  
        <li>Google Generative AI (PaLM API)<a href='https://developers.generativeai.google'>https://developers.generativeai.google</a></li>         
@@ -52,6 +52,7 @@ class AskPicturizeIt:
        <li>Stable Diffusion <a href='https://huggingface.co/blog/stable_diffusion'>https://huggingface.co/blog/stable_diffusion</a></li> 
        <li>CoDi: Any-to-Any Generation via Composable Diffusion <a href='https://codi-gen.github.io'>https://codi-gen.github.io</a></li>        
        </ul>
+
        </p>
     """
 
@@ -234,4 +235,5 @@ class AskPicturizeIt:
     ASSEMBLY_AI_HTML = "Sign up AssemblyAI <a href='https://www.assemblyai.com'>https://www.assemblyai.com/dashboard/signup</a>"
 
     ELEVENLABS_HTML = "Sign up Elevenlabs <a href='https://www.elevenlabs.io'>https://www.elevenlabs.io</a>"
+    
     ELEVENLABS_TEST_MESSAGE ="AI as a tool that can augment and empower us, rather than compete or replace us."

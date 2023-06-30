@@ -1,5 +1,7 @@
 import tempfile
 import elevenlabs
+import os
+from elevenlabs import voices, set_api_key
 
 class ElevenlabsVoiceGenerator:
     def __init__(self, api_key):
@@ -23,3 +25,8 @@ class ElevenlabsVoiceGenerator:
                 return audio_file
         except elevenlabs.api.error.RateLimitError as error:
             raise Exception(f"RateLimitError : {error}")
+
+    def voices_list(self):        
+        #set_api_key(os.getenv("ELEVEN_API_KEY"))
+        set_api_key(self.api_key)
+        return [voice.name for voice in voices()]

@@ -109,3 +109,9 @@ class TextOperations(Operations):
             # Handle request timeout
             print(f"Request timed out: {error_except} {openai.api_base}")
             return error_except.error["message"], ""
+
+    def model_list(self):
+        openai.api_key = self.api_key
+        openai.api_version = '2020-11-07'
+        response = openai.Model.list()
+        return [model["id"] for model in response["data"]]

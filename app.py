@@ -426,6 +426,21 @@ def elevenlabs_test_handler(api_key: str, test_string: str, test_voice: str):
         return f"{exception}", None
 
 
+def assemblyai_test_handler(api_key, test_uri):
+    if not api_key:
+        return "AssemblyAI API Key or ASSEMBLYAI_API_KEY env variable missing!", ""
+    if not test_uri: 
+        return "No audio file/uri", ""
+    try:
+        transcriber = AssemblyAITranscriber(api_key)
+        text = transcriber.transcribe(test_uri)
+        return text, text
+    except Exception as exception:
+        print(f"Exception Name: {type(exception).__name__}")
+        print(exception)        
+        return f"{exception}", None
+
+
 with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabbedScreen:
     gr.Markdown(AskPicturizeIt.TITLE)
     with gr.Tab("Information"):
@@ -512,6 +527,10 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
             with gr.Row():
                with gr.Column():
                    assemblyai_api_key = gr.Textbox(label="AssemblyAI API Key", value=os.getenv("ASSEMBLYAI_API_KEY"), type="password")
+                   assemblyai_test_uri = gr.Audio(label="Audio to Text", type="filepath", value = "audio/AI as a tool that can augment and empower us, rather than compete or replace us.mp3")
+                   assemblyai_test_string = gr.Textbox(label="Transcription", lines=5)                   
+                   assemblyai_test_button = gr.Button("Transcribe audio")
+                   assemblyai_test_string_output_info = gr.Label(value="Output Info", label="Info")
         with gr.Tab("Elevenlabs API"):
             gr.HTML(AskPicturizeIt.ELEVENLABS_HTML)
             with gr.Row():
@@ -882,7 +901,13 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
 
     celebs_name_search_clear.click(lambda: None, None, celebs_name_chatbot, queue=False)
 
-   
+    
+    assemblyai_test_button.click(
+        fn=assemblyai_test_handler,
+        inputs=[assemblyai_api_key, assemblyai_test_uri],
+        outputs=[assemblyai_test_string_output_info, assemblyai_test_string]
+    )
+    
     elevenlabs_test_button.click(
         fn=elevenlabs_test_handler,
         inputs=[elevenlabs_api_key, elevenlabs_test_string, elevenlabs_test_voice],
