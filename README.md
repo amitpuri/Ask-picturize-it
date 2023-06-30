@@ -1,4 +1,4 @@
-# Ask-me-to-picturize-it
+# Ask-picturize-it
 
 [![licenses](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
