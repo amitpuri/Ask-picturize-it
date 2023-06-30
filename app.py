@@ -234,8 +234,6 @@ def awesome_prompts_handler(api_key, org_id, model_name, optionSelection, azure_
 Product Definition
 '''
 
-
-
 def ask_product_def_handler(api_key, org_id, model_name, optionSelection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, mongo_config, mongo_connection_string, mongo_database, prompt, keyword):
     uihandlers = get_AskMeUI(api_key, org_id, optionSelection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name)
     uihandlers.set_model_name(model_name)
@@ -523,7 +521,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                    elevenlabs_test_voice = gr.Dropdown(["Rachel","Domi","Bella","Antoni","Elli","Josh","Arnold","Adam","Sam"], value="Bella", label="Voice", info="Select a voice to generate audio")
                    elevenlabs_test_string_output_info = gr.Label(value="Output Info", label="Info")
                    elevenlabs_test_button = gr.Button("Generate Test audio")
-                   elevenlabs_test_audio_file = gr.Audio(label="Play the generated audio",type="filepath")                   
+                   elevenlabs_test_audio_file = gr.Audio(label="Play the generated audio",type="filepath", value ="audio/AI as a tool that can augment and empower us, rather than compete or replace us.mp3")
         with gr.Tab("Rapid API"):
             gr.HTML(AskPicturizeIt.RAPIDAPI_HTML)
             with gr.Row():
