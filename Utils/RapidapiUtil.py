@@ -21,7 +21,7 @@ class RapidapiUtil:
         }
     
         response = requests.get(url, headers=headers, params=querystring)
-        try:
-            return response[response_element]
+        try:            
+            return response.json()[response_element]
         except KeyError:
             return response["error"]  
