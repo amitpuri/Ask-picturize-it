@@ -1,6 +1,3 @@
-import wikipedia
-import requests
-import json
 from langchain.prompts import PromptTemplate
 
 class AskPicturizeIt:
@@ -8,9 +5,12 @@ class AskPicturizeIt:
     DESCRIPTION = """<strong>This space uses following:</strong>
        <p>
        <ul>    
-       <li>OpenAI API Whisper(whisper-1) <a href='https://openai.com/research/whisper'>https://openai.com/research/whisper</a></li>    
-       <li>DALL-E <a href='https://openai.com/product/dall-e-2'>https://openai.com/product/dall-e-2</a></li>
-       <li>GPT(gpt-3.5-turbo) <a href='https://openai.com/product/gpt-4'>https://openai.com/product/gpt-4</a></li>  
+       <li>OpenAI API</li>    
+           <ul>    
+               <li>Whisper(whisper-1) <a href='https://openai.com/research/whisper'>https://openai.com/research/whisper</a></li>    
+               <li>DALL-E <a href='https://openai.com/product/dall-e-2'>https://openai.com/product/dall-e-2</a></li>
+               <li>GPT(gpt-3.5-turbo) <a href='https://openai.com/product/gpt-4'>https://openai.com/product/gpt-4</a></li>  
+           </ul>
        <li>Azure OpenAI <a href='https://azure.microsoft.com/products/cognitive-services/openai-service'>https://azure.microsoft.com/products/cognitive-services/openai-service</a></li>  
        <li>Google Generative AI (PaLM API)<a href='https://developers.generativeai.google'>https://developers.generativeai.google</a></li>         
        <li>Cloudinary <a href='https://cloudinary.com/documentation/python_quickstart'>https://cloudinary.com/documentation/python_quickstart</a></li>
@@ -179,14 +179,18 @@ class AskPicturizeIt:
     template="Who was Bond girl co-star in {movie_name}? answer without any explanation and return only the actor's name?")
 
 
-    CELEB_SEARCH_QUESTIONS_EXAMPLES = [prompt_character.format(character_name="James Bond",program_name="Casino Royale"),
+    CELEB_SEARCH_QUESTIONS_EXAMPLES = [prompt_character.format(character_name="Princess Devasena",program_name="Baahubali 2: The Conclusion"),
+                        prompt_character.format(character_name="Amerendra Baahubali",program_name="Baahubali 2: The Conclusion"),
+                        prompt_character.format(character_name="Bhallaladeva",program_name="Baahubali 2: The Conclusion"),
+                        prompt_character.format(character_name="Avanthika",program_name="Baahubali 2: The Conclusion"),
+                        prompt_character.format(character_name="Kattappa",program_name="Baahubali 2: The Conclusion"),
+                        prompt_character.format(character_name="James Bond",program_name="Casino Royale"),
                         prompt_character.format(character_name="James Bond",program_name="Die Another Day"),
                         prompt_character.format(character_name="James Bond",program_name="Never Say Never Again"),
                         prompt_character.format(character_name="James Bond",program_name="Spectre"),
                         prompt_character.format(character_name="James Bond",program_name="Tomorrow Never Dies"),
                         prompt_character.format(character_name="James Bond",program_name="The World Is Not Enough"),
                         prompt_character.format(character_name="James Bond",program_name="Goldfinger"),
-
                         prompt_character.format(character_name="James Bond",program_name="Octopussy"),
                         prompt_character.format(character_name="James Bond",program_name="Diamonds Are Forever"),
                         prompt_character.format(character_name="James Bond",program_name="Licence to Kill"), 
@@ -200,6 +204,7 @@ class AskPicturizeIt:
                         prompt_bond_girl.format(movie_name="No Time to Die"),
                         prompt_bond_girl.format(movie_name="Octopussy"),
                         prompt_bond_girl.format(movie_name="The World Is Not Enough"),
+
                         prompt_bond_girl.format(movie_name="Diamonds Are Forever"),
                         prompt_bond_girl.format(movie_name="Licence to Kill"),                          	
 		                prompt_bond_girl.format(movie_name="Die Another Day")]
@@ -207,48 +212,20 @@ class AskPicturizeIt:
 
     TEST_MESSAGE = "My favorite TV shows are The Mentalist, The Blacklist, and Unforgettable. What are four series that I should watch next?"
 
-    
-    def get_wikimedia_image(self, keyword):
-        WIKI_REQUEST = 'http://en.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&piprop=original&titles='
+    MONGODB_HTML = "Sign up here <a href='https://www.mongodb.com/cloud/atlas/register'>https://www.mongodb.com/cloud/atlas/register</a>"
 
-        if keyword:
-            try:
-                result = wikipedia.search(keyword, results = 1)
-            except wikipedia.exceptions.WikipediaException as exception:
-                print(f"Exception Name: {type(exception).__name__}")
-                print(exception)
-                result = None
-                pass
-            wikipedia.set_lang('en')
-            try:
-                if result is not None:
-                    try:
-                        wkpage = wikipedia.WikipediaPage(title = result[0])
-                    except:
-                        print(result)
-                    finally:
-                        wkpage = None    
-            except wikipedia.exceptions.WikipediaException as exception:
-                print(f"Exception Name: {type(exception).__name__}")
-                print(exception)
-                wkpage = None
-                pass
-            if wkpage is not None:
-                title = wkpage.title
-                response  = requests.get(WIKI_REQUEST+title)
-                json_data = json.loads(response.text)
-                try:
-                    image_link = list(json_data['query']['pages'].values())[0]['original']['source']
-                    return image_link
-                except:
-                    return None
-    
-    def get_wiki_page_summary(self, keyword):
-        if keyword:
-            try:
-                return wikipedia.page(keyword).summary
-            except wikipedia.exceptions.PageError:
-                return f"No page for this keyword {keyword}"
-            except Exception as exception:
-                print(f"Exception Name: {type(exception).__name__}")
-                print(exception)
+    OPENAI_HTML = "Sign up for API Key here <a href='https://platform.openai.com'>https://platform.openai.com</a>"
+
+    AZURE_OPENAI_HTML = "Apply for access to Azure OpenAI Service by completing the form at <a href='https://aka.ms/oai/access?azure-portal=true'>https://aka.ms/oai/access?azure-portal=true</a>"
+
+    GOOGLE_PALMAPI_HTML = "Visit PaLM (Pathways Language Model) API <a href='https://developers.generativeai.google'>Google Generative AI </a>,  <a href='https://makersuite.google.com'>MakerSuite</a>, and <a href='https://developers.generativeai.google/develop/sample-apps'>https://developers.generativeai.google/develop/sample-apps</a>"
+
+    CLOUDINARY_HTML = "Sign up here <a href='https://cloudinary.com'>https://cloudinary.com</a>"
+
+    STABILITY_AI_HTML = "Sign up here <a href='https://platform.stability.ai'>https://platform.stability.ai</a>"
+
+    RAPIDAPI_HTML = "Sign up here <a href='https://rapidapi.com'>https://rapidapi.com</a>"
+
+    RAPIDAPI_ARTICLE_HTML = "Article Extractor and Summarizer API on RapidAPI <a href='https://rapidapi.com/restyler/api/article-extractor-and-summarizer'>https://rapidapi.com/restyler/api/article-extractor-and-summarizer</a>"
+
+    LANGCHAIN_TEXT = "Credit <a href='https://github.com/gkamradt/langchain-tutorials'>https://github.com/gkamradt/langchain-tutorials</a>"
