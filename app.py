@@ -14,9 +14,10 @@ from UIHandlers.AskMeUI import AskMeUI
 from UIHandlers.Test import Test
 from UIHandlers.KnowledgeBase import KnowledgeBase
 from Utils.PromptOptimizer import PromptOptimizer
+from AssemblyAIUtil.AssemblyAITranscriber import AssemblyAITranscriber
 from Utils.AskPicturizeIt import *
-from OpenAIUtil.TranscribeOperations import *  #transcribe
-
+from OpenAIUtil.TranscribeOperations import TranscribeOperations 
+from ElevenlabsUtil.ElevenlabsVoiceGenerator import ElevenlabsVoiceGenerator
 
 #from dotenv import load_dotenv
 #load_dotenv()
@@ -49,6 +50,16 @@ def transcribe_whisper_large_v2(audio_file :str):
     if audio_file: 
         transcribeOperations = TranscribeOperations()
         return transcribeOperations.transcribe_whisper_large_v2(audio_file)
+
+def assemblyai_transcribe_handler(api_key :str, audio_file :str):
+    if not api_key:
+        return "AssemblyAI API Key or ASSEMBLYAI_API_KEY env variable missing!", ""
+    if not audio_file: 
+        return "No audio file", ""
+        
+    transcriber = AssemblyAITranscriber(api_key)
+    text = transcriber.transcribe(audio_file)
+    return text, text    
 
 def get_AskMeUI(api_key :str, org_id :str, optionSelection :str, azure_openai_key :str, azure_openai_api_base :str, azure_openai_deployment_name :str):
         if optionSelection not in ["OpenAI API","Azure OpenAI API","Google PaLM API"]:
@@ -402,6 +413,20 @@ def generated_images_gallery_on_select(evt: gr.SelectData, generated_images_gall
     else:        
         return None
 
+'''
+Elevenlabs test handler
+'''
+
+def elevenlabs_test_handler(api_key: str, test_string: str, test_voice: str):
+    try:
+        voice_generator = ElevenlabsVoiceGenerator(api_key)
+        test_audio_file = voice_generator.generate_voice(test_voice, test_string)
+        return "Audio Generated", test_audio_file
+    except Exception as exception:
+        print(f"Exception Name: {type(exception).__name__}")
+        print(exception)        
+        return f"{exception}", None
+
 
 with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabbedScreen:
     gr.Markdown(AskPicturizeIt.TITLE)
@@ -479,11 +504,26 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                         label="Cloudinary API Key", value=os.getenv("CLOUDINARY_API_KEY"), type="password")
                     cloudinary_api_secret = gr.Textbox(
                         label="Cloudinary API Secret", value=os.getenv("CLOUDINARY_API_SECRET"), type="password")
-        with gr.Tab("Stability API"):
+        with gr.Tab("StabilityAI API"):
             gr.HTML(AskPicturizeIt.STABILITY_AI_HTML)
             with gr.Row():
                with gr.Column():
-                   stability_api_key = gr.Textbox(label="Stability API Key", value=os.getenv("STABILITY_API_KEY"), type="password")   
+                   stability_api_key = gr.Textbox(label="Stability API Key", value=os.getenv("STABILITY_API_KEY"), type="password")       
+        with gr.Tab("AssemblyAI API"):
+            gr.HTML(AskPicturizeIt.ASSEMBLY_AI_HTML)
+            with gr.Row():
+               with gr.Column():
+                   assemblyai_api_key = gr.Textbox(label="AssemblyAI API Key", value=os.getenv("ASSEMBLYAI_API_KEY"), type="password")
+        with gr.Tab("Elevenlabs API"):
+            gr.HTML(AskPicturizeIt.ELEVENLABS_HTML)
+            with gr.Row():
+               with gr.Column():
+                   elevenlabs_api_key = gr.Textbox(label="Elevenlabs API Key", value=os.getenv("ELEVEN_API_KEY"), type="password")
+                   elevenlabs_test_string = gr.Textbox(label="Text to Audio string", value=AskPicturizeIt.ELEVENLABS_TEST_MESSAGE, lines=2)
+                   elevenlabs_test_voice = gr.Dropdown(["Rachel","Domi","Bella","Antoni","Elli","Josh","Arnold","Adam","Sam"], value="Bella", label="Voice", info="Select a voice to generate audio")
+                   elevenlabs_test_string_output_info = gr.Label(value="Output Info", label="Info")
+                   elevenlabs_test_button = gr.Button("Generate Test audio")
+                   elevenlabs_test_audio_file = gr.Audio(label="Play the generated audio",type="filepath")                   
         with gr.Tab("Rapid API"):
             gr.HTML(AskPicturizeIt.RAPIDAPI_HTML)
             with gr.Row():
@@ -508,6 +548,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                         inputs=audio_file)
                     transcribe_button = gr.Button("Transcribe via Whisper")  
                     transcribe_whisper_large_v2_button = gr.Button("Transcribe via openai/whisper-large-v2") 
+                    transcribe_assemblyai_button = gr.Button("Transcribe via AssemblyAI") 
             input_transcriptionprompt = gr.Label(label="Transcription Text")
         with gr.Tab("Image generation"):
             input_prompt = gr.Textbox(label="Prompt Text to describe what you want to picturize?", lines=7)
@@ -844,6 +885,12 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
     celebs_name_search_clear.click(lambda: None, None, celebs_name_chatbot, queue=False)
 
    
+    elevenlabs_test_button.click(
+        fn=elevenlabs_test_handler,
+        inputs=[elevenlabs_api_key, elevenlabs_test_string, elevenlabs_test_voice],
+        outputs=[elevenlabs_test_string_output_info, elevenlabs_test_audio_file]
+    )
+
     test_button.click(
         fn=test.test_handler,
         inputs=[input_key, org_id, openai_model, openai_selection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, google_generative_api_key, test_string],
@@ -1049,7 +1096,13 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
         outputs=[input_transcriptionprompt, input_prompt]
     )
     
-  
+    transcribe_assemblyai_button.click(
+        fn=assemblyai_transcribe_handler,
+        inputs=[assemblyai_api_key, audio_file],
+        outputs=[input_transcriptionprompt, input_prompt]
+    )
+    
+    
     generate_button.click(
         fn=create_image_from_prompt_handler,
         inputs=[input_key, org_id, openai_selection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, input_prompt, input_imagesize, input_num_images],

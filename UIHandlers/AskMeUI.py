@@ -1,6 +1,5 @@
 import os
 from CloudinaryUtil.CloudinaryClient import *  #set_folder_name,search_images, upload_image
-
 from MongoUtil.CelebDataClient import * #get_describe, get_celebs_response
 from MongoUtil.StateDataClient import *
 from MongoUtil.KBDataClient import *
@@ -161,8 +160,10 @@ class AskMeUI:
             return "No Name given", None
             
     def transcribe_handler(self, audio_file):
-        if not self.api_key or not audio_file:
-            return self.NO_API_KEY_ERROR, self.NO_API_KEY_ERROR
+        if not self.api_key:
+            return self.NO_API_KEY_ERROR, ""
+        if not audio_file:
+            return "No audio file", ""
             
         transcribe_operations = TranscribeOperations()
         transcribe_operations.setOpenAIConfig(self.api_key, self.org_id)

@@ -63,6 +63,7 @@ class AskPicturizeIt:
     
     Copyright (c) 2023 Amit Puri
     
+
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
     in the Software without restriction, including without limitation the rights
@@ -229,3 +230,8 @@ class AskPicturizeIt:
     RAPIDAPI_ARTICLE_HTML = "Article Extractor and Summarizer API on RapidAPI <a href='https://rapidapi.com/restyler/api/article-extractor-and-summarizer'>https://rapidapi.com/restyler/api/article-extractor-and-summarizer</a>"
 
     LANGCHAIN_TEXT = "Credit <a href='https://github.com/gkamradt/langchain-tutorials'>https://github.com/gkamradt/langchain-tutorials</a>"
+
+    ASSEMBLY_AI_HTML = "Sign up AssemblyAI <a href='https://www.assemblyai.com'>https://www.assemblyai.com/dashboard/signup</a>"
+
+    ELEVENLABS_HTML = "Sign up Elevenlabs <a href='https://www.elevenlabs.io'>https://www.elevenlabs.io</a>"
+    ELEVENLABS_TEST_MESSAGE ="AI as a tool that can augment and empower us, rather than compete or replace us."
