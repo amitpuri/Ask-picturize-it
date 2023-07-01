@@ -13,11 +13,9 @@ from MongoUtil.StateDataClient import *
 from MongoUtil.CelebDataClient import *
 from UIHandlers.AskMeUI import AskMeUI
 from UIHandlers.Test import Test
-
 from UIHandlers.KnowledgeBase import KnowledgeBase
 from Utils.PromptOptimizer import PromptOptimizer
 from Utils.StabilityAPI import StabilityAPI
-
 from AssemblyAIUtil.AssemblyAITranscriber import AssemblyAITranscriber
 from Utils.AskPicturizeIt import *
 from OpenAIUtil.TranscribeOperations import TranscribeOperations 
@@ -27,6 +25,7 @@ from ElevenlabsUtil.ElevenlabsVoiceGenerator import ElevenlabsVoiceGenerator
 #load_dotenv()
 
 kb = KnowledgeBase()
+
 prompt_optimizer = PromptOptimizer()
 prompt_generator =  CelebPromptGenerator()
 test = Test()
@@ -377,18 +376,13 @@ Business_celeb_list = get_celeb_examples("Business")
 IndianFilm_celeb_examples = [celeb[0] for celeb in IndianFilm_celeb_list]
 hollywood_celeb_examples = [celeb[0] for celeb in Hollywood_celeb_list]
 business_celeb_examples = [celeb[0] for celeb in Business_celeb_list]
-
-
 task_explanation_examples = AskPicturizeIt.TASK_EXPLANATION_EXAMPLES
 product_def_question_examples = AskPicturizeIt.PRODUCT_DEF_QUESTION_EXAMPLES
 article_links_examples = AskPicturizeIt.ARTICLE_LINKS_EXAMPLES
-
 pdf_examples = kb.PDF_Examples()
 youtube_links_examples = kb.YouTube_Examples()
-
 celeb_search_questions = AskPicturizeIt.CELEB_SEARCH_QUESTIONS_EXAMPLES
                                
-
 
 '''
 UI Components
@@ -431,16 +425,48 @@ def assemblyai_test_handler(api_key, test_uri):
         print(exception)        
         return f"{exception}", None
 
-def test_stability_ai_handler(api_key, style_preset, prompt, init_image):
+def test_stability_ai_handler(api_key, test_style_preset, test_prompt, test_init_image, test_steps):
     if api_key:
         try:
             name = "TestPrompt"                
             stability_api = StabilityAPI(api_key)
-            if init_image:                    
-                output_generated_image = stability_api.image_to_image(name, init_image, prompt, style_preset)
+            '''
+            Common parameters
+                cfg_scale=7 (default) 0 - 35, How strictly the diffusion process adheres to the prompt text (higher values keep your image closer to your prompt)
+                clip_guidance_preset="FAST_BLUE" - FAST_BLUE FAST_GREEN NONE SIMPLE SLOW SLOWER SLOWEST
+                samples = 1, between 1-10 
+                steps = 30 between 10-150
+                seed between 0 .. 4294967295, default: 0 Random noise seed (omit this option or use 0 for a random seed)
+            '''
+            if test_init_image:    
+                '''
+                init_image, text_prompts, style_preset = "photographic", 
+                init_image_mode IMAGE_STRENGTH or STEP_SCHEDULE
+                    # IMAGE_STRENGTH 
+                        # image_strength=0.35 (default) - between 0-1 or 
+                    # STEP_SCHEDULE - start and end between 0-1
+                        # step_schedule_start 0.65 (default) 
+                        # and step_schedule_end 
+                '''
+                output_generated_image = stability_api.image_to_image(
+                    actor_name = name, 
+                    init_image = test_init_image,
+                    text_prompts = test_prompt, 
+                    style_preset = test_style_preset,
+                    samples = 1, 
+                    steps = test_steps)
                 return "Image variation generated using stability AI ", output_generated_image
             else:
-                output_generated_image = stability_api.text_to_image(name, prompt)             
+                '''
+                text_prompts, style_preset = "photographic", 
+                height=512, width=512, 
+                '''
+                output_generated_image = stability_api.text_to_image(
+                    actor_name = name, 
+                    text_prompts = test_prompt, 
+                    style_preset = test_style_preset,
+                    samples = 1, 
+                    steps = test_steps)
                 return "Image generated using stability AI ", output_generated_image
         except Exception as err:
             return f"{err}", None
@@ -526,12 +552,13 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
         with gr.Tab("StabilityAI API"):
             gr.HTML(AskPicturizeIt.STABILITY_AI_HTML)
             with gr.Row():
-                    stabilityai_api_key = gr.Textbox(label="StabilityAI API Key", value=os.getenv("STABILITY_API_KEY"), type="password")
-                    stabilityai_style_preset = gr.Dropdown(["enhance", "anime", "photographic", "digital-art", "comic-book", "fantasy-art", 
-                                                           "line-art", "analog-film", "neon-punk", "isometric", 
-                                                           "low-poly", "origami", "modeling-compound", "cinematic", 
-                                                           "3d-model", "pixel-art", "tile-texture"], 
-                                                   value="photographic", label="Style preset", info="Select one style preset")            
+                stabilityai_api_key = gr.Textbox(label="StabilityAI API Key", value=os.getenv("STABILITY_API_KEY"), type="password")
+                stabilityai_style_preset = gr.Dropdown(["enhance", "anime", "photographic", "digital-art", "comic-book", "fantasy-art", 
+                                                       "line-art", "analog-film", "neon-punk", "isometric", 
+                                                       "low-poly", "origami", "modeling-compound", "cinematic", 
+                                                       "3d-model", "pixel-art", "tile-texture"], 
+                                               value="photographic", label="Style preset", info="Select one style preset")            
+                stabilityai_steps = gr.Slider(minimum=10, maximum=150, step=10, label="Number of diffusion steps to run", value=30, info="Diffusion steps")
             with gr.Tab("Testing"):
                 stabilityai_test_string = gr.Textbox(label="Prompt", value="John Doe")
                 with gr.Column(scale=2):
@@ -949,7 +976,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
         
     stabilityai_test_button.click(
         fn=test_stability_ai_handler,
-        inputs=[stabilityai_api_key, stabilityai_style_preset, stabilityai_test_string, stabilityai_photo],
+        inputs=[stabilityai_api_key, stabilityai_style_preset, stabilityai_test_string, stabilityai_photo, stabilityai_steps],
         outputs=[stabilityai_output_info, stabilityai_output_photo]
 
     )
