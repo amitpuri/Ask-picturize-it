@@ -16,6 +16,8 @@ from UIHandlers.Test import Test
 
 from UIHandlers.KnowledgeBase import KnowledgeBase
 from Utils.PromptOptimizer import PromptOptimizer
+from Utils.StabilityAPI import StabilityAPI
+
 from AssemblyAIUtil.AssemblyAITranscriber import AssemblyAITranscriber
 from Utils.AskPicturizeIt import *
 from OpenAIUtil.TranscribeOperations import TranscribeOperations 
@@ -273,12 +275,13 @@ def cloudinary_upload(cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_
 Image generation
 '''
 
-def generate_image_stability_ai_handler(stability_api_key, celebs_name_label, generate_image_prompt_text):
+def generate_image_stability_ai_handler(stability_api_key, celebs_name_label, generate_image_prompt_text, generate_image_prompt_uri):
     uihandlers = AskMeUI()
-    if generate_image_prompt_text and len(generate_image_prompt_text)>0:
-        uihandlers.set_stabilityai_config(stability_api_key)
-        return uihandlers.generate_image_stability_ai_handler(celebs_name_label, generate_image_prompt_text)
-    else:
+    if generate_image_prompt_uri is None and generate_image_prompt_text and len(generate_image_prompt_text)>0:
+        return uihandlers.stability_ai_handler(stability_api_key, celebs_name_label, generate_image_prompt_text)
+    elif generate_image_prompt_uri and generate_image_prompt_text and len(generate_image_prompt_text)>0:
+        return uihandlers.stability_ai_handler(stability_api_key, celebs_name_label, generate_image_prompt_text, generate_image_prompt_uri)
+    else:        
         return AskPicturizeIt.ENTER_A_PROMPT_IMAGE, None
     
 def generate_image_diffusion_handler(generate_image_prompt_text):
@@ -428,6 +431,21 @@ def assemblyai_test_handler(api_key, test_uri):
         print(exception)        
         return f"{exception}", None
 
+def test_stability_ai_handler(api_key, style_preset, prompt, init_image):
+    if api_key:
+        try:
+            name = "TestPrompt"                
+            stability_api = StabilityAPI(api_key)
+            if init_image:                    
+                output_generated_image = stability_api.image_to_image(name, init_image, prompt, style_preset)
+                return "Image variation generated using stability AI ", output_generated_image
+            else:
+                output_generated_image = stability_api.text_to_image(name, prompt)             
+                return "Image generated using stability AI ", output_generated_image
+        except Exception as err:
+            return f"{err}", None
+    else:
+        return AskPicturizeIt.NO_STABILITYAI_API_KEY_ERROR, None
 
 with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabbedScreen:
     gr.Markdown(AskPicturizeIt.TITLE)
@@ -508,15 +526,34 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
         with gr.Tab("StabilityAI API"):
             gr.HTML(AskPicturizeIt.STABILITY_AI_HTML)
             with gr.Row():
-               with gr.Column():
-                   stability_api_key = gr.Textbox(label="Stability API Key", value=os.getenv("STABILITY_API_KEY"), type="password")       
+                    stabilityai_api_key = gr.Textbox(label="StabilityAI API Key", value=os.getenv("STABILITY_API_KEY"), type="password")
+                    stabilityai_style_preset = gr.Dropdown(["enhance", "anime", "photographic", "digital-art", "comic-book", "fantasy-art", 
+                                                           "line-art", "analog-film", "neon-punk", "isometric", 
+                                                           "low-poly", "origami", "modeling-compound", "cinematic", 
+                                                           "3d-model", "pixel-art", "tile-texture"], 
+                                                   value="photographic", label="Style preset", info="Select one style preset")            
+            with gr.Tab("Testing"):
+                stabilityai_test_string = gr.Textbox(label="Prompt", value="John Doe")
+                with gr.Column(scale=2):
+                    stabilityai_photo = gr.Image(label="Input Image",  type="filepath")
+                    stabilityai_output_photo = gr.Image(label="output Image",  type="filepath")
+                with gr.Column(scale=1):
+                    gr.Examples(
+                        examples=images_examples,
+                        label="Select one from Image Examples and get variation",
+                        inputs=[stabilityai_photo],
+                        examples_per_page=10,
+                        outputs=stabilityai_photo,
+                    )
+                    stabilityai_test_button = gr.Button("Test it")
+                    stabilityai_output_info = gr.Label(value="Output Info", label="Info")
         with gr.Tab("AssemblyAI API"):
             gr.HTML(AskPicturizeIt.ASSEMBLY_AI_HTML)
             with gr.Row():
                with gr.Column():
                    assemblyai_api_key = gr.Textbox(label="AssemblyAI API Key", value=os.getenv("ASSEMBLYAI_API_KEY"), type="password")
                    assemblyai_test_uri = gr.Audio(label="Audio to Text", type="filepath", value = "audio/AI as a tool that can augment and empower us, rather than compete or replace us.mp3")
-                   assemblyai_test_string = gr.Textbox(label="Transcription", lines=5)                   
+                   assemblyai_test_string = gr.Textbox(label="Transcription", lines=5)
                    assemblyai_test_button = gr.Button("Transcribe audio")
                    assemblyai_test_string_output_info = gr.Label(value="Output Info", label="Info")
         with gr.Tab("Elevenlabs API"):
@@ -908,7 +945,14 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
         inputs=[input_key, org_id, openai_model, openai_selection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, google_generative_api_key, test_string],
         outputs=[test_string_output_info, test_string_response]
     )
-    
+
+        
+    stabilityai_test_button.click(
+        fn=test_stability_ai_handler,
+        inputs=[stabilityai_api_key, stabilityai_style_preset, stabilityai_test_string, stabilityai_photo],
+        outputs=[stabilityai_output_info, stabilityai_output_photo]
+
+    )
     youtube_transcribe_button.click(
         fn=kb.youtube_transcribe_handler,
         inputs=[input_key, youtube_link],
@@ -1057,7 +1101,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
     
     generate_image_stability_ai_button.click(
         fn=generate_image_stability_ai_handler,
-        inputs=[stability_api_key, celebs_name_label, generate_image_prompt_text],
+        inputs=[stabilityai_api_key, celebs_name_label, generate_image_prompt_text, celeb_real_photo],
         outputs=[label_describe_gpt, celeb_generated_image]
 
     )

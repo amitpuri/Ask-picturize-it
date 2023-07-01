@@ -160,6 +160,7 @@ class AskPicturizeIt:
                     "Root Mean Square Error", "Cosine similarity", "Euclidean distance","Dot product similarity",
                     "Machine Learning","Artificial Intelligence","Deep Learning", "Neural Networks", "Data Science",
                     "Supervised Learning","Unsupervised Learning","Reinforcement Learning", "Natural Language Processing", 
+
                     "Data Mining", "Feature Extraction", "Dimensionality Reduction", "Ensemble Learning", "Transfer Learning",
                     "Decision Trees","Support Vector Machines", "Clustering","Regression", "Computer Vision", "Big Data",                   
                     "Language Models","Transformer","BERT","OpenAI","Text Generation","Text Classification",
@@ -241,3 +242,5 @@ class AskPicturizeIt:
 
 
     NO_ASSEMBLYAI_API_KEY_ERROR = "AssemblyAI API Key or ASSEMBLYAI_API_KEY env variable missing!"
+
+    NO_STABILITYAI_API_KEY_ERROR = "StabilityAI API Key or STABILITYAI_API_KEY env variable missing!"

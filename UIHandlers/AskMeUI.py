@@ -17,27 +17,12 @@ class AskMeUI:
     def __init__(self):
         self.NO_API_KEY_ERROR="Review Configuration tab for keys/settings"
         self.LABEL_GPT_CELEB_SCREEN = "Name, Describe, Preview and Upload"
-
         self.image_utils = ImageUtils()
         self.api_key = None         
         self.azure_openai_key = None
         self.azure_openai_deployment_name = None
         self.org_id = None
         self.model_name = None
-        #self.connection_string, self.database = self.get_private_mongo_config()
-        #self.stability_api_key = self.get_stabilityai_config()
-        #self.api_key, self.org_id = self.get_openai_config()
-        #self.cloudinary_cloud_name, self.cloudinary_api_key, self.cloudinary_api_secret = self.get_cloudinary_config()
-        
-    def get_cloudinary_config(self):
-        return os.getenv("CLOUDINARY_CLOUD_NAME"), os.getenv("CLOUDINARY_API_KEY"), os.getenv("CLOUDINARY_API_SECRET")
-
-    def get_stabilityai_config(self):
-        return os.getenv("STABILITY_API_KEY")
-
-    def get_openai_config(self):
-        return os.getenv("OPENAI_API_KEY"), os.getenv("OPENAI_ORG_ID")
-
         
     def get_private_mongo_config(self):
         return os.getenv("P_MONGODB_URI"), os.getenv("P_MONGODB_DATABASE")
@@ -48,9 +33,6 @@ class AskMeUI:
         self.cloudinary_api_key = cloudinary_api_key
         self.cloudinary_api_secret = cloudinary_api_secret
 
-    def set_stabilityai_config(self, stability_api_key):
-        self.stability_api_key = stability_api_key
-    
     def set_org_id(self, org_id: str):
         self.org_id = org_id
 
@@ -69,7 +51,6 @@ class AskMeUI:
         self.azure_openai_api_base = azure_openai_api_base
         self.azure_openai_deployment_name = azure_openai_deployment_name
     
-    
     def set_mongodb_config(self, mongo_config, connection_string, database):
         if not mongo_config:
             self.connection_string, self.database = self.get_private_mongo_config()
@@ -77,7 +58,6 @@ class AskMeUI:
             self.connection_string = connection_string
             self.database = database
         
-
     def get_celebs_response_handler(self, keyword):        
         celeb_client = CelebDataClient(self.connection_string, self.database)
         name, prompt, response, image_url, generated_image_url = celeb_client.get_celebs_response(keyword)
@@ -136,13 +116,21 @@ class AskMeUI:
     
         return "Uploaded - Done", self.image_utils.url_to_image(url)
     
-    
-    def generate_image_stability_ai_handler(self, name, prompt):
-        if self.stability_api_key:
+    def stability_ai_handler(self, stability_api_key, name, prompt, init_image = None):
+        if stability_api_key:
             try:
-                stability_api = StabilityAPI(self.stability_api_key)
-                output_generated_image = stability_api.text_to_image(name, prompt)
-                return "Image generated using stability AI ", output_generated_image
+                if name and not prompt:
+                    prompt = name
+                if prompt and not name:
+                    name = prompt  
+                    
+                stability_api = StabilityAPI(stability_api_key)
+                if init_image:                    
+                    output_generated_image = stability_api.image_to_image(name, init_image, prompt)
+                    return "Image variation generated using stability AI ", output_generated_image
+                else:
+                    output_generated_image = stability_api.text_to_image(name, prompt)             
+                    return "Image generated using stability AI ", output_generated_image
             except Exception as err:
                 return f"{err}", None
         else:
