@@ -12,6 +12,8 @@ This uses OpenAI API Whisper(whisper-1), DALL-E, GPT(gpt-3.5-turbo), also Azure 
 
 ![image](https://github.com/amitpuri/Ask-picturize-it/assets/6460233/706bc278-7c51-48f8-9546-accce726d976)
 
+## OpenAI Pricing notes
+
 Extracted from https://openai.com/pricing
 
 Multiple models, each with different capabilities and price points. Prices are per 1,000 tokens. 
@@ -73,16 +75,49 @@ Build advanced search, clustering, topic modeling, and classification functional
 |--------------|-----------------------|
 | Ada          | $0.0004 / 1K tokens   | 
 
+## Azure Container registry and Docker notes
+
+export required environment variables
+
+    export AZURE_REGISTRY_NAME = "Set Azure Container registry name here"
+    export P_MONGODB_DATABASE = "Mongo database"
+    export P_MONGODB_URI = "Mongo connection string"
+
+build a docker image locally or use [GitHub Workflow action](.github/workflows)
 
     docker build --rm --pull \
       --file "Dockerfile" \
-      --label "com.amitpuri.ask-picturize-it" \
+      --label "com.$AZURE_REGISTRY_NAME.ask-picturize-it" \
       --tag "ask-picturize-it:latest" \
       .
 
+Run and test 
+
     docker run -e P_MONGODB_DATABASE -e P_MONGODB_URI -it --publish 80:80 --publish 27017:27017 ask-picturize-it:latest
-    
+
+Login to Azure Container registry
+
     az login --use-device-code
-    az acr login --name [Azure Registry Name].azurecr.io
-    docker tag ask-picturize-it [Azure Registry Name].azurecr.io/ask-picturize-it
-    docker push [Azure Registry Name].azurecr.io/ask-picturize-it
+    az acr login --name $AZURE_REGISTRY_NAME.azurecr.io
+
+ Tag and Push the docker image to the Azure Container registry   
+ 
+    docker tag ask-picturize-it $AZURE_REGISTRY_NAME.azurecr.io/ask-picturize-it
+    docker push $AZURE_REGISTRY_NAME.azurecr.io/ask-picturize-it
+
+
+## JupyterLab or Azure ML Workspace Notes
+
+- Use [https://jupyter.org](https://jupyter.org) or Login to [https://ml.azure.com](https://ml.azure.com) and use Notebooks
+- Clone repo and rename env.example to .env and set values to variables
+- Run to install dependencies
+
+      pip install -r requirements.txt 
+  
+- Install pip install p2j
+  
+      pip install p2j
+  
+- Run to convert py to ipynb
+  
+      p2j app.py
