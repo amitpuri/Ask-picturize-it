@@ -1,3 +1,4 @@
+[Breaking cross-modal boundaries in multimodal AI: Introducing CoDi, composable diffusion for any-to-any generation](https://www.microsoft.com/en-us/research/blog/breaking-cross-modal-boundaries-in-multimodal-ai-introducing-codi-composable-diffusion-for-any-to-any-generation)
 # Project i-Code
 The ambition of the i-Code project is to build integrative and composable multimodal Artificial Intelligence. The "i" stands for integrative multimodal learning.
 
