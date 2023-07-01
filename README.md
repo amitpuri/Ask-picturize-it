@@ -108,8 +108,8 @@ Login to Azure Container registry
 
 ## Azure ML Workspace Notes
 
-- [https://ml.azure.com](https://ml.azure.com)
-- Clone repo
+- Login to [https://ml.azure.com](https://ml.azure.com) and use Notebooks
+- from Terminal and Clone repo
 - Install pip install p2j
   
       pip install p2j
