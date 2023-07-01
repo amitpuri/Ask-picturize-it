@@ -23,11 +23,10 @@ class AskMeUI:
         self.azure_openai_deployment_name = None
         self.org_id = None
         self.model_name = None
-        
+
     def get_private_mongo_config(self):
         return os.getenv("P_MONGODB_URI"), os.getenv("P_MONGODB_DATABASE")
         
-
     def set_cloudinary_config(self, cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret):        
         self.cloudinary_cloud_name = cloudinary_cloud_name
         self.cloudinary_api_key = cloudinary_api_key
@@ -126,10 +125,17 @@ class AskMeUI:
                     
                 stability_api = StabilityAPI(stability_api_key)
                 if init_image:                    
-                    output_generated_image = stability_api.image_to_image(name, init_image, prompt)
+                    output_generated_image = stability_api.image_to_image(                        
+                        actor_name = name, 
+                        init_image = init_image,
+                        text_prompts = prompt, 
+                    )
                     return "Image variation generated using stability AI ", output_generated_image
                 else:
-                    output_generated_image = stability_api.text_to_image(name, prompt)             
+                    output_generated_image = stability_api.text_to_image(
+                        actor_name = name, 
+                        text_prompts = [prompt]
+                    ) 
                     return "Image generated using stability AI ", output_generated_image
             except Exception as err:
                 return f"{err}", None
