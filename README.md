@@ -104,3 +104,16 @@ Login to Azure Container registry
  
     docker tag ask-picturize-it $AZURE_REGISTRY_NAME.azurecr.io/ask-picturize-it
     docker push $AZURE_REGISTRY_NAME.azurecr.io/ask-picturize-it
+
+
+## Azure ML Workspace Notes
+
+- [https://ml.azure.com](https://ml.azure.com)
+- Clone repo
+- Install pip install p2j
+  
+      pip install p2j
+  
+- Run to convert py to ipynb
+  
+      p2j app.py
