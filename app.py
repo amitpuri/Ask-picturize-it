@@ -205,7 +205,7 @@ def celebs_name_search_history_handler(search_text, celebs_chat_history):
                 celebrity_name = search_text.replace(".", "").strip()
                 if len(celebrity_name)>0:
                     celebs_chat_history[-1][1] = celebrity_name
-                    return None, celebrity_name, celebs_chat_history, f"Review Celebrity tab for {celebrity_name} details"
+                    return None, celebrity_name, celebs_chat_history, f"Review Celebrity tab for {celebrity_name} details, else rewrite your question to get a right answer."
     except Exception as exception:
         print(f"Exception Name: {type(exception).__name__}")
         print(exception)
