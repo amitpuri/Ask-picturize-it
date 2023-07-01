@@ -20,16 +20,16 @@ class StabilityAPI:
             raise Exception("Stability API key is required.")
 
     def text_to_image(self, actor_name, text_prompts, style_preset = "photographic", cfg_scale=7, clip_guidance_preset="FAST_BLUE", height=512, width=512, samples=1, steps=30):
-        if self.api_key:
+        if self.api_key:     
+            print(f"StabilityAPI.text_to_image text_prompts={text_prompts}")
             response = requests.post(
                 f"{self.api_host}/v1/generation/{self.engine_id}/text-to-image",
                 headers={
                     "Content-Type": "application/json",
                     "Accept": "application/json",
                     "Authorization": f"Bearer {self.api_key}"
-                },
+                },                
                 json={
-
                     "text_prompts": [{"text": text} for text in text_prompts],
                     "cfg_scale": cfg_scale,
                     "clip_guidance_preset": clip_guidance_preset,
@@ -57,37 +57,38 @@ class StabilityAPI:
                 try:
                     with open(init_image, "rb") as file_path:
                         image = Image.open(file_path)
-                        width, height = 256, 256
+                        width, height = 512, 512
                         image = image.resize((width, height))
                         byte_stream = BytesIO()
                         image.save(byte_stream, format='PNG')
                         image_byte_array = byte_stream.getvalue()
                 except Exception as err:
                     print(f"StabilityAPI image_to_image {err}")
-                
-                response = requests.post(
-                    f"{self.api_host}/v1/generation/{self.engine_id}/image-to-image",
-                    headers={
-                        "Accept": "application/json",
-                        "Authorization": f"Bearer {self.api_key}"
-                    },
-                    files={
-                        "init_image": image_byte_array
-                    },
-                    data={
-                        "image_strength": image_strength,
-                        "init_image_mode": "IMAGE_STRENGTH",
-                        "text_prompts[0][text]": text_prompts,
-                        "text_prompts[0][weight]": 1,
-                        "cfg_scale": cfg_scale,
-                        "clip_guidance_preset": clip_guidance_preset,
-                        "samples": samples,
-                        "steps": steps,
-                        "style_preset": style_preset
-                    }
-                )
-                if response.status_code != 200:
-                    raise Exception("Non-200 response: " + str(response.text))
+
+                if image_byte_array:
+                    response = requests.post(
+                        f"{self.api_host}/v1/generation/{self.engine_id}/image-to-image",
+                        headers={
+                            "Accept": "application/json",
+                            "Authorization": f"Bearer {self.api_key}"
+                        },
+                        files={
+                            "init_image": image_byte_array
+                        },
+                        data={
+                            "image_strength": image_strength,
+                            "init_image_mode": "IMAGE_STRENGTH",
+                            "text_prompts[0][text]": text_prompts,
+                            "text_prompts[0][weight]": 1,
+                            "cfg_scale": cfg_scale,
+                            "clip_guidance_preset": clip_guidance_preset,
+                            "samples": samples,
+                            "steps": steps,
+                            "style_preset": style_preset
+                        }
+                    )
+                    if response.status_code != 200:
+                        raise Exception("Non-200 response: " + str(response.text))
             except Exception as error:
                 raise Exception(f"Exception {error}")
             

@@ -463,7 +463,7 @@ def test_stability_ai_handler(api_key, test_style_preset, test_prompt, test_init
                 '''
                 output_generated_image = stability_api.text_to_image(
                     actor_name = name, 
-                    text_prompts = test_prompt, 
+                    text_prompts = [test_prompt], 
                     style_preset = test_style_preset,
                     samples = 1, 
                     steps = test_steps)
@@ -557,12 +557,12 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                                                        "line-art", "analog-film", "neon-punk", "isometric", 
                                                        "low-poly", "origami", "modeling-compound", "cinematic", 
                                                        "3d-model", "pixel-art", "tile-texture"], 
-                                               value="photographic", label="Style preset", info="Select one style preset")            
+                                               value="digital-art", label="Style preset", info="Select one style preset")            
                 stabilityai_steps = gr.Slider(minimum=10, maximum=150, step=10, label="Number of diffusion steps to run", value=30, info="Diffusion steps")
             with gr.Tab("Testing"):
-                stabilityai_test_string = gr.Textbox(label="Prompt", value="John Doe")
+                stabilityai_test_string = gr.Textbox(label="Prompt", value="panda mad scientist mixing sparkling chemicals digital art")
                 with gr.Column(scale=2):
-                    stabilityai_photo = gr.Image(label="Input Image",  type="filepath")
+                    stabilityai_photo = gr.Image(label="Input Image",  type="filepath", value="images/panda mad scientist mixing sparkling chemicals digital art.png")
                     stabilityai_output_photo = gr.Image(label="output Image",  type="filepath")
                 with gr.Column(scale=1):
                     gr.Examples(
