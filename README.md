@@ -75,22 +75,32 @@ Build advanced search, clustering, topic modeling, and classification functional
 |--------------|-----------------------|
 | Ada          | $0.0004 / 1K tokens   | 
 
-## AKS and Docker notes
+## Azure Container registry and Docker notes
 
-    export AZURE_REGISTRY_NAME ="Set a name here"
+export required environment variables
+
+    export AZURE_REGISTRY_NAME ="Set Azure Container registry name here"
     export P_MONGODB_DATABASE = "Mongo database"
     export P_MONGODB_URI = "Mongo connection string"
 
+build a docker image locally or use GitHub Workflow action
+
     docker build --rm --pull \
       --file "Dockerfile" \
-      --label "com.amitpuri.ask-picturize-it" \
+      --label "com.$AZURE_REGISTRY_NAME.ask-picturize-it" \
       --tag "ask-picturize-it:latest" \
       .
 
+Run and test 
+
     docker run -e P_MONGODB_DATABASE -e P_MONGODB_URI -it --publish 80:80 --publish 27017:27017 ask-picturize-it:latest
-    
+
+Login to Azure Container registry
+
     az login --use-device-code
     az acr login --name $AZURE_REGISTRY_NAME.azurecr.io
-    
+
+ Tag and Push the docker image to the Azure Container registry   
+ 
     docker tag ask-picturize-it $AZURE_REGISTRY_NAME.azurecr.io/ask-picturize-it
     docker push $AZURE_REGISTRY_NAME.azurecr.io/ask-picturize-it
