@@ -6,12 +6,14 @@ import requests
 import gpt3_tokenizer
 import gradio as gr
 from langchain.llms import OpenAI
+from langchain.retrievers import WikipediaRetriever
 
 from ExamplesUtil.CelebPromptGenerator import *
 from MongoUtil.StateDataClient import *
 from MongoUtil.CelebDataClient import *
 from UIHandlers.AskMeUI import AskMeUI
 from UIHandlers.Test import Test
+
 from UIHandlers.KnowledgeBase import KnowledgeBase
 from Utils.PromptOptimizer import PromptOptimizer
 from AssemblyAIUtil.AssemblyAITranscriber import AssemblyAITranscriber
@@ -31,6 +33,7 @@ test = Test()
 def tokenizer_calc(prompt :str):
     if prompt:
         return f"Tokenizer (tokens/characters) {gpt3_tokenizer.count_tokens(prompt)}, {len(prompt)}"
+
 
 
 '''
@@ -142,7 +145,10 @@ def get_celebs_response(mongo_config, mongo_connection_string, mongo_database, c
     uihandlers = AskMeUI()
     uihandlers.set_mongodb_config(mongo_config, mongo_connection_string, mongo_database)
     internal_celeb_name = get_internal_celeb_name(celebrity)
-    wiki_summary = get_wiki_page_summary(internal_celeb_name)
+    retriever = WikipediaRetriever()
+    docs = retriever.get_relevant_documents(query=celebrity)    
+    wiki_summary = docs[0].page_content[:400] 
+    
     key_traits = get_key_traits(celebrity)
     try:
         name, prompt, response, wiki_image, generated_image_url = uihandlers.get_celebs_response_handler(celebrity)
@@ -152,7 +158,7 @@ def get_celebs_response(mongo_config, mongo_connection_string, mongo_database, c
     except:
         response = None
         generated_image_url = None
-        wiki_image = get_wikimedia_image(celebrity)
+        wiki_image = get_wikimedia_image(internal_celeb_name)
         return celebrity, f"Write a paragraph on {celebrity}", wiki_summary, "", wiki_image, None, f"{celebrity}", key_traits
         pass
     
@@ -288,50 +294,35 @@ def generate_image_diffusion_handler(generate_image_prompt_text):
 # wikimedia
         
 def get_wikimedia_image(keyword):
-        WIKI_REQUEST = 'http://en.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&piprop=original&titles='
+    WIKI_REQUEST = 'http://en.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&piprop=original&titles='
 
-        if keyword:
-            try:
-                result = wikipedia.search(keyword, results = 1)
-            except wikipedia.exceptions.WikipediaException as exception:
-                print(f"Exception Name: {type(exception).__name__}")
-                print(exception)
-                result = None
-                pass
-            wikipedia.set_lang('en')
-            try:
-                if result is not None:
-                    try:
-                        wkpage = wikipedia.WikipediaPage(title = result[0])
-                    except:
-                        print(result)
-                    finally:
-                        wkpage = None    
-            except wikipedia.exceptions.WikipediaException as exception:
-                print(f"Exception Name: {type(exception).__name__}")
-                print(exception)
-                wkpage = None
-                pass
-            if wkpage is not None:
-                title = wkpage.title
-                response  = requests.get(WIKI_REQUEST+title)
-                json_data = json.loads(response.text)
-                try:
-                    image_link = list(json_data['query']['pages'].values())[0]['original']['source']
-                    return image_link
-                except:
-                    return None
-    
-def get_wiki_page_summary(self, keyword):
     if keyword:
         try:
-            return wikipedia.page(keyword).summary
-        except wikipedia.exceptions.PageError:
-            return f"No page for this keyword {keyword}"
-        except Exception as exception:
+            result = wikipedia.search(keyword, results = 1)
+        except wikipedia.exceptions.WikipediaException as exception:
             print(f"Exception Name: {type(exception).__name__}")
             print(exception)
-
+            result = None
+            pass
+        wikipedia.set_lang('en')
+        try:
+            if result is not None:
+                wkpage = wikipedia.WikipediaPage(title = result[0])
+        except wikipedia.exceptions.WikipediaException as exception:
+            print(f"Exception Name: {type(exception).__name__}")
+            print(exception)
+            wkpage = None
+            pass
+        if wkpage is not None:
+            title = wkpage.title
+            response  = requests.get(WIKI_REQUEST+title)
+            json_data = json.loads(response.text)
+            try:
+                image_link = list(json_data['query']['pages'].values())[0]['original']['source']
+                return image_link
+            except:
+                return None
+    
                 
 # Examples fn
 
