@@ -552,7 +552,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
         with gr.Tab("StabilityAI API"):
             gr.HTML(AskPicturizeIt.STABILITY_AI_HTML)
             with gr.Row():
-                stabilityai_api_key = gr.Textbox(label="StabilityAI API Key", value=os.getenv("STABILITY_API_KEY"), type="password")
+                stabilityai_api_key = gr.Textbox(label="StabilityAI API Key", value=os.getenv("STABILITYAI_API_KEY"), type="password")
                 stabilityai_style_preset = gr.Dropdown(["enhance", "anime", "photographic", "digital-art", "comic-book", "fantasy-art", 
                                                        "line-art", "analog-film", "neon-punk", "isometric", 
                                                        "low-poly", "origami", "modeling-compound", "cinematic", 
