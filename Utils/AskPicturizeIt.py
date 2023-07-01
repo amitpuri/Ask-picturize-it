@@ -95,7 +95,7 @@ class AskPicturizeIt:
     AWESOME_CHATGPT_PROMPTS = """
     Credits 🧠 Awesome ChatGPT Prompts <a href='https://github.com/f/awesome-chatgpt-prompts'>https://github.com/f/awesome-chatgpt-prompts</a>
     """
-    
+    PRODUCT_DEFINITION_INFO = "<p>Prompt builder, <br><br> Step 1 - Select a fact sheet, <br><br> Step 2 - Select a task and <br><br> Step 3 - Select a question to build it <br><br> Step 4 - Click Ask ChatGPT</p>"
     
     PRODUCT_DEFINITION = "<p>Define a product by prompt, picturize it, get variations, save it with a keyword for later retrieval. Credits <a href='https://www.deeplearning.ai/short-courses/chatgpt-prompt-engineering-for-developers'>https://www.deeplearning.ai/short-courses/chatgpt-prompt-engineering-for-developers</a></p>"
     
@@ -130,7 +130,6 @@ class AskPicturizeIt:
     ARTICLE_LINKS_EXAMPLES = ["https://time.com/6266679/musk-ai-open-letter", 
                               "https://futureoflife.org/open-letter/ai-open-letter",
                               "https://github.com/openai/CLIP",
-
                               "https://arxiv.org/abs/2103.00020",
                               "https://arxiv.org/abs/2302.14045v2",
                               "https://arxiv.org/abs/2304.04487",
@@ -225,6 +224,7 @@ class AskPicturizeIt:
 
     CLOUDINARY_HTML = "Sign up here <a href='https://cloudinary.com'>https://cloudinary.com</a>"
 
+
     STABILITY_AI_HTML = "Sign up here <a href='https://platform.stability.ai'>https://platform.stability.ai</a>"
 
     RAPIDAPI_HTML = "Sign up here <a href='https://rapidapi.com'>https://rapidapi.com</a>"
@@ -238,3 +238,6 @@ class AskPicturizeIt:
     ELEVENLABS_HTML = "Sign up Elevenlabs <a href='https://www.elevenlabs.io'>https://www.elevenlabs.io</a>"
     
     ELEVENLABS_TEST_MESSAGE ="AI as a tool that can augment and empower us, rather than compete or replace us."
+
+
+    NO_ASSEMBLYAI_API_KEY_ERROR = "AssemblyAI API Key or ASSEMBLYAI_API_KEY env variable missing!"

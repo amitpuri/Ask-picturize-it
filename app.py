@@ -26,15 +26,12 @@ from ElevenlabsUtil.ElevenlabsVoiceGenerator import ElevenlabsVoiceGenerator
 
 kb = KnowledgeBase()
 prompt_optimizer = PromptOptimizer()
-prompt_generator = CelebPromptGenerator()
-
+prompt_generator =  CelebPromptGenerator()
 test = Test()
 
 def tokenizer_calc(prompt :str):
     if prompt:
         return f"Tokenizer (tokens/characters) {gpt3_tokenizer.count_tokens(prompt)}, {len(prompt)}"
-
-
 
 '''
 Record voice, transcribe, picturize, create variations, and upload
@@ -56,7 +53,7 @@ def transcribe_whisper_large_v2(audio_file :str):
 
 def assemblyai_transcribe_handler(api_key :str, audio_file :str):
     if not api_key:
-        return "AssemblyAI API Key or ASSEMBLYAI_API_KEY env variable missing!", ""
+        return AskPicturizeIt.NO_ASSEMBLYAI_API_KEY_ERROR, ""
     if not audio_file: 
         return "No audio file", ""
         
@@ -419,7 +416,7 @@ def elevenlabs_test_handler(api_key: str, test_string: str, test_voice: str):
 
 def assemblyai_test_handler(api_key, test_uri):
     if not api_key:
-        return "AssemblyAI API Key or ASSEMBLYAI_API_KEY env variable missing!", ""
+        return AskPicturizeIt.NO_ASSEMBLYAI_API_KEY_ERROR, ""
     if not test_uri: 
         return "No audio file/uri", ""
     try:
@@ -591,6 +588,19 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                         value="Get variation of your favorite celebs", label="Info")                
                 with gr.Column():
                     generate_variations_button = gr.Button("Generate a variation via DALL-E")
+        with gr.Tab("Output"):
+            with gr.Row():            
+                with gr.Column(scale=4):
+                    with gr.Accordion("Generated Gallery", open=False):
+                        generated_images_gallery = gr.Gallery(
+                                        label="Generated Images", preview="False", columns=4)
+                    output_generated_image = gr.Image(label="Preview Image",  type="filepath")
+                with gr.Column(scale=1):
+                    output_cloudinary_button = gr.Button("Get images from Cloudinary")
+                    generate_more_variations_button = gr.Button("More variations via DALL-E")
+                    name_variation_it = gr.Textbox(label="Name variation to upload")   
+                    variation_cloudinary_upload = gr.Button("Upload to Cloudinary")
+            label_upload_variation = gr.Label(value="Upload output", label="Output Info")
     with gr.Tab("Use cases"):
         with gr.Tab("Know your Celebrity"):
             with gr.Tab("GPT Search"):
@@ -662,7 +672,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                             celeb_save_description_button = gr.Button("Save Description")
                             describe_button = gr.Button("Describe via ChatGPT and Save")
                             celeb_upload_save_real_generated_image_button = gr.Button("Upload, Save real & generated image")                    
-                label_upload_here = gr.Label(value=AskPicturizeIt.LABEL_GPT_CELEB_SCREEN, label="Info")     
+                label_upload_here = gr.Label(value=AskPicturizeIt.LABEL_GPT_CELEB_SCREEN, label="Info")            
         with gr.Tab("Ask GPT"):
             with gr.Row():
                 with gr.Column(): 
@@ -756,7 +766,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                         product_task_explanation = gr.Textbox(label="Task explanation", lines=5)
                         product_def_question = gr.Textbox(label="Question", lines=5)
                     with gr.Column(scale=1):
-                        gr.HTML("<p>Prompt builder, <br><br> Step 1 - Select a fact sheet, <br><br> Step 2 - Select a task and <br><br> Step 3 - Select a question to build it <br><br> Step 4 - Click Ask ChatGPT</p>")
+                        gr.HTML(AskPicturizeIt.PRODUCT_DEFINITION_INFO)
                         gr.Examples(
                                     label="Product Fact sheet examples",
                                     fn=prompt_generator.get_awesome_chatgpt_prompt,
@@ -872,19 +882,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                         article_article_summarize_button = gr.Button("Summarize")
                         article_article_extract_button = gr.Button("Extract")            
                 article_summary = gr.Code(label="Article response", language="html", lines=10)                                   
-    with gr.Tab("Output"):
-            with gr.Row():            
-                with gr.Column(scale=4):
-                    with gr.Accordion("Generated Gallery", open=False):
-                        generated_images_gallery = gr.Gallery(
-                                        label="Generated Images", preview="False", columns=4)
-                    output_generated_image = gr.Image(label="Preview Image",  type="filepath")
-                with gr.Column(scale=1):
-                    output_cloudinary_button = gr.Button("Get images from Cloudinary")
-                    generate_more_variations_button = gr.Button("More variations via DALL-E")
-                    name_variation_it = gr.Textbox(label="Name variation to upload")   
-                    variation_cloudinary_upload = gr.Button("Upload to Cloudinary")
-            label_upload_variation = gr.Label(value="Upload output", label="Output Info")
+    
     with gr.Tab("DISCLAIMER"):
         gr.Markdown(AskPicturizeIt.DISCLAIMER)
     gr.HTML(AskPicturizeIt.FOOTER)
