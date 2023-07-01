@@ -110,6 +110,10 @@ Login to Azure Container registry
 
 - Login to [https://ml.azure.com](https://ml.azure.com) and use Notebooks
 - from Terminal Clone repo and rename env.example to .env and set values to variables
+- Run to install dependencies
+
+        pip install -r requirements.txt 
+  
 - Install pip install p2j
   
       pip install p2j
