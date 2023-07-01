@@ -79,7 +79,7 @@ Build advanced search, clustering, topic modeling, and classification functional
 
 export required environment variables
 
-    export AZURE_REGISTRY_NAME ="Set Azure Container registry name here"
+    export AZURE_REGISTRY_NAME = "Set Azure Container registry name here"
     export P_MONGODB_DATABASE = "Mongo database"
     export P_MONGODB_URI = "Mongo connection string"
 
