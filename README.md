@@ -109,7 +109,7 @@ Login to Azure Container registry
 ## Azure ML Workspace Notes
 
 - Login to [https://ml.azure.com](https://ml.azure.com) and use Notebooks
-- from Terminal and Clone repo
+- from Terminal Clone repo and rename env.example to .env and set values to variables
 - Install pip install p2j
   
       pip install p2j
