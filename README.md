@@ -83,7 +83,7 @@ export required environment variables
     export P_MONGODB_DATABASE = "Mongo database"
     export P_MONGODB_URI = "Mongo connection string"
 
-build a docker image locally or use GitHub Workflow action
+build a docker image locally or use [GitHub Workflow action](.github/workflows)
 
     docker build --rm --pull \
       --file "Dockerfile" \
