@@ -77,19 +77,20 @@ Build advanced search, clustering, topic modeling, and classification functional
 
 ## AKS and Docker notes
 
-export AZURE_REGISTRY_NAME ="Set a name here"
-export P_MONGODB_DATABASE = "Mongo database"
-export P_MONGODB_URI = "Mongo connection string"
+    export AZURE_REGISTRY_NAME ="Set a name here"
+    export P_MONGODB_DATABASE = "Mongo database"
+    export P_MONGODB_URI = "Mongo connection string"
 
-docker build --rm --pull \
-  --file "Dockerfile" \
-  --label "com.amitpuri.ask-picturize-it" \
-  --tag "ask-picturize-it:latest" \
-  .
+    docker build --rm --pull \
+      --file "Dockerfile" \
+      --label "com.amitpuri.ask-picturize-it" \
+      --tag "ask-picturize-it:latest" \
+      .
 
-docker run -e P_MONGODB_DATABASE -e P_MONGODB_URI -it --publish 80:80 --publish 27017:27017 ask-picturize-it:latest
+    docker run -e P_MONGODB_DATABASE -e P_MONGODB_URI -it --publish 80:80 --publish 27017:27017 ask-picturize-it:latest
     
-az login --use-device-code
-az acr login --name $AZURE_REGISTRY_NAME.azurecr.io
-docker tag ask-picturize-it $AZURE_REGISTRY_NAME.azurecr.io/ask-picturize-it
-docker push $AZURE_REGISTRY_NAME.azurecr.io/ask-picturize-it
+    az login --use-device-code
+    az acr login --name $AZURE_REGISTRY_NAME.azurecr.io
+    
+    docker tag ask-picturize-it $AZURE_REGISTRY_NAME.azurecr.io/ask-picturize-it
+    docker push $AZURE_REGISTRY_NAME.azurecr.io/ask-picturize-it
