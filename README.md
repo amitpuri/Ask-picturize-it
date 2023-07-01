@@ -106,7 +106,7 @@ Login to Azure Container registry
     docker push $AZURE_REGISTRY_NAME.azurecr.io/ask-picturize-it
 
 
-## Azure ML Workspace Notes
+## JupyterLab or Azure ML Workspace Notes
 
 - Use [https://jupyter.org](https://jupyter.org) or Login to [https://ml.azure.com](https://ml.azure.com) and use Notebooks
 - Clone repo and rename env.example to .env and set values to variables
