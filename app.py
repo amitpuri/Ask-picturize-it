@@ -12,6 +12,7 @@ from ExamplesUtil.CelebPromptGenerator import *
 from MongoUtil.StateDataClient import *
 from MongoUtil.CelebDataClient import *
 from UIHandlers.AskMeUI import AskMeUI
+
 from UIHandlers.Test import Test
 from UIHandlers.KnowledgeBase import KnowledgeBase
 from Utils.PromptOptimizer import PromptOptimizer
@@ -274,15 +275,34 @@ def cloudinary_upload(cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_
 Image generation
 '''
 
-def generate_image_stability_ai_handler(stability_api_key, celebs_name_label, generate_image_prompt_text, generate_image_prompt_uri):
-    uihandlers = AskMeUI()
-    if generate_image_prompt_uri is None and generate_image_prompt_text and len(generate_image_prompt_text)>0:
-        return uihandlers.stability_ai_handler(stability_api_key, celebs_name_label, generate_image_prompt_text)
-    elif generate_image_prompt_uri and generate_image_prompt_text and len(generate_image_prompt_text)>0:
-        return uihandlers.stability_ai_handler(stability_api_key, celebs_name_label, generate_image_prompt_text, generate_image_prompt_uri)
-    else:        
-        return AskPicturizeIt.ENTER_A_PROMPT_IMAGE, None
-    
+def text2image_stability_ai_handler(api_key, prompt):
+    try:    
+        stability_api = StabilityAPI(api_key)
+        output_generated_image = stability_api.text_to_image(text_prompts = [prompt]) 
+        return "Image generated using stability AI ", output_generated_image
+    except Exception as err:
+        return f"{err}", None
+        
+def image2image_stability_ai_handler(api_key, init_image, prompt = None):
+    try:    
+        stability_api = StabilityAPI(api_key)
+        output_generated_image = stability_api.image_to_image(                        
+                init_image = init_image,
+                text_prompts = prompt, 
+            )
+        return "Image variation generated using stability AI ", output_generated_image
+    except Exception as err:
+        return f"{err}", None
+        
+def stability_ai_handler(api_key, prompt = None, init_image = None):
+    if api_key:
+        if init_image:
+            return image2image_stability_ai_handler(api_key, init_image, prompt)
+        else:
+            return text2image_stability_ai_handler(api_key, prompt)
+    else:
+        return AskPicturizeIt.NO_STABILITYAI_API_KEY_ERROR , None
+
 def generate_image_diffusion_handler(generate_image_prompt_text):
     uihandlers = AskMeUI()
     if generate_image_prompt_text and len(generate_image_prompt_text)>0:
@@ -428,7 +448,6 @@ def assemblyai_test_handler(api_key, test_uri):
 def test_stability_ai_handler(api_key, test_style_preset, test_prompt, test_init_image, test_steps):
     if api_key:
         try:
-            name = "TestPrompt"                
             stability_api = StabilityAPI(api_key)
             '''
             Common parameters
@@ -449,7 +468,6 @@ def test_stability_ai_handler(api_key, test_style_preset, test_prompt, test_init
                         # and step_schedule_end 
                 '''
                 output_generated_image = stability_api.image_to_image(
-                    actor_name = name, 
                     init_image = test_init_image,
                     text_prompts = test_prompt, 
                     style_preset = test_style_preset,
@@ -462,7 +480,6 @@ def test_stability_ai_handler(api_key, test_style_preset, test_prompt, test_init
                 height=512, width=512, 
                 '''
                 output_generated_image = stability_api.text_to_image(
-                    actor_name = name, 
                     text_prompts = [test_prompt], 
                     style_preset = test_style_preset,
                     samples = 1, 
@@ -562,7 +579,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
             with gr.Tab("Testing"):
                 stabilityai_test_string = gr.Textbox(label="Prompt", value="panda mad scientist mixing sparkling chemicals digital art")
                 with gr.Column(scale=2):
-                    stabilityai_photo = gr.Image(label="Input Image",  type="filepath", value="images/panda mad scientist mixing sparkling chemicals digital art.png")
+                    stabilityai_photo = gr.Image(label="Input Image",  type="filepath", value="images/panda mad scientist mixing sparkling chemicals digital art-1.png")
                     stabilityai_output_photo = gr.Image(label="output Image",  type="filepath")
                 with gr.Column(scale=1):
                     gr.Examples(
@@ -626,6 +643,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                     optimize_prompt_chatgpt_button = gr.Button("Optimize Prompt")
                     generate_button = gr.Button("Picture it via DALL-E")
                     generate_image_diffusion_button = gr.Button("*via stable-diffusion-2 model")
+                    generate_image_stability_ai_button = gr.Button("via Stability AI")
                     label_generate_image_diffusion = gr.Label(value="* takes 30-50 mins on CPU", label="Warning") 
                 with gr.Column(scale=5):
                     gr.Examples(
@@ -652,6 +670,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                         value="Get variation of your favorite celebs", label="Info")                
                 with gr.Column():
                     generate_variations_button = gr.Button("Generate a variation via DALL-E")
+                    generate_variations_image_stability_ai_button = gr.Button("via Stability AI")
         with gr.Tab("Output"):
             with gr.Row():            
                 with gr.Column(scale=4):
@@ -662,6 +681,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                 with gr.Column(scale=1):
                     output_cloudinary_button = gr.Button("Get images from Cloudinary")
                     generate_more_variations_button = gr.Button("More variations via DALL-E")
+                    generate_more_image_stability_ai_button = gr.Button("via Stability AI")
                     name_variation_it = gr.Textbox(label="Name variation to upload")   
                     variation_cloudinary_upload = gr.Button("Upload to Cloudinary")
             label_upload_variation = gr.Label(value="Upload output", label="Output Info")
@@ -721,7 +741,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                         generate_image_prompt_text = gr.Textbox(label="Image generation prompt")
                         label_describe_gpt = gr.Label(value="Generate or Upload Image to Save", label="Info")
                         with gr.Accordion("Options..", open=True):
-                            generate_image_stability_ai_button = gr.Button("via Stability AI")
+                            generate_celeb_image_stability_ai_button = gr.Button("via Stability AI")
                             celeb_variation_button = gr.Button("variation from the real photo (DALL-E 2)")                                
                 with gr.Row():
                     celeb_real_photo = gr.Image(label="Real Photo",  type="filepath")                        
@@ -954,7 +974,6 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
 
     celebs_name_search_clear.click(lambda: None, None, celebs_name_chatbot, queue=False)
 
-    
     assemblyai_test_button.click(
         fn=assemblyai_test_handler,
         inputs=[assemblyai_api_key, assemblyai_test_uri],
@@ -978,8 +997,8 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
         fn=test_stability_ai_handler,
         inputs=[stabilityai_api_key, stabilityai_style_preset, stabilityai_test_string, stabilityai_photo, stabilityai_steps],
         outputs=[stabilityai_output_info, stabilityai_output_photo]
-
     )
+    
     youtube_transcribe_button.click(
         fn=kb.youtube_transcribe_handler,
         inputs=[input_key, youtube_link],
@@ -998,13 +1017,11 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
         outputs=[pdf_summarize_info_label, pdf_summary]
     )
     
-    
     youtube_summarize_button.click(
         kb.youtube_summarizer_handler,
         inputs=[input_key, youtube_link],
         outputs=[youtube_transcribe_summarize_info_label, youtube_transcribe_summary]
     )
-    
     
     article_article_summarize_button.click(
         kb.article_summarize_handler,        
@@ -1017,7 +1034,6 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
         inputs=[rapidapi_api_key, article_link], 
         outputs=[article_summary, article_summarize_extract_info_label]
     )
-
 
     optimize_prompt_product_def_button.click(
         fn=prompt_optimizer.generate_optimized_prompt,
@@ -1092,7 +1108,6 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
         outputs=[product_def_final_prompt]        
     )
     
-    
     question_prompt.change(
         fn=tokenizer_calc,
         inputs=[generate_image_prompt_text],
@@ -1110,37 +1125,31 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
         inputs=[product_def_final_prompt],
         outputs=[product_def_info_label]
     )
-
     
     input_prompt.change(
         fn=tokenizer_calc,
         inputs=[input_prompt],
         outputs=[label_picturize_it]        
-
     )
     
     ask_prompt.change(
         fn=tokenizer_calc,
         inputs=[ask_prompt],
         outputs=[label_codex_here]        
-
     )
     
-    generate_image_stability_ai_button.click(
-        fn=generate_image_stability_ai_handler,
-        inputs=[stabilityai_api_key, celebs_name_label, generate_image_prompt_text, celeb_real_photo],
+    generate_celeb_image_stability_ai_button.click(
+        fn=stability_ai_handler,
+        inputs=[stabilityai_api_key, generate_image_prompt_text, celeb_real_photo],
         outputs=[label_describe_gpt, celeb_generated_image]
-
     )
     
     generate_image_diffusion_button.click(
         fn=generate_image_diffusion_handler,
         inputs=[input_prompt],
         outputs=[label_picturize_it, output_generated_image]
-
     )
 
-   
     optimize_prompt_chatgpt_button.click(
         fn=prompt_optimizer.generate_optimized_prompt,
         inputs=[input_prompt],
@@ -1164,7 +1173,6 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
         fn=cloudinary_upload,
         inputs=[cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret, cloudinary_folder, output_generated_image, name_variation_it],
         outputs=[label_upload_variation,output_generated_image]
-
     )
 
     transcribe_button.click(
@@ -1219,8 +1227,6 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
 
     )
     
-    
-
     celeb_variation_button.click(
         fn=create_variation_from_image_handler,
         inputs=[input_key, org_id, openai_selection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, celeb_real_photo, input_imagesize, input_num_images],
@@ -1237,6 +1243,24 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
         fn=create_variation_from_image_handler,
         inputs=[input_key, org_id, openai_selection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, output_generated_image, input_imagesize, input_num_images],
         outputs=[label_upload_variation, output_generated_image, generated_images_gallery]
+    )
+
+    generate_image_stability_ai_button.click(
+        fn=text2image_stability_ai_handler,
+        inputs=[stabilityai_api_key, input_prompt],
+        outputs=[label_picturize_it, output_generated_image]
+    )
+    
+    generate_variations_image_stability_ai_button.click(
+        fn=image2image_stability_ai_handler,
+        inputs=[stabilityai_api_key, input_image_variation],
+        outputs=[label_get_variation, output_generated_image]
+    )
+
+    generate_more_image_stability_ai_button.click(
+        fn=image2image_stability_ai_handler,
+        inputs=[stabilityai_api_key, output_generated_image],
+        outputs=[label_get_variation, output_generated_image]
     )
 
     product_def_variations_button.click(

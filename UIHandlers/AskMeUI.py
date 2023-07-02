@@ -8,12 +8,10 @@ from OpenAIUtil.TranscribeOperations import *  #transcribe
 from OpenAIUtil.TextOperations import *
 from Utils.ImageUtils import * #fallback_image_implement
 from Utils.DiffusionImageGenerator import * #generate_image
-from Utils.StabilityAPI import * #text_to_image
 
 
 # Ask me UI Component handler
 class AskMeUI:
-
     def __init__(self):
         self.NO_API_KEY_ERROR="Review Configuration tab for keys/settings"
         self.LABEL_GPT_CELEB_SCREEN = "Name, Describe, Preview and Upload"
@@ -27,6 +25,7 @@ class AskMeUI:
     def get_private_mongo_config(self):
         return os.getenv("P_MONGODB_URI"), os.getenv("P_MONGODB_DATABASE")
         
+
     def set_cloudinary_config(self, cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret):        
         self.cloudinary_cloud_name = cloudinary_cloud_name
         self.cloudinary_api_key = cloudinary_api_key
@@ -114,33 +113,6 @@ class AskMeUI:
         url = cloudinary_client.upload_image(input_celeb_picture, celebrity_name)    
     
         return "Uploaded - Done", self.image_utils.url_to_image(url)
-    
-    def stability_ai_handler(self, stability_api_key, name, prompt, init_image = None):
-        if stability_api_key:
-            try:
-                if name and not prompt:
-                    prompt = name
-                if prompt and not name:
-                    name = prompt  
-                    
-                stability_api = StabilityAPI(stability_api_key)
-                if init_image:                    
-                    output_generated_image = stability_api.image_to_image(                        
-                        actor_name = name, 
-                        init_image = init_image,
-                        text_prompts = prompt, 
-                    )
-                    return "Image variation generated using stability AI ", output_generated_image
-                else:
-                    output_generated_image = stability_api.text_to_image(
-                        actor_name = name, 
-                        text_prompts = [prompt]
-                    ) 
-                    return "Image generated using stability AI ", output_generated_image
-            except Exception as err:
-                return f"{err}", None
-        else:
-            return self.NO_API_KEY_ERROR, None
     
     def generate_image_diffusion_handler(self, name, prompt):
         if name:
