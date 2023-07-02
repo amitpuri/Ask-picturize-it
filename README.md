@@ -6,7 +6,7 @@ Huggingface Space 🤗
 
 [https://huggingface.co/spaces/amitpuri/Ask-picturize-it](https://huggingface.co/spaces/amitpuri/Ask-picturize-it)
 
-[![Ask picturize it huggingface space](https://github.com/amitpuri/Ask-picturize-it/assets/6460233/9a59fa51-470c-40bb-ad40-411003e38282)](https://amitpuri-ask-picturize-it.hf.space)
+[![Ask picturize it huggingface space](https://amitpuri-ask-picturize-it.hf.space)](https://github.com/amitpuri/Ask-picturize-it/assets/6460233/9a59fa51-470c-40bb-ad40-411003e38282)
 
 
 <iframe src="" title="Ask picturize it huggingface space"
