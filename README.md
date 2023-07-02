@@ -6,7 +6,10 @@ Huggingface Space 🤗
 
 [https://huggingface.co/spaces/amitpuri/Ask-picturize-it](https://huggingface.co/spaces/amitpuri/Ask-picturize-it)
 
-<iframe src="https://amitpuri-ask-picturize-it.hf.space" title="Ask picturize it huggingface space"
+[![Ask picturize it huggingface space](https://amitpuri-ask-picturize-it.hf.space)](https://amitpuri-ask-picturize-it.hf.space)
+
+
+<iframe src="" title="Ask picturize it huggingface space"
 width="100%" height="300"
 style="border:none;">
 </iframe>
