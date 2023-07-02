@@ -146,7 +146,7 @@ def get_celebs_response(mongo_config, mongo_connection_string, mongo_database, c
     internal_celeb_name = get_internal_celeb_name(celebrity)
     retriever = WikipediaRetriever()
     docs = retriever.get_relevant_documents(query=celebrity)    
-    wiki_summary = docs[0].page_content[:400] 
+    wiki_summary = docs[0].page_content 
     
     key_traits = get_key_traits(celebrity)
     try:
