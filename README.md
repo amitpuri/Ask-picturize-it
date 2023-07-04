@@ -116,6 +116,10 @@ Login to Azure Container registry
         #from dotenv import load_dotenv
         #load_dotenv()
 
+- Install
+  
+        pip install python-dotenv
+
 - Run to install dependencies
 
       pip install -r requirements.txt 
