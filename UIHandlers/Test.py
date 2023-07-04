@@ -5,7 +5,7 @@ from Utils.AskPicturizeIt import *
 
 class Test:
     def test_handler(self, api_key, org_id, model_name, optionSelection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, google_generative_api_key, prompt):        
-        if optionSelection not in ["OpenAI API","Azure OpenAI API","Google PaLM API"]:
+        if optionSelection not in AskPicturizeIt.llm_api_options:
             raise ValueError("Invalid choice!")
             
         match optionSelection:

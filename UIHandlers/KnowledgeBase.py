@@ -1,20 +1,19 @@
 import os
 import json
 import arxiv
-from Utils.AskPicturizeIt import *
+import wikipedia
+import requests
 from youtube_search import YoutubeSearch
 from Utils.YouTubeSummarizer import *
 from Utils.PDFSummarizer import *
 from Utils.RapidapiUtil import *
 from MongoUtil.KBDataClient import *
+from Utils.AskPicturizeIt import *
 
-class KnowledgeBase:
-    def __init__(self):
-        self.ask_picturize_it = AskPicturizeIt()
-    
+class KnowledgeBase: 
     def get_private_mongo_config(self):
         return os.getenv("P_MONGODB_URI"), os.getenv("P_MONGODB_DATABASE")
-
+        
     def get_searchData_by_uri(self, uri: str):
         try:
             connection_string, database = self.get_private_mongo_config()           
@@ -28,7 +27,7 @@ class KnowledgeBase:
             pass
         finally:
             return title, summary
-    
+            
     def extract_youtube_attributes(self, keyword, output):
         videos = []
         for video in output.videos:
@@ -43,7 +42,7 @@ class KnowledgeBase:
                 'summary': None
             })
         return videos
-    
+               
     def extract_arxiv_attributes(self, keyword, output):
         papers = []
         for pdf in output.results():
@@ -55,15 +54,15 @@ class KnowledgeBase:
                 'summary': pdf.summary
             })
         return papers
-    
+                
     def pdf_search_data_by_uri(self, uri: str):
         title, summary = self.get_searchData_by_uri(uri)
         return uri, title, summary
         
+                
     def youtube_search_data_by_uri(self, uri: str):
         title, summary = self.get_searchData_by_uri(uri)
         return uri, title
-    
     
     def kb_search(self, keyword: str, select_medium, max_results: int):
         connection_string, database = self.get_private_mongo_config()
@@ -77,7 +76,6 @@ class KnowledgeBase:
                 print(f"Exception Name: {type(exception).__name__}")
                 print(exception)
                 pass
-    
             return output.to_json()
         elif select_medium == 1:
             output = arxiv.Search(
@@ -108,22 +106,22 @@ class KnowledgeBase:
             if url and len(url)>0:
                 youtube_summarizer = YouTubeSummarizer()
                 youtube_summarizer.setOpenAIConfig(api_key)
-                return self.ask_picturize_it.TRANSCRIBE_OUTPUT_INFO,  youtube_summarizer.summarize(url)
+                return AskPicturizeIt.TRANSCRIBE_OUTPUT_INFO,  youtube_summarizer.summarize(url)
             else:
                 return "No URL",  ""
         else:
-            return self.ask_picturize_it.NO_API_KEY_ERROR, ""
+            return AskPicturizeIt.NO_API_KEY_ERROR, ""
     
     def youtube_transcribe_handler(self, api_key, url):    
         if api_key:
             if url and len(url)>0:
                 youtube_summarizer = YouTubeSummarizer()
                 youtube_summarizer.setOpenAIConfig(api_key)
-                return self.ask_picturize_it.TRANSCRIBE_OUTPUT_INFO,  youtube_summarizer.transcribe(url)
+                return AskPicturizeIt.TRANSCRIBE_OUTPUT_INFO,  youtube_summarizer.transcribe(url)
             else:
                 return "No URL",  ""
         else:
-            return self.ask_picturize_it.NO_API_KEY_ERROR, ""
+            return AskPicturizeIt.NO_API_KEY_ERROR, ""
     
     def pdf_summarizer_handler(self, api_key, url):    
         if api_key:
@@ -131,12 +129,12 @@ class KnowledgeBase:
                 pdf_summarizer = PDFSummarizer()
                 pdf_summarizer.setOpenAIConfig(api_key)
                 #TO DO
-                return self.ask_picturize_it.PDF_OUTPUT_INFO, pdf_summarizer.summarize(url)
+                return AskPicturizeIt.PDF_OUTPUT_INFO, pdf_summarizer.summarize(url)
             else:
                 return "No URL",  ""
         else:
-            return self.ask_picturize_it.NO_API_KEY_ERROR, ""
-    
+            return AskPicturizeIt.NO_API_KEY_ERROR, ""
+                   
     def article_summarize_handler(self, rapidapi_api_key, article_link, length):
         rapidapi_util = RapidapiUtil()
         if rapidapi_api_key:
@@ -146,8 +144,9 @@ class KnowledgeBase:
             else:            
                 return "No URL",  ""
         else:
-            return "", self.ask_picturize_it.NO_RAPIDAPI_KEY_ERROR 
-            
+            return "", AskPicturizeIt.NO_RAPIDAPI_KEY_ERROR 
+
+                
     def article_extract_handler(self, rapidapi_api_key, article_link):
         rapidapi_util = RapidapiUtil()
         if rapidapi_api_key:
@@ -157,14 +156,46 @@ class KnowledgeBase:
             else:
                 return "No URL",  ""
         else:
-            return "", self.ask_picturize_it.NO_RAPIDAPI_KEY_ERROR
-            
+            return "", AskPicturizeIt.NO_RAPIDAPI_KEY_ERROR
+
     def PDF_Examples(self):
-        connection_string, database = self.get_private_mongo_config()           
+        connection_string, database = self.get_private_mongo_config()         
         kb_data_client = KBDataClient(connection_string, database)
         return kb_data_client.list_kb_searchData("pdf")
-    
+
     def YouTube_Examples(self):
-        connection_string, database = self.get_private_mongo_config()           
+        connection_string, database = self.get_private_mongo_config()       
         kb_data_client = KBDataClient(connection_string, database)
         return kb_data_client.list_kb_searchData("youtube")
+
+    def get_wikimedia_image(self, keyword):
+        WIKI_REQUEST = 'http://en.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&piprop=original&titles='
+
+        if keyword:
+            try:
+                result = wikipedia.search(keyword, results = 1)
+            except wikipedia.exceptions.WikipediaException as exception:
+                print(f"Exception Name: {type(exception).__name__}")
+                print(exception)
+                result = None
+                pass
+            wikipedia.set_lang('en')
+            try:
+                if result is not None:
+                    wkpage = wikipedia.WikipediaPage(title = result[0])
+            except wikipedia.exceptions.WikipediaException as exception:
+                print(f"Exception Name: {type(exception).__name__}")
+                print(exception)
+                wkpage = None
+                pass
+            if wkpage is not None:
+                title = wkpage.title
+                response  = requests.get(WIKI_REQUEST+title)
+                json_data = json.loads(response.text)
+    
+                try:
+                    image_link = list(json_data['query']['pages'].values())[0]['original']['source']
+                    return image_link
+                except:
+                    return None
+    

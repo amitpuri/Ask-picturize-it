@@ -1,6 +1,10 @@
+git+https://github.com/huggingface/diffusers
 git+https://github.com/huggingface/transformers
+git+https://github.com/google/flax.git
+jaxlib
 openai
 google-generativeai
+stability-sdk
 assemblyai
 elevenlabs
 requests
@@ -15,6 +19,7 @@ scipy
 --extra-index-url https://download.pytorch.org/whl/cu113 
 torch
 torchvision
+torchaudio
 accelerate
 gpt3-tokenizer
 wikipedia
@@ -31,3 +36,6 @@ chromadb
 tiktoken
 arxiv
 youtube-search
+jax
+flax
+speechbrain

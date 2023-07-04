@@ -12,24 +12,60 @@ from ExamplesUtil.CelebPromptGenerator import *
 from MongoUtil.StateDataClient import *
 from MongoUtil.CelebDataClient import *
 from UIHandlers.AskMeUI import AskMeUI
-
 from UIHandlers.Test import Test
 from UIHandlers.KnowledgeBase import KnowledgeBase
 from Utils.PromptOptimizer import PromptOptimizer
+
 from Utils.StabilityAPI import StabilityAPI
 from AssemblyAIUtil.AssemblyAITranscriber import AssemblyAITranscriber
 from Utils.AskPicturizeIt import *
 from OpenAIUtil.TranscribeOperations import TranscribeOperations 
 from ElevenlabsUtil.ElevenlabsVoiceGenerator import ElevenlabsVoiceGenerator
 
+from Utils.LinkedInImageGenerator import LinkedInImageGenerator
+from Utils.OpenJourneyImageGenerator import OpenJourneyImageGenerator
+from Utils.FlaxMidjourneyImageGenerator import FlaxMidjourneyImageGenerator
+from Utils.RunwaymlImageGenerator import RunwaymlImageGenerator
+from Utils.CompVisImageGenerator import CompVisImageGenerator
+from Utils.TranscribeSpeechbrain import TranscribeSpeechbrain
+
 #from dotenv import load_dotenv
 #load_dotenv()
-
-kb = KnowledgeBase()
 
 prompt_optimizer = PromptOptimizer()
 prompt_generator =  CelebPromptGenerator()
 test = Test()
+kb = KnowledgeBase()
+
+def diffusion_models_handler(model_selection : str, prompt :str):
+    if model_selection not in AskPicturizeIt.diffusion_models:
+        raise ValueError("Invalid choice!")
+    try: 
+        match model_selection:
+            case  "prompthero/linkedin-diffusion":
+                image_generator = LinkedInImageGenerator()
+                image_result = image_generator.generate_image(prompt)
+                return f"Image generated from {model_selection}", image_result
+            case  "prompthero/openjourney":
+                image_generator = OpenJourneyImageGenerator()
+                image_result = image_generator.generate_image(prompt)
+                return f"Image generated from {model_selection}", image_result
+            case "runwayml/stable-diffusion-v1-5":
+                image_generator = RunwaymlImageGenerator()
+                image_result = image_generator.generate_image(prompt)
+                return f"Image generated from {model_selection}", image_result
+            case  "CompVis/stable-diffusion-v1-4":
+                image_generator = CompVisImageGenerator()
+                image_result = image_generator.generate_image(prompt)
+                return f"Image generated from {model_selection}", image_result
+            case  "flax/midjourney-v4-diffusion":
+                image_generator = FlaxMidjourneyImageGenerator()
+                image_result = image_generator.generate_image(prompt)
+                return f"Image generated from {model_selection}", image_result
+    except Exception as exception:
+        print(f"Exception Name: {type(exception).__name__}")
+        print(exception)
+        return f" {model_selection} image_generator Error - {exception}", None
 
 def tokenizer_calc(prompt :str):
     if prompt:
@@ -47,11 +83,27 @@ def transcribe_handler(api_key :str, org_id :str, audio_file :str):
             set_org_id(org_id)
         return uihandlers.transcribe_handler(audio_file)
 
-
 def transcribe_whisper_large_v2(audio_file :str):
     if audio_file: 
         transcribeOperations = TranscribeOperations()
         return transcribeOperations.transcribe_whisper_large_v2(audio_file)
+
+def transcribe_speechbrain(audio_file :str, lang :str ="hi"):
+    if audio_file: 
+        if lang in ["hi","fr","es"]:
+            match lang:
+                case  "hi": # Hindi
+                    transcribeOperations = TranscribeSpeechbrain()
+                    text, message = transcribeOperations.transcribe(audio_file)
+                    return text, message 
+                case "fr": # French
+                    #TO DO
+                    return "", ""
+                case "es": # Spanish
+                    #TO DO
+                    return "", ""
+        else:
+            return "", "No supported voice language!"
 
 def assemblyai_transcribe_handler(api_key :str, audio_file :str):
     if not api_key:
@@ -64,7 +116,7 @@ def assemblyai_transcribe_handler(api_key :str, audio_file :str):
     return text, text    
 
 def get_AskMeUI(api_key :str, org_id :str, optionSelection :str, azure_openai_key :str, azure_openai_api_base :str, azure_openai_deployment_name :str):
-        if optionSelection not in ["OpenAI API","Azure OpenAI API","Google PaLM API"]:
+        if optionSelection not in AskPicturizeIt.llm_api_options:
             raise ValueError("Invalid choice!")
         
         uihandlers = AskMeUI()        
@@ -91,6 +143,7 @@ def get_key_traits(name):
 '''
 Image generation 
 '''
+
 
 def create_image_from_prompt_handler(api_key :str, org_id :str, optionSelection :str, azure_openai_key :str, azure_openai_api_base :str, azure_openai_deployment_name :str, input_prompt :str, input_imagesize :str, input_num_images :int):    
     uihandlers = get_AskMeUI(api_key, org_id, optionSelection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name)
@@ -146,24 +199,22 @@ def get_celebs_response(mongo_config, mongo_connection_string, mongo_database, c
     internal_celeb_name = get_internal_celeb_name(celebrity)
     retriever = WikipediaRetriever()
     docs = retriever.get_relevant_documents(query=celebrity)    
-    wiki_summary = docs[0].page_content 
+    wiki_summary = docs[0].page_content
     
     key_traits = get_key_traits(celebrity)
     try:
         name, prompt, response, wiki_image, generated_image_url = uihandlers.get_celebs_response_handler(celebrity)
         if wiki_image is None:
-            wiki_image = get_wikimedia_image(celebrity)
+            wiki_image = kb.get_wikimedia_image(celebrity)
         return name, prompt, wiki_summary, response, wiki_image, generated_image_url, f"{name}", key_traits
     except:
         response = None
         generated_image_url = None
-        wiki_image = get_wikimedia_image(internal_celeb_name)
+        wiki_image = kb.get_wikimedia_image(internal_celeb_name)
         return celebrity, f"Write a paragraph on {celebrity}", wiki_summary, "", wiki_image, None, f"{celebrity}", key_traits
         pass
     
 
-def clear_celeb_details():
-    return "", "", "", "", None, None, None, None
 
 
 def celeb_summarize_handler(api_key, org_id, prompt):
@@ -187,7 +238,6 @@ def celebs_name_search_handler(input_key, search_text, celebs_chat_history):
     elif len(search_text.strip())>0:
         os.environ["OPENAI_API_KEY"] = input_key
         os.environ["OPENAI_API_VERSION"] = "2020-11-07"
-
         celebs_chat_history = celebs_chat_history + [(search_text, None)] 
         try:
             llm = OpenAI(temperature=0.7)
@@ -208,11 +258,7 @@ def celebs_name_search_history_handler(search_text, celebs_chat_history):
     except Exception as exception:
         print(f"Exception Name: {type(exception).__name__}")
         print(exception)
-        pass
-        
-    return search_text, "John Doe", celebs_chat_history, AskPicturizeIt.NO_API_KEY_ERROR
-
-
+        return search_text, "John Doe", celebs_chat_history, AskPicturizeIt.NO_API_KEY_ERROR
 
 '''
 Codex
@@ -310,49 +356,14 @@ def generate_image_diffusion_handler(generate_image_prompt_text):
     else:
         return AskPicturizeIt.ENTER_A_PROMPT_IMAGE, None
 
-# wikimedia
-        
-def get_wikimedia_image(keyword):
-    WIKI_REQUEST = 'http://en.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&piprop=original&titles='
-
-    if keyword:
-        try:
-            result = wikipedia.search(keyword, results = 1)
-        except wikipedia.exceptions.WikipediaException as exception:
-            print(f"Exception Name: {type(exception).__name__}")
-            print(exception)
-            result = None
-            pass
-        wikipedia.set_lang('en')
-        try:
-            if result is not None:
-                wkpage = wikipedia.WikipediaPage(title = result[0])
-        except wikipedia.exceptions.WikipediaException as exception:
-            print(f"Exception Name: {type(exception).__name__}")
-            print(exception)
-            wkpage = None
-            pass
-        if wkpage is not None:
-            title = wkpage.title
-            response  = requests.get(WIKI_REQUEST+title)
-            json_data = json.loads(response.text)
-            try:
-                image_link = list(json_data['query']['pages'].values())[0]['original']['source']
-                return image_link
-            except:
-                return None
-    
                 
 # Examples fn
-
 
 def get_celeb_examples(category):
     connection_string, database = get_private_mongo_config()
     celeb_data_client = CelebDataClient(connection_string, database)
     celeb_list = celeb_data_client.celeb_list(category)
     return celeb_list
-
-
 
 def get_saved_prompts(keyword): 
     try:
@@ -366,7 +377,6 @@ def get_saved_prompts(keyword):
     finally:
         return prompt, response
 
-
 def get_keyword_prompts(prompttype):
     connection_string, database = get_private_mongo_config()
     state_data_client = StateDataClient(connection_string, database)
@@ -375,7 +385,6 @@ def get_keyword_prompts(prompttype):
 
 def get_input_examples():
     return prompt_generator.get_input_examples()
-
 
 def get_images_examples():
     return prompt_generator.get_images_examples()
@@ -417,7 +426,7 @@ def generated_images_gallery_on_select(evt: gr.SelectData, generated_images_gall
         return None
 
 '''
-Elevenlabs test handler
+test handlers
 '''
 
 def elevenlabs_test_handler(api_key: str, test_string: str, test_voice: str):
@@ -429,7 +438,6 @@ def elevenlabs_test_handler(api_key: str, test_string: str, test_voice: str):
         print(f"Exception Name: {type(exception).__name__}")
         print(exception)        
         return f"{exception}", None
-
 
 def assemblyai_test_handler(api_key, test_uri):
     if not api_key:
@@ -474,6 +482,7 @@ def test_stability_ai_handler(api_key, test_style_preset, test_prompt, test_init
                     samples = 1, 
                     steps = test_steps)
                 return "Image variation generated using stability AI ", output_generated_image
+
             else:
                 '''
                 text_prompts, style_preset = "photographic", 
@@ -490,15 +499,18 @@ def test_stability_ai_handler(api_key, test_style_preset, test_prompt, test_init
     else:
         return AskPicturizeIt.NO_STABILITYAI_API_KEY_ERROR, None
 
+def clear_celeb_details():
+    return "", "", "", "", None, None, None, None
+
 with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabbedScreen:
     gr.Markdown(AskPicturizeIt.TITLE)
     with gr.Tab("Information"):
         gr.HTML(AskPicturizeIt.DESCRIPTION)
         gr.HTML(AskPicturizeIt.RESEARCH_SECTION)
         gr.HTML(AskPicturizeIt.SECTION_FOOTER)
-    with gr.Tab("Configuration"):
+    with gr.Tab("Configuration and Try"):
         with gr.Tab("OpenAI settings"):
-            openai_selection = gr.Radio(["OpenAI API", "Azure OpenAI API", "Google PaLM API"], label="Select one", info="Which service do you want to use?", value="OpenAI API")
+            openai_selection = gr.Radio(AskPicturizeIt.llm_api_options, label="Select one", info="Which service do you want to use?", value="OpenAI API")
             with gr.Tab("OpenAI API"):
                 gr.HTML(AskPicturizeIt.OPENAI_HTML)
                 with gr.Row():
@@ -507,10 +519,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                             label="OpenAI API Key", value=os.getenv("OPENAI_API_KEY"), type="password")
                         org_id = gr.Textbox(
                             label="OpenAI ORG ID (only for org account)", value=os.getenv("OPENAI_ORG_ID"))  
-                        
-                        openai_model = gr.Dropdown(["gpt-4", "gpt-4-0613", "gpt-4-32k", "gpt-4-32k-0613", "gpt-3.5-turbo", 
-                                                    "gpt-3.5-turbo-0613", "gpt-3.5-turbo-16k", "gpt-3.5-turbo-16k-0613", "text-davinci-003", 
-                                                    "text-davinci-002", "text-curie-001", "text-babbage-001", "text-ada-001"], 
+                        openai_model = gr.Dropdown(AskPicturizeIt.openai_models, 
                                                    value="gpt-3.5-turbo", label="Model", info="Select one, for Natural language")            
             with gr.Tab("Azure OpenAI API"):
                 gr.HTML(AskPicturizeIt.AZURE_OPENAI_HTML)
@@ -528,21 +537,87 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                     with gr.Column():
                         google_generative_api_key = gr.Textbox(
                                 label="Google Generative AI API Key", value=os.getenv("LANGUAGE_MODEL_API_KEY"), type="password")
-            with gr.Tab("Testing"):
+            with gr.Tab("Try"):
                 with gr.Row():
                     with gr.Column():                    
                         test_string = gr.Textbox(
-                            label="Test String", value=AskPicturizeIt.TEST_MESSAGE, lines=2)
+                            label="Try String", value=AskPicturizeIt.TEST_MESSAGE, lines=2)
                         test_string_response = gr.Textbox(
                             label="Response")
                         test_string_output_info = gr.Label(value="Output Info", label="Info")
-                        test_button = gr.Button("Test it")
+                        test_button = gr.Button("Try it")
             with gr.Group():
                 with gr.Row():
                     input_num_images = gr.Slider(minimum=1,maximum=10,step=1,
                         label="Number of Images to generate", value=1, info="OpenAI API supports 1-10 images")
-                    input_imagesize = gr.Dropdown(["1024x1024", "512x512", "256x256"], value="256x256", label="Image size",
-                                                  info="Select one, use download for image size from Image generation/variation Output tab")
+                    input_imagesize = gr.Dropdown(["1024x1024", "512x512", "256x256"], 
+                                                  value="256x256", label="Image size",
+                                                  info=AskPicturizeIt.imagesize_text )
+        with gr.Tab("StabilityAI API"):
+            gr.HTML(AskPicturizeIt.STABILITY_AI_HTML)
+            with gr.Row():
+                stabilityai_api_key = gr.Textbox(label="StabilityAI API Key", value=os.getenv("STABILITYAI_API_KEY"), type="password")
+                stabilityai_style_preset = gr.Dropdown(AskPicturizeIt.style_presets, 
+                                               value="digital-art", label="Style preset", info="Select one style preset")            
+                stabilityai_steps = gr.Slider(minimum=10, maximum=150, step=10, label="Number of diffusion steps to run", value=30, info="Diffusion steps")
+            with gr.Tab("Try"):
+                stabilityai_test_string = gr.Textbox(label="Prompt", value="panda mad scientist mixing sparkling chemicals digital art")
+                with gr.Column(scale=2):
+                    stabilityai_photo = gr.Image(label="Input Image",  type="filepath", value="images/generated-image-panda.png")
+                    stabilityai_output_photo = gr.Image(label="output Image",  type="filepath")
+                with gr.Column(scale=1):
+                    gr.Examples(
+                        examples=images_examples,
+                        label="Select one from Image Examples and get variation",
+                        inputs=[stabilityai_photo],
+                        examples_per_page=10,
+                        outputs=stabilityai_photo,
+                    )
+                    stabilityai_test_button = gr.Button("Try it")
+                    stabilityai_output_info = gr.Label(value="Output Info", label="Info")
+        with gr.Tab("AssemblyAI API and SpeechBrain"):
+            gr.HTML(AskPicturizeIt.ASSEMBLY_AI_HTML)
+            with gr.Row():
+               with gr.Column():
+                   assemblyai_api_key = gr.Textbox(label="AssemblyAI API Key", value=os.getenv("ASSEMBLYAI_API_KEY"), type="password")
+                   assemblyai_test_uri = gr.Audio(label="Audio to Text", type="filepath", source="microphone", value = "audio/AI as a tool that can augment and empower us, rather than compete or replace us.mp3")
+                   assemblyai_speechbrain_test_string = gr.Textbox(label="Transcription", lines=5)
+                   with gr.Row():
+                       assemblyai_test_button = gr.Button("Try transcribing English audio using AssemblyAI")
+                       speechbrain_test_button = gr.Button("Try transcribing Hindi audio using SpeechBrain")
+                       assemblyai_speechbrain_clear = gr.Button("Clear")
+                   assemblyai_test_string_output_info = gr.Label(value="Output Info", label="Info")                  
+        with gr.Tab("Elevenlabs API"):
+            gr.HTML(AskPicturizeIt.ELEVENLABS_HTML)
+            with gr.Row():
+               with gr.Column():
+                   elevenlabs_api_key = gr.Textbox(label="Elevenlabs API Key", value=os.getenv("ELEVEN_API_KEY"), type="password")
+                   elevenlabs_test_string = gr.Textbox(label="Text to Audio string", value=AskPicturizeIt.ELEVENLABS_TEST_MESSAGE, lines=2)
+                   elevenlabs_test_voice = gr.Dropdown(AskPicturizeIt.elevenlabs_voices, value="Bella", label="Voice", info="Select a voice to generate audio")
+                   elevenlabs_test_string_output_info = gr.Label(value="Output Info", label="Info")
+                   elevenlabs_test_button = gr.Button("Try Generating audio")
+                   elevenlabs_test_audio_file = gr.Audio(label="Play the generated audio",type="filepath", value ="audio/AI as a tool that can augment and empower us, rather than compete or replace us.mp3")
+        with gr.Tab("Diffusion models"):
+            gr.HTML(AskPicturizeIt.DIFFUSION_MODELS_HTML)
+            with gr.Row():
+                with gr.Column(scale=1):
+                    diffusion_model_selection = gr.Radio(AskPicturizeIt.diffusion_models, label="Select one", info="Which model do you want to use?", value="prompthero/linkedin-diffusion")
+                    diffusion_test_string = gr.Textbox(label="Prompt", value="a lnkdn photography of Sam Altman")
+                    diffusion_test_button = gr.Button("Try it")
+                    diffusion_output_info = gr.Label(value="Output Info", label="Info")
+                with gr.Column(scale=3):
+                    diffusion_output_photo = gr.Image(label="Generated Image",  type="filepath")                    
+            gr.Examples(
+                examples=AskPicturizeIt.coolest_midjourney_prompts,                   
+                label="Select one and try it",
+                examples_per_page=10,
+                inputs=diffusion_test_string)
+        with gr.Tab("Rapid API"):
+            gr.HTML(AskPicturizeIt.RAPIDAPI_HTML)
+            with gr.Row():
+                with gr.Column():
+                   gr.HTML(AskPicturizeIt.RAPIDAPI_ARTICLE_HTML)
+                   rapidapi_api_key = gr.Textbox(label="API Key", value=os.getenv("RAPIDAPI_KEY"), type="password")  
         with gr.Tab("MongoDB"):
             gr.HTML(AskPicturizeIt.MONGODB_HTML)
             with gr.Row():
@@ -566,56 +641,6 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                         label="Cloudinary API Key", value=os.getenv("CLOUDINARY_API_KEY"), type="password")
                     cloudinary_api_secret = gr.Textbox(
                         label="Cloudinary API Secret", value=os.getenv("CLOUDINARY_API_SECRET"), type="password")
-        with gr.Tab("StabilityAI API"):
-            gr.HTML(AskPicturizeIt.STABILITY_AI_HTML)
-            with gr.Row():
-                stabilityai_api_key = gr.Textbox(label="StabilityAI API Key", value=os.getenv("STABILITYAI_API_KEY"), type="password")
-                stabilityai_style_preset = gr.Dropdown(["enhance", "anime", "photographic", "digital-art", "comic-book", "fantasy-art", 
-                                                       "line-art", "analog-film", "neon-punk", "isometric", 
-                                                       "low-poly", "origami", "modeling-compound", "cinematic", 
-                                                       "3d-model", "pixel-art", "tile-texture"], 
-                                               value="digital-art", label="Style preset", info="Select one style preset")            
-                stabilityai_steps = gr.Slider(minimum=10, maximum=150, step=10, label="Number of diffusion steps to run", value=30, info="Diffusion steps")
-            with gr.Tab("Testing"):
-                stabilityai_test_string = gr.Textbox(label="Prompt", value="panda mad scientist mixing sparkling chemicals digital art")
-                with gr.Column(scale=2):
-                    stabilityai_photo = gr.Image(label="Input Image",  type="filepath", value="images/panda mad scientist mixing sparkling chemicals digital art-1.png")
-                    stabilityai_output_photo = gr.Image(label="output Image",  type="filepath")
-                with gr.Column(scale=1):
-                    gr.Examples(
-                        examples=images_examples,
-                        label="Select one from Image Examples and get variation",
-                        inputs=[stabilityai_photo],
-                        examples_per_page=10,
-                        outputs=stabilityai_photo,
-                    )
-                    stabilityai_test_button = gr.Button("Test it")
-                    stabilityai_output_info = gr.Label(value="Output Info", label="Info")
-        with gr.Tab("AssemblyAI API"):
-            gr.HTML(AskPicturizeIt.ASSEMBLY_AI_HTML)
-            with gr.Row():
-               with gr.Column():
-                   assemblyai_api_key = gr.Textbox(label="AssemblyAI API Key", value=os.getenv("ASSEMBLYAI_API_KEY"), type="password")
-                   assemblyai_test_uri = gr.Audio(label="Audio to Text", type="filepath", value = "audio/AI as a tool that can augment and empower us, rather than compete or replace us.mp3")
-                   assemblyai_test_string = gr.Textbox(label="Transcription", lines=5)
-                   assemblyai_test_button = gr.Button("Transcribe audio")
-                   assemblyai_test_string_output_info = gr.Label(value="Output Info", label="Info")
-        with gr.Tab("Elevenlabs API"):
-            gr.HTML(AskPicturizeIt.ELEVENLABS_HTML)
-            with gr.Row():
-               with gr.Column():
-                   elevenlabs_api_key = gr.Textbox(label="Elevenlabs API Key", value=os.getenv("ELEVEN_API_KEY"), type="password")
-                   elevenlabs_test_string = gr.Textbox(label="Text to Audio string", value=AskPicturizeIt.ELEVENLABS_TEST_MESSAGE, lines=2)
-                   elevenlabs_test_voice = gr.Dropdown(["Rachel","Domi","Bella","Antoni","Elli","Josh","Arnold","Adam","Sam"], value="Bella", label="Voice", info="Select a voice to generate audio")
-                   elevenlabs_test_string_output_info = gr.Label(value="Output Info", label="Info")
-                   elevenlabs_test_button = gr.Button("Generate Test audio")
-                   elevenlabs_test_audio_file = gr.Audio(label="Play the generated audio",type="filepath", value ="audio/AI as a tool that can augment and empower us, rather than compete or replace us.mp3")
-        with gr.Tab("Rapid API"):
-            gr.HTML(AskPicturizeIt.RAPIDAPI_HTML)
-            with gr.Row():
-                with gr.Column():
-                   gr.HTML(AskPicturizeIt.RAPIDAPI_ARTICLE_HTML)
-                   rapidapi_api_key = gr.Textbox(label="API Key", value=os.getenv("RAPIDAPI_KEY"), type="password")   
     with gr.Tab("Record, transcribe, picturize and upload"):
         gr.HTML("<p>Record voice, transcribe a prompt, picturize the prompt, create variations, and upload in Output tab</p>")
         with gr.Tab("Whisper(whisper-1)"):
@@ -624,6 +649,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                     audio_file = gr.Audio(
                         label="Upload Audio, or Record to describe what you want to picturize and click on Transcribe",
                         source="microphone",
+                        value = "audio/AI as a tool that can augment and empower us, rather than compete or replace us.mp3",
                         type="filepath"
                     )
                 with gr.Column(scale=2):
@@ -839,6 +865,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                 with gr.Row():
                     with gr.Column(scale=4):
                         product_def_keyword = gr.Textbox(label="Keyword")
+
                         product_def_final_prompt = gr.Textbox(label="Prompt", lines=10)
                     with gr.Column(scale=1):                
                         with gr.Row():                            
@@ -972,12 +999,40 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
     gr.HTML(AskPicturizeIt.FOOTER)
 
 
-    celebs_name_search_clear.click(lambda: None, None, celebs_name_chatbot, queue=False)
+    celebs_name_search_clear.click(
+        fn = lambda: None, 
+        inputs = None, 
+        outputs = celebs_name_chatbot, 
+        queue=False)
+    
+    assemblyai_speechbrain_clear.click(
+        fn = lambda: None, 
+        inputs = None,
+        outputs = [assemblyai_speechbrain_test_string], 
+        queue=False)
+
+    clear_celeb_details_button.click(
+        clear_celeb_details,
+        inputs=[],
+        outputs=[celebs_name_label, question_prompt, know_your_celeb_description_wiki, know_your_celeb_description, celeb_real_photo, celeb_generated_image, generate_image_prompt_text, key_traits]
+    )
+    
+    speechbrain_test_button.click(
+       fn = transcribe_speechbrain,
+       inputs = [assemblyai_test_uri],
+       outputs = [assemblyai_speechbrain_test_string, assemblyai_test_string_output_info]
+       )
+
+    diffusion_test_button.click(
+        fn=diffusion_models_handler,
+        inputs=[diffusion_model_selection, diffusion_test_string],
+        outputs=[diffusion_output_info, diffusion_output_photo]
+    )
 
     assemblyai_test_button.click(
         fn=assemblyai_test_handler,
         inputs=[assemblyai_api_key, assemblyai_test_uri],
-        outputs=[assemblyai_test_string_output_info, assemblyai_test_string]
+        outputs=[assemblyai_test_string_output_info, assemblyai_speechbrain_test_string]
     )
     
     elevenlabs_test_button.click(
@@ -1012,25 +1067,25 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
     )
     
     pdf_summarize_button.click(
-        kb.pdf_summarizer_handler,
+        fn=kb.pdf_summarizer_handler,
         inputs=[input_key, pdf_link],
         outputs=[pdf_summarize_info_label, pdf_summary]
     )
     
     youtube_summarize_button.click(
-        kb.youtube_summarizer_handler,
+        fn=kb.youtube_summarizer_handler,
         inputs=[input_key, youtube_link],
         outputs=[youtube_transcribe_summarize_info_label, youtube_transcribe_summary]
     )
     
     article_article_summarize_button.click(
-        kb.article_summarize_handler,        
+        fn=kb.article_summarize_handler,        
         inputs=[rapidapi_api_key, article_link, article_summarize_length], 
         outputs=[article_summary, article_summarize_extract_info_label]
     )
 
     article_article_extract_button.click(
-        kb.article_extract_handler,        
+        fn=kb.article_extract_handler,        
         inputs=[rapidapi_api_key, article_link], 
         outputs=[article_summary, article_summarize_extract_info_label]
     )
@@ -1071,13 +1126,6 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
     )
     
     
-    clear_celeb_details_button.click(
-        clear_celeb_details,
-        inputs=[],
-        outputs=[celebs_name_label, question_prompt, know_your_celeb_description_wiki, know_your_celeb_description, celeb_real_photo, celeb_generated_image, generate_image_prompt_text, key_traits]
-    )
-    
-
     celebs_name_label.change(
         fn=get_celebs_response_change_handler,
         inputs=[mongo_config, mongo_connection_string, mongo_database, celebs_name_label, generate_image_prompt_text, key_traits],

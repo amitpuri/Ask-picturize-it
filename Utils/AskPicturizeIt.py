@@ -25,9 +25,11 @@ class AskPicturizeIt:
        </p>
      """
     RESEARCH_SECTION = """
+
        <p><strong>Check it out</strong></p>
        <p>
        <ul>
+
        <li><p>Attention Is All You Need <a href='https://arxiv.org/abs/1706.03762'>https://arxiv.org/abs/1706.03762</a></p></li>
        <li><p>NLP's ImageNet moment has arrived <a href='https://thegradient.pub/nlp-imagenet'>https://thegradient.pub/nlp-imagenet</a></p></li>   
        <li><p>Zero-Shot Text-to-Image Generation <a href='https://arxiv.org/abs/2102.12092'>https://arxiv.org/abs/2102.12092</a></p></li>   
@@ -122,6 +124,7 @@ class AskPicturizeIt:
     
     PRODUCT_DEF_QUESTION_EXAMPLES = ["Limit answer to 50 words", 
                                  "Limit answer to 100 words", 
+
                                  "Write the answer in bullet points",
                                  "Write the answer in 2/3 sentences",
                                  "Write the answer in one line TLDR with the fewest words"
@@ -160,7 +163,6 @@ class AskPicturizeIt:
                     "Root Mean Square Error", "Cosine similarity", "Euclidean distance","Dot product similarity",
                     "Machine Learning","Artificial Intelligence","Deep Learning", "Neural Networks", "Data Science",
                     "Supervised Learning","Unsupervised Learning","Reinforcement Learning", "Natural Language Processing", 
-
                     "Data Mining", "Feature Extraction", "Dimensionality Reduction", "Ensemble Learning", "Transfer Learning",
                     "Decision Trees","Support Vector Machines", "Clustering","Regression", "Computer Vision", "Big Data",                   
                     "Language Models","Transformer","BERT","OpenAI","Text Generation","Text Classification",
@@ -213,6 +215,28 @@ class AskPicturizeIt:
 		                prompt_bond_girl.format(movie_name="Die Another Day")]
 
 
+    coolest_midjourney_prompts =  [ "While traveling through a dense forest, you stumble upon an ancient, overgrown path veering off from the main trail. Do you dare to explore its mysteries?",
+ "As you sail across the open sea, a sudden storm engulfs your ship, throwing you off course. You find yourself stranded on a remote, uncharted island. What secrets does it hold?",
+ "During your intergalactic voyage, your spacecraft malfunctions and crash-lands on an unknown planet. As you step out, you discover a civilization unlike anything you've ever seen. How will you communicate with its inhabitants?",
+ "While trekking through a barren desert, you uncover an entrance to an underground labyrinth. Its walls are adorned with ancient symbols and clues. Will you risk getting lost in its depths to unravel its enigmatic riddles?",
+ "On your quest to summit a towering mountain, you encounter a legendary creature said to possess the power to grant a single wish to those who prove their worth. What challenges must you overcome to face this majestic being?",
+ "As you journey through a bustling futuristic city, you stumble upon a hidden resistance group fighting against a tyrannical regime. Will you join their cause and help bring about change, or stay on the sidelines?",
+ "While traversing a parallel dimension, you come across a mirror that shows you glimpses of your own future. How will these glimpses affect your choices and the outcome of your journey?",
+ "During a long train ride, you strike up a conversation with a mysterious stranger who claims to have the ability to travel through time. Will you believe their incredible stories and join them on a mind-bending adventure?",
+ "As you explore an ancient, abandoned ruin, you accidentally activate a long-lost artifact, transporting you to a bygone era. Can you find a way back home while navigating the perils of a time unknown to you?",
+ "While backpacking through a remote wilderness, you stumble upon a hidden tribe that has managed to preserve ancient traditions and knowledge. Will you earn their trust and gain access to their wisdom?" ]
+
+    style_presets = ["enhance", "anime", "photographic", "digital-art", "comic-book", "fantasy-art", 
+                    "line-art", "analog-film", "neon-punk", "isometric", 
+                    "low-poly", "origami", "modeling-compound", "cinematic", 
+                    "3d-model", "pixel-art", "tile-texture"]
+
+    elevenlabs_voices = ["Rachel","Domi","Bella","Antoni","Elli","Josh","Arnold","Adam","Sam"]
+    
+    diffusion_models = ["prompthero/linkedin-diffusion", "prompthero/openjourney","runwayml/stable-diffusion-v1-5","CompVis/stable-diffusion-v1-4"]
+
+    llm_api_options = ["OpenAI API","Azure OpenAI API","Google PaLM API"]
+    
     TEST_MESSAGE = "My favorite TV shows are The Mentalist, The Blacklist, and Unforgettable. What are four series that I should watch next?"
 
     MONGODB_HTML = "Sign up here <a href='https://www.mongodb.com/cloud/atlas/register'>https://www.mongodb.com/cloud/atlas/register</a>"
@@ -225,8 +249,13 @@ class AskPicturizeIt:
 
     CLOUDINARY_HTML = "Sign up here <a href='https://cloudinary.com'>https://cloudinary.com</a>"
 
+    openai_models = ["gpt-4", "gpt-4-0613", "gpt-4-32k", "gpt-4-32k-0613", "gpt-3.5-turbo", 
+                     "gpt-3.5-turbo-0613", "gpt-3.5-turbo-16k", "gpt-3.5-turbo-16k-0613", "text-davinci-003", 
+                     "text-davinci-002", "text-curie-001", "text-babbage-001", "text-ada-001"]
 
-    STABILITY_AI_HTML = "Sign up here <a href='https://platform.stability.ai'>https://platform.stability.ai</a>"
+    imagesize_text = "Select one, use download for image size from Image generation/variation Output tab"
+    
+    STABILITY_AI_HTML = "Sign up here <a href='https://platform.stability.ai'>https://platform.stability.ai</a> and learn how to write a prompt <a href='https://dreamstudio.ai/prompt-guide'>https://dreamstudio.ai/prompt-guide</a>"
 
     RAPIDAPI_HTML = "Sign up here <a href='https://rapidapi.com'>https://rapidapi.com</a>"
 
@@ -234,13 +263,14 @@ class AskPicturizeIt:
 
     LANGCHAIN_TEXT = "Credit <a href='https://github.com/gkamradt/langchain-tutorials'>https://github.com/gkamradt/langchain-tutorials</a>"
 
-    ASSEMBLY_AI_HTML = "Sign up AssemblyAI <a href='https://www.assemblyai.com'>https://www.assemblyai.com/dashboard/signup</a>"
+    ASSEMBLY_AI_HTML = "Sign up AssemblyAI <a href='https://www.assemblyai.com'>https://www.assemblyai.com/dashboard/signup</a> and using <a href='https://huggingface.co/speechbrain'>https://huggingface.co/speechbrain</a>"
 
     ELEVENLABS_HTML = "Sign up Elevenlabs <a href='https://www.elevenlabs.io'>https://www.elevenlabs.io</a>"
     
     ELEVENLABS_TEST_MESSAGE ="AI as a tool that can augment and empower us, rather than compete or replace us."
 
-
+    DIFFUSION_MODELS_HTML ="Diffusion Models from huggingface"
+    
     NO_ASSEMBLYAI_API_KEY_ERROR = "AssemblyAI API Key or ASSEMBLYAI_API_KEY env variable missing!"
 
     NO_STABILITYAI_API_KEY_ERROR = "StabilityAI API Key or STABILITYAI_API_KEY env variable missing!"
