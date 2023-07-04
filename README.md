@@ -111,6 +111,11 @@ Login to Azure Container registry
 
 - Use [https://jupyter.org](https://jupyter.org) or Login to [https://ml.azure.com](https://ml.azure.com) and use Notebooks
 - Clone repo and rename env.example to .env and set values to variables
+- uncomment following lines
+  
+        #from dotenv import load_dotenv
+        #load_dotenv()
+
 - Run to install dependencies
 
       pip install -r requirements.txt 
