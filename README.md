@@ -109,7 +109,7 @@ Login to Azure Container registry
 
 ## JupyterLab or Azure ML Workspace Notes
 
-- Use [https://jupyter.org](https://jupyter.org) or Login to [https://ml.azure.com](https://ml.azure.com) and use Notebooks
+- Use [https://jupyter.org](https://jupyter.org) (locally, or on the Cloud or in GitHub Codespaces) or Login to [https://ml.azure.com](https://ml.azure.com) and use Notebooks
 - Clone repo and rename env.example to .env and set values to variables
 - uncomment following lines
   
