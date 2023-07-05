@@ -239,7 +239,7 @@ class AskPicturizeIt:
 
     llm_api_options = ["OpenAI API","Azure OpenAI API","Google PaLM API"]
     
-    TEST_MESSAGE = "My favorite TV shows are The Mentalist, The Blacklist, and Unforgettable. What are four series that I should watch next?"
+    TEST_MESSAGE = "My favorite TV shows are The Mentalist, The Blacklist, Designated Survivor, and Unforgettable. What are ten series that I should watch next?"
 
     MONGODB_HTML = "Sign up here <a href='https://www.mongodb.com/cloud/atlas/register'>https://www.mongodb.com/cloud/atlas/register</a>"
 
