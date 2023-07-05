@@ -8,7 +8,8 @@ Huggingface Space 🤗
 
 This uses OpenAI API Whisper(whisper-1), DALL-E, GPT(gpt-3.5-turbo), also Azure OpenAI and Google PaLM (https://developers.generativeai.google)
 
-![image](https://github.com/amitpuri/Ask-picturize-it/assets/6460233/9a59fa51-470c-40bb-ad40-411003e38282)
+![image](https://github.com/amitpuri/Ask-picturize-it/assets/6460233/14b09c7b-fb24-42cf-bb22-d909877a0e06)
+
 
 ![image](https://github.com/amitpuri/Ask-picturize-it/assets/6460233/706bc278-7c51-48f8-9546-accce726d976)
 
