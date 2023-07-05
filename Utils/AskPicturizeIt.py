@@ -184,12 +184,10 @@ class AskPicturizeIt:
     template="Who was Bond girl co-star in {movie_name}? answer without any explanation and return only the actor's name?")
 
 
-    CELEB_SEARCH_QUESTIONS_EXAMPLES = [prompt_character.format(character_name="Princess Devasena", program_name="Movie Baahubali"),
-                        prompt_character.format(character_name="Mahendra/Amerendra Baahubali", program_name="Movie Baahubali"),
-                        prompt_character.format(character_name="Bhallaladeva, the king of Mahishmati", program_name="Movie Baahubali"),
-                        prompt_character.format(character_name="Avanthika, a skilled warrior and a fighter of the rebel group", program_name="Movie Baahubali"),
+    CELEB_SEARCH_QUESTIONS_EXAMPLES = sorted([prompt_character.format(character_name="Princess Devasena", program_name="Movie Baahubali"),
+                        prompt_character.format(character_name="Mahendra/Amerendra Baahubali", program_name="Movie Baahubali"),                        
                         prompt_character.format(character_name="Kattappa", program_name="Movie Baahubali"),
-                        prompt_character.format(character_name="Sivagami Devi", program_name="Movie Baahubali"),                        
+                        prompt_character.format(character_name="Sivagami Devi", program_name="Movie Baahubali"),                                                
                         prompt_character.format(character_name="James Bond", program_name="Casino Royale"),
                         prompt_character.format(character_name="James Bond", program_name="Die Another Day"),
                         prompt_character.format(character_name="James Bond", program_name="Never Say Never Again"),
@@ -202,6 +200,10 @@ class AskPicturizeIt:
                         prompt_character.format(character_name="James Bond", program_name="Licence to Kill"), 
                         prompt_character.format(character_name="Patrick Jane", program_name="The Mentalist"),
                         prompt_character.format(character_name="Raymond Reddington", program_name="The Blacklist"),
+                        prompt_character.format(character_name="Tom Kirkman", program_name="Designated Survivor"),  
+                        prompt_character.format(character_name="Carrie Wells", program_name="Unforgettable"),
+                        prompt_character.format(character_name="Bhallaladeva, the king of Mahishmati", program_name="Movie Baahubali"),
+                        prompt_character.format(character_name="Avanthika, a skilled warrior and a fighter of the rebel group", program_name="Movie Baahubali"),
                         prompt_bond_girl.format(movie_name="Casino Royale"),
                         prompt_bond_girl.format(movie_name="GoldenEye"),
                         prompt_bond_girl.format(movie_name="Spectre"),
@@ -212,7 +214,7 @@ class AskPicturizeIt:
                         prompt_bond_girl.format(movie_name="The World Is Not Enough"),
                         prompt_bond_girl.format(movie_name="Diamonds Are Forever"),
                         prompt_bond_girl.format(movie_name="Licence to Kill"),                          	
-		                prompt_bond_girl.format(movie_name="Die Another Day")]
+		                prompt_bond_girl.format(movie_name="Die Another Day")])
 
 
     coolest_midjourney_prompts =  [ "While traveling through a dense forest, you stumble upon an ancient, overgrown path veering off from the main trail. Do you dare to explore its mysteries?",
