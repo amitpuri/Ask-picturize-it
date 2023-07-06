@@ -137,3 +137,7 @@ If there are examples or guides you'd like to see, feel free to suggest them on 
 [openai examples]: https://beta.openai.com/examples
 [openai blog]: https://openai.com/blog/
 [issues page]: https://github.com/openai/openai-cookbook/issues
+
+
+[Open this notebooks folder in nbviewer https://nbviewer.org](https://nbviewer.org/github/openai/point-e/tree/main/point_e/examples)
+
