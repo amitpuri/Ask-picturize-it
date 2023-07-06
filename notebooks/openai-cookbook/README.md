@@ -139,5 +139,5 @@ If there are examples or guides you'd like to see, feel free to suggest them on 
 [issues page]: https://github.com/openai/openai-cookbook/issues
 
 
-[Open this notebooks folder in nbviewer https://nbviewer.org](https://nbviewer.org/github/openai/point-e/tree/main/point_e/examples)
+[Open  point-e  examples notebooks folder in nbviewer https://nbviewer.org](https://nbviewer.org/github/openai/point-e/tree/main/point_e/examples)
 
