@@ -237,7 +237,8 @@ def celebs_name_search_handler(input_key, search_text, celebs_chat_history):
         celebs_chat_history = celebs_chat_history + [(search_text, None)] 
         try:
             llm = OpenAI(temperature=0.7)
-            llm_response = llm(search_text)        
+            llm_response = llm(search_text)   
+            #TO DO - modify to support chain and system, assistant prompt
             return llm_response, celebs_chat_history, "In progress"
         except openai.error.AuthenticationError:
             return None, celebs_chat_history, AskPicturizeIt.NO_API_KEY_ERROR_INVALID 
