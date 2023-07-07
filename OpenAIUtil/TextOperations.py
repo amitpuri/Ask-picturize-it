@@ -25,9 +25,23 @@ class TextOperations(Operations):
     def summarize(self, prompt: str):                    
         self.chat_completion(f"Summarize the following text :{prompt}")
 
-    def chat_completion(self, prompt: str):
+    def chat_completion(self, prompt: str, 
+                        system_prompt: str = None, 
+                        temperature=0.7, 
+                        max_tokens=800,
+                        top_p=0.95,
+                        frequency_penalty=0,
+                        presence_penalty=0,
+                        stop=None):
         try:
             if prompt is not None:
+                if system_prompt is None:
+                    messages = [{"role": "user", "content": f"{prompt}"}]
+                else:
+                    messages = [
+                        {"role": "user", "content": f"{prompt}"},
+                        {"role": "system", "content": f"{system_prompt}"}
+                    ]            
                 if self.deployment_name:
                     openai.api_type = "azure"
                     openai.api_version = "2023-05-15" 
@@ -35,15 +49,13 @@ class TextOperations(Operations):
                     openai.api_key = self.api_key
                     completion = openai.ChatCompletion.create(
                         engine=f"{self.deployment_name}",
-                        messages = [
-                                        {"role": "user", "content": f"{prompt}"}
-                                    ],
-                        temperature=0.7,
-                        max_tokens=800,
-                        top_p=0.95,
-                        frequency_penalty=0,
-                        presence_penalty=0,
-                        stop=None)                   
+                        messages = messages,
+                        temperature=temperature,
+                        max_tokens=max_tokens,
+                        top_p=top_p,
+                        frequency_penalty=frequency_penalty,
+                        presence_penalty=presence_penalty,
+                        stop=stop)                   
                     response = completion["choices"][0]["message"].content                      
                     return "Response from Azure OpenAI", response
                 else:
@@ -56,15 +68,24 @@ class TextOperations(Operations):
                     if self.model_name in self.models:                                                           
                         completion = openai.ChatCompletion.create(                                  
                                           model=f"{self.model_name}",
-                                          messages = [
-                                                        {"role": "user", "content": f"{prompt}"}
-                                                    ])
+                                          messages = messages,
+                                          temperature=temperature,
+                                          max_tokens=max_tokens,
+                                          top_p=top_p,
+                                          frequency_penalty=frequency_penalty,
+                                          presence_penalty=presence_penalty,
+                                          stop=stop)
                         response = completion["choices"][0]["message"].content     
                     else:                                                        
                         completion = openai.Completion.create(
                                       model=f"{self.model_name}",
-                                      prompt=f"{prompt}"
-                                    )
+                                      prompt=f"{prompt}",
+                                      temperature=temperature,
+                                      max_tokens=max_tokens,
+                                      top_p=top_p,
+                                      frequency_penalty=frequency_penalty,
+                                      presence_penalty=presence_penalty,
+                                      stop=stop)
                         response = completion["choices"][0]["text"]
                     return f"Response from OpenAI model {self.model_name}", response                   
                 
