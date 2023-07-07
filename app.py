@@ -14,10 +14,11 @@ from MongoUtil.CelebDataClient import *
 from UIHandlers.AskMeUI import AskMeUI
 from UIHandlers.Test import Test
 from UIHandlers.KnowledgeBase import KnowledgeBase
-from Utils.PromptOptimizer import PromptOptimizer
 
+from Utils.PromptOptimizer import PromptOptimizer
 from Utils.StabilityAPI import StabilityAPI
 from AssemblyAIUtil.AssemblyAITranscriber import AssemblyAITranscriber
+
 from Utils.AskPicturizeIt import *
 from OpenAIUtil.TranscribeOperations import TranscribeOperations 
 from ElevenlabsUtil.ElevenlabsVoiceGenerator import ElevenlabsVoiceGenerator
@@ -88,9 +89,9 @@ def transcribe_whisper_large_v2(audio_file :str):
         transcribeOperations = TranscribeOperations()
         return transcribeOperations.transcribe_whisper_large_v2(audio_file)
 
-def transcribe_speechbrain(audio_file :str, lang :str ="hi"):
+def try_transcribe(audio_file :str, lang :str ="hi", api_key :str = None):
     if audio_file: 
-        if lang in ["hi","fr","es"]:
+        if lang in ["en","hi","fr","es"]:
             match lang:
                 case  "hi": # Hindi
                     transcribeOperations = TranscribeSpeechbrain()
@@ -102,18 +103,16 @@ def transcribe_speechbrain(audio_file :str, lang :str ="hi"):
                 case "es": # Spanish
                     #TO DO
                     return "", ""
+                case "en":
+                    if not api_key:
+                        return AskPicturizeIt.NO_ASSEMBLYAI_API_KEY_ERROR, ""                       
+                    transcriber = AssemblyAITranscriber(api_key)
+                    text = transcriber.transcribe(audio_file)
+                    return text, text    
         else:
             return "", "No supported voice language!"
 
-def assemblyai_transcribe_handler(api_key :str, audio_file :str):
-    if not api_key:
-        return AskPicturizeIt.NO_ASSEMBLYAI_API_KEY_ERROR, ""
-    if not audio_file: 
-        return "No audio file", ""
-        
-    transcriber = AssemblyAITranscriber(api_key)
-    text = transcriber.transcribe(audio_file)
-    return text, text    
+    
 
 def get_AskMeUI(api_key :str, org_id :str, optionSelection :str, azure_openai_key :str, azure_openai_api_base :str, azure_openai_deployment_name :str):
         if optionSelection not in AskPicturizeIt.llm_api_options:
@@ -214,9 +213,6 @@ def get_celebs_response(mongo_config, mongo_connection_string, mongo_database, c
         return celebrity, f"Write a paragraph on {celebrity}", wiki_summary, "", wiki_image, None, f"{celebrity}", key_traits
         pass
     
-
-
-
 def celeb_summarize_handler(api_key, org_id, prompt):
     uihandlers = AskMeUI()
     uihandlers.set_openai_config(api_key, None)
@@ -577,41 +573,36 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                     stabilityai_output_info = gr.Label(value="Output Info", label="Info")
         with gr.Tab("AssemblyAI API and SpeechBrain"):
             gr.HTML(AskPicturizeIt.ASSEMBLY_AI_HTML)
-            with gr.Row():
-               with gr.Column():
-                   assemblyai_api_key = gr.Textbox(label="AssemblyAI API Key", value=os.getenv("ASSEMBLYAI_API_KEY"), type="password")
-                   assemblyai_test_uri = gr.Audio(label="Audio to Text", type="filepath", source="microphone", value = "audio/AI as a tool that can augment and empower us, rather than compete or replace us.mp3")
-                   assemblyai_speechbrain_test_string = gr.Textbox(label="Transcription", lines=5)
-                   with gr.Row():
-                       assemblyai_test_button = gr.Button("Try transcribing English audio using AssemblyAI")
-                       speechbrain_test_button = gr.Button("Try transcribing Hindi audio using SpeechBrain")
-                       assemblyai_speechbrain_clear = gr.Button("Clear")
-                   assemblyai_test_string_output_info = gr.Label(value="Output Info", label="Info")                  
+            assemblyai_api_key = gr.Textbox(label="AssemblyAI API Key", value=os.getenv("ASSEMBLYAI_API_KEY"), type="password")
+            with gr.Tab("Try"):
+                with gr.Row():
+                    with gr.Column(scale=2):                    
+                        assemblyai_test_uri = gr.Audio(label="Audio to Text", type="filepath", source="microphone")
+                        assemblyai_speechbrain_test_string = gr.Textbox(label="Transcription", lines=5)                
+                        gr.Examples(
+                            examples=audio_examples,                   
+                            label="Select one from Audio Examples and Transcribe",
+                            examples_per_page=5,
+                            inputs=assemblyai_test_uri)                    
+                    with gr.Column(scale=1):
+                        with gr.Accordion("Options..", open=True):
+                            audio_lang_selection = gr.Dropdown(["en","hi"], label="Select one", info="Audio Language", value="en")
+                        with gr.Row():
+                            assemblyai_speechbrain_clear = gr.Button("Clear")
+                            assemblyai_test_button = gr.Button("Try transcribe")
+                    assemblyai_test_string_output_info = gr.Label(value="Output Info", label="Info")                  
         with gr.Tab("Elevenlabs API"):
             gr.HTML(AskPicturizeIt.ELEVENLABS_HTML)
-            with gr.Row():
-               with gr.Column():
-                   elevenlabs_api_key = gr.Textbox(label="Elevenlabs API Key", value=os.getenv("ELEVEN_API_KEY"), type="password")
-                   elevenlabs_test_string = gr.Textbox(label="Text to Audio string", value=AskPicturizeIt.ELEVENLABS_TEST_MESSAGE, lines=2)
-                   elevenlabs_test_voice = gr.Dropdown(AskPicturizeIt.elevenlabs_voices, value="Bella", label="Voice", info="Select a voice to generate audio")
-                   elevenlabs_test_string_output_info = gr.Label(value="Output Info", label="Info")
-                   elevenlabs_test_button = gr.Button("Try Generating audio")
-                   elevenlabs_test_audio_file = gr.Audio(label="Play the generated audio",type="filepath", value ="audio/AI as a tool that can augment and empower us, rather than compete or replace us.mp3")
-        with gr.Tab("Diffusion models"):
-            gr.HTML(AskPicturizeIt.DIFFUSION_MODELS_HTML)
-            with gr.Row():
-                with gr.Column(scale=1):
-                    diffusion_model_selection = gr.Radio(AskPicturizeIt.diffusion_models, label="Select one", info="Which model do you want to use?", value="prompthero/linkedin-diffusion")
-                    diffusion_test_string = gr.Textbox(label="Prompt", value="a lnkdn photography of Sam Altman")
-                    diffusion_test_button = gr.Button("Try it")
-                    diffusion_output_info = gr.Label(value="Output Info", label="Info")
-                with gr.Column(scale=3):
-                    diffusion_output_photo = gr.Image(label="Generated Image",  type="filepath")                    
-            gr.Examples(
-                examples=AskPicturizeIt.coolest_midjourney_prompts,                   
-                label="Select one and try it",
-                examples_per_page=10,
-                inputs=diffusion_test_string)
+            elevenlabs_api_key = gr.Textbox(label="Elevenlabs API Key", value=os.getenv("ELEVEN_API_KEY"), type="password")
+            elevenlabs_voice = gr.Dropdown(AskPicturizeIt.elevenlabs_voices, value="Bella", label="Voice", info="Select a voice to generate audio")
+            with gr.Tab("Try"):
+                with gr.Row():
+                   with gr.Column():                   
+                       elevenlabs_test_string = gr.Textbox(label="Text to Audio string", value=AskPicturizeIt.ELEVENLABS_TEST_MESSAGE, lines=2)
+                       elevenlabs_test_string_output_info = gr.Label(value="Output Info", label="Info")
+                       elevenlabs_test_button = gr.Button("Try Generating audio")
+                       elevenlabs_test_audio_file = gr.Audio(label="Play the generated audio",type="filepath", value ="audio/AI as a tool that can augment and empower us, rather than compete or replace us.mp3")
+        
         with gr.Tab("Rapid API"):
             gr.HTML(AskPicturizeIt.RAPIDAPI_HTML)
             with gr.Row():
@@ -659,8 +650,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                         examples_per_page=6,
                         inputs=audio_file)
                     transcribe_button = gr.Button("Transcribe via Whisper")  
-                    transcribe_whisper_large_v2_button = gr.Button("Transcribe via openai/whisper-large-v2") 
-                    transcribe_assemblyai_button = gr.Button("Transcribe via AssemblyAI") 
+                    transcribe_whisper_large_v2_button = gr.Button("Transcribe via openai/whisper-large-v2")                     
             input_transcriptionprompt = gr.Label(label="Transcription Text")
         with gr.Tab("Image generation"):
             input_prompt = gr.Textbox(label="Prompt Text to describe what you want to picturize?", lines=7)
@@ -865,7 +855,6 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                 with gr.Row():
                     with gr.Column(scale=4):
                         product_def_keyword = gr.Textbox(label="Keyword")
-
                         product_def_final_prompt = gr.Textbox(label="Prompt", lines=10)
                     with gr.Column(scale=1):                
                         with gr.Row():                            
@@ -993,7 +982,21 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                         article_article_summarize_button = gr.Button("Summarize")
                         article_article_extract_button = gr.Button("Extract")            
                 article_summary = gr.Code(label="Article response", language="html", lines=10)                                   
-    
+    with gr.Tab("Diffusion models"):
+            gr.HTML(AskPicturizeIt.DIFFUSION_MODELS_HTML)
+            with gr.Row():
+                with gr.Column(scale=1):
+                    diffusion_model_selection = gr.Radio(AskPicturizeIt.diffusion_models, label="Select one", info="Which model do you want to use?", value="prompthero/linkedin-diffusion")
+                    diffusion_test_string = gr.Textbox(label="Prompt", value="a lnkdn photography of Sam Altman")
+                    diffusion_test_button = gr.Button("Try it")
+                    diffusion_output_info = gr.Label(value="Output Info", label="Info")
+                with gr.Column(scale=3):
+                    diffusion_output_photo = gr.Image(label="Generated Image",  type="filepath")                    
+            gr.Examples(
+                examples=AskPicturizeIt.coolest_midjourney_prompts,                   
+                label="Select one and try it",
+                examples_per_page=10,
+                inputs=diffusion_test_string)
     with gr.Tab("DISCLAIMER"):
         gr.Markdown(AskPicturizeIt.DISCLAIMER)
     gr.HTML(AskPicturizeIt.FOOTER)
@@ -1017,12 +1020,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
         outputs=[celebs_name_label, question_prompt, know_your_celeb_description_wiki, know_your_celeb_description, celeb_real_photo, celeb_generated_image, generate_image_prompt_text, key_traits]
     )
     
-    speechbrain_test_button.click(
-       fn = transcribe_speechbrain,
-       inputs = [assemblyai_test_uri],
-       outputs = [assemblyai_speechbrain_test_string, assemblyai_test_string_output_info]
-       )
-
+    
     diffusion_test_button.click(
         fn=diffusion_models_handler,
         inputs=[diffusion_model_selection, diffusion_test_string],
@@ -1030,14 +1028,14 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
     )
 
     assemblyai_test_button.click(
-        fn=assemblyai_test_handler,
-        inputs=[assemblyai_api_key, assemblyai_test_uri],
+        fn=try_transcribe,
+        inputs=[assemblyai_test_uri, audio_lang_selection, assemblyai_api_key],
         outputs=[assemblyai_test_string_output_info, assemblyai_speechbrain_test_string]
     )
     
     elevenlabs_test_button.click(
         fn=elevenlabs_test_handler,
-        inputs=[elevenlabs_api_key, elevenlabs_test_string, elevenlabs_test_voice],
+        inputs=[elevenlabs_api_key, elevenlabs_test_string, elevenlabs_voice],
         outputs=[elevenlabs_test_string_output_info, elevenlabs_test_audio_file]
     )
 
@@ -1232,12 +1230,6 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
     transcribe_whisper_large_v2_button.click(
         fn=transcribe_whisper_large_v2,
         inputs=[audio_file],
-        outputs=[input_transcriptionprompt, input_prompt]
-    )
-    
-    transcribe_assemblyai_button.click(
-        fn=assemblyai_transcribe_handler,
-        inputs=[assemblyai_api_key, audio_file],
         outputs=[input_transcriptionprompt, input_prompt]
     )
     
