@@ -27,6 +27,7 @@ class TextOperations(Operations):
 
     def chat_completion(self, prompt: str, 
                         system_prompt: str = None, 
+                        assistant_prompt: str = None, 
                         temperature=0.7, 
                         max_tokens=800,
                         top_p=0.95,
@@ -40,7 +41,8 @@ class TextOperations(Operations):
                 else:
                     messages = [
                         {"role": "user", "content": f"{prompt}"},
-                        {"role": "system", "content": f"{system_prompt}"}
+                        {"role": "system", "content": f"{system_prompt}"},
+                        {"role": "assistant", "content": f"{assistant_prompt}"}
                     ]            
                 if self.deployment_name:
                     openai.api_type = "azure"
@@ -77,6 +79,7 @@ class TextOperations(Operations):
                                           stop=stop)
                         response = completion["choices"][0]["message"].content     
                     else:                                                        
+
                         completion = openai.Completion.create(
                                       model=f"{self.model_name}",
                                       prompt=f"{prompt}",

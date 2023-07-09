@@ -29,7 +29,6 @@ class AskPicturizeIt:
        <p><strong>Check it out</strong></p>
        <p>
        <ul>
-
        <li><p>Attention Is All You Need <a href='https://arxiv.org/abs/1706.03762'>https://arxiv.org/abs/1706.03762</a></p></li>
        <li><p>NLP's ImageNet moment has arrived <a href='https://thegradient.pub/nlp-imagenet'>https://thegradient.pub/nlp-imagenet</a></p></li>   
        <li><p>Zero-Shot Text-to-Image Generation <a href='https://arxiv.org/abs/2102.12092'>https://arxiv.org/abs/2102.12092</a></p></li>   
@@ -37,8 +36,11 @@ class AskPicturizeIt:
        <li><p>CS25: Transformers United V2 <a href='https://web.stanford.edu/class/cs25'>https://web.stanford.edu/class/cs25</a></p></li>
        <li><p>CS25: Stanford Seminar - Transformers United 2023: Introduction to Transformer <a href='https://youtu.be/XfpMkf4rD6E'>https://youtu.be/XfpMkf4rD6E</a></p></li>
        <li><p>Temperature in NLP <a href='https://lukesalamone.github.io/posts/what-is-temperature'>https://lukesalamone.github.io/posts/what-is-temperature</a></p></li>
-       <li><p>openai-cookbook <a href='https://github.com/openai/openai-cookbook'>https://github.com/openai/openai-cookbook</a></p></li>              
+       <li><p>openai-cookbook <a href='https://github.com/openai/openai-cookbook'>https://github.com/openai/openai-cookbook</a></p></li>                     
+       <li><p>Alpaca Eval Leaderboard <a href='https://tatsu-lab.github.io/alpaca_eval'>https://tatsu-lab.github.io/alpaca_eval</a></p></li>
        <li><p>Open LLM Leaderboard <a href='https://huggingface.co/spaces/HuggingFaceH4/open_llm_leaderboard'>https://huggingface.co/spaces/HuggingFaceH4/open_llm_leaderboard</a></p></li>
+       <li><p>LLM Sys projects <a href='https://lmsys.org/projects'>https://lmsys.org/projects</a></p></li>
+       <li><p>A list of open LLMs available for commercial use<a href='https://github.com/eugeneyan/open-llms'>https://github.com/eugeneyan/open-llms</a></p></li>
        <li><p>Aviary Explorer  <a href='https://aviary.anyscale.com'>https://aviary.anyscale.com</a></p></li>       
        <li><p>LangChain <a href='https://langchain.com/features.html'>https://langchain.com/features.html</a></p></li>
        <li><p>LangChain Python <a href='https://python.langchain.com'>https://python.langchain.com</a></p></li>
@@ -54,7 +56,6 @@ class AskPicturizeIt:
        <li>Stable Diffusion <a href='https://huggingface.co/blog/stable_diffusion'>https://huggingface.co/blog/stable_diffusion</a></li> 
        <li>CoDi: Any-to-Any Generation via Composable Diffusion <a href='https://codi-gen.github.io'>https://codi-gen.github.io</a></li>        
        </ul>
-
        </p>
     """
 
@@ -76,6 +77,7 @@ class AskPicturizeIt:
     
     furnished to do so, subject to the following conditions:
     
+
     The above copyright notice and this permission notice shall be included in all
     copies or substantial portions of the Software.
     
@@ -124,7 +126,6 @@ class AskPicturizeIt:
     
     PRODUCT_DEF_QUESTION_EXAMPLES = ["Limit answer to 50 words", 
                                  "Limit answer to 100 words", 
-
                                  "Write the answer in bullet points",
                                  "Write the answer in 2/3 sentences",
                                  "Write the answer in one line TLDR with the fewest words"
@@ -236,6 +237,8 @@ class AskPicturizeIt:
     elevenlabs_voices = ["Rachel","Domi","Bella","Antoni","Elli","Josh","Arnold","Adam","Sam"]
     
     diffusion_models = ["prompthero/linkedin-diffusion", "prompthero/openjourney","runwayml/stable-diffusion-v1-5","CompVis/stable-diffusion-v1-4"]
+
+    audio_models = ["openai/whisper-1","speechbrain/speechbrain","assemblyai/assemblyai"]
 
     llm_api_options = ["OpenAI API","Azure OpenAI API","Google PaLM API"]
     

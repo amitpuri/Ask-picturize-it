@@ -125,7 +125,7 @@ class AskMeUI:
         else:
             return "No Name given", None
             
-    def transcribe_handler(self, audio_file):
+    def transcribe_handler(self, audio_file, language="en"):
         if not self.api_key:
             return self.NO_API_KEY_ERROR, ""
         if not audio_file:
@@ -133,7 +133,7 @@ class AskMeUI:
             
         transcribe_operations = TranscribeOperations()
         transcribe_operations.setOpenAIConfig(self.api_key, self.org_id)
-        return transcribe_operations.transcribe(audio_file)
+        return transcribe_operations.transcribe(audio_file, language)
     
     def create_variation_from_image_handler(self, input_image_variation, input_imagesize, input_num_images):
         if self.api_key is None and self.azure_openai_key is None:

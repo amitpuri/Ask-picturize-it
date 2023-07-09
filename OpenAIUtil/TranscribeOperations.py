@@ -28,11 +28,11 @@ class TranscribeOperations(Operations):
 
 
     
-    def transcribe(self, audio_file: str):
+    def transcribe(self, audio_file: str, language: str ="en"):
         try: 
             if audio_file is not None and openai.api_key is not None:
                 audio = open(audio_file, "rb")
-                transcript = openai.Audio.transcribe("whisper-1", audio)
+                transcript = openai.Audio.transcribe("whisper-1", audio, language = language)
                 return transcript["text"], transcript["text"]
             else:
                 return "", ""

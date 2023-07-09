@@ -11,7 +11,6 @@ class AssemblyAITranscriber:
             
             config = aai.TranscriptionConfig(
                 punctuate = True,
-
                 format_text = True
             )
             transcript = transcriber.transcribe(audio_file, config)
