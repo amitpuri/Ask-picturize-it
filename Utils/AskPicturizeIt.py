@@ -26,6 +26,7 @@ class AskPicturizeIt:
      """
     RESEARCH_SECTION = """
 
+
        <p><strong>Check it out</strong></p>
        <p>
        <ul>
@@ -174,6 +175,7 @@ class AskPicturizeIt:
                     "Redis as a vector database","Qdrant, a vector search engine", "Milvus", "Embedding-based search",
                     "Chroma, an open-source embeddings store","Typesense, fast open source vector search", "Low-code No-code",
                     "Zilliz, data infrastructure, powered by Milvus", "Lexical-based search","Graph-based search"                            
+
                    ])
 
 
@@ -242,7 +244,11 @@ class AskPicturizeIt:
     audio_models = ["openai/whisper-1","speechbrain/speechbrain","assemblyai/assemblyai"]
 
     llm_api_options = ["OpenAI API","Azure OpenAI API","Google PaLM API"]
-    
+
+    text2audio_medium = ["elevanlabs","microsoft/speecht5_tts","coqui/tts","speechbrain/tts-tacotron2-ljspeech"]
+
+    text2image_medium = ["StabilityAI", "OpenAI API","Azure OpenAI API","Vertex AI Image Generation"]
+
     TEST_MESSAGE = "My favorite TV shows are The Mentalist, The Blacklist, Designated Survivor, and Unforgettable. What are ten series that I should watch next?"
 
     MONGODB_HTML = "Sign up here <a href='https://www.mongodb.com/cloud/atlas/register'>https://www.mongodb.com/cloud/atlas/register</a>"
@@ -265,6 +271,7 @@ class AskPicturizeIt:
 
     RAPIDAPI_HTML = "Sign up here <a href='https://rapidapi.com'>https://rapidapi.com</a>"
 
+
     RAPIDAPI_ARTICLE_HTML = "Article Extractor and Summarizer API on RapidAPI <a href='https://rapidapi.com/restyler/api/article-extractor-and-summarizer'>https://rapidapi.com/restyler/api/article-extractor-and-summarizer</a>"
 
     LANGCHAIN_TEXT = "Credit <a href='https://github.com/gkamradt/langchain-tutorials'>https://github.com/gkamradt/langchain-tutorials</a>"
@@ -275,7 +282,7 @@ class AskPicturizeIt:
     
     ELEVENLABS_TEST_MESSAGE ="AI as a tool that can augment and empower us, rather than compete or replace us."
 
-    DIFFUSION_MODELS_HTML ="Diffusion Models from huggingface"
+    DIFFUSION_MODELS_HTML ="Diffusion Models from huggingface, Stability AI, OpenAI DALL-E"
     
     NO_ASSEMBLYAI_API_KEY_ERROR = "AssemblyAI API Key or ASSEMBLYAI_API_KEY env variable missing!"
 

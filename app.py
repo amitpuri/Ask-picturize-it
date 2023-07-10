@@ -28,7 +28,6 @@ from Utils.RunwaymlImageGenerator import RunwaymlImageGenerator
 from Utils.CompVisImageGenerator import CompVisImageGenerator
 from Utils.TranscribeSpeechbrain import TranscribeSpeechbrain
 
-
 #from dotenv import load_dotenv
 #load_dotenv()
 
@@ -671,31 +670,34 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                         assemblyai_test_button = gr.Button("Try transcribe")
                         assemblyai_speechbrain_clear = gr.Button("Clear")
                         assemblyai_test_string_output_info = gr.Label(value="Output Info", label="Info")                
-        with gr.Tab("Text-to-Audio"):
-            gr.HTML(AskPicturizeIt.ELEVENLABS_HTML)
+        with gr.Tab("Text-to-Audio"):        
+            text2audio_selection = gr.Radio(AskPicturizeIt.text2audio_medium, label="Select one", info="Which medium do you want to use?", value="elevanlabs")
+            with gr.Tab("Elevenlabs"):                   
+                gr.HTML(AskPicturizeIt.ELEVENLABS_HTML)
+                elevenlabs_voice = gr.Dropdown(AskPicturizeIt.elevenlabs_voices, value="Bella", label="Voice", info="Select a voice to generate audio")
             with gr.Row():
-               with gr.Column():                   
-                   elevenlabs_voice = gr.Dropdown(AskPicturizeIt.elevenlabs_voices, value="Bella", label="Voice", info="Select a voice to generate audio")
+                with gr.Column():
                    elevenlabs_test_string = gr.Textbox(label="Text to Audio string", value=AskPicturizeIt.ELEVENLABS_TEST_MESSAGE, lines=2)
                    elevenlabs_test_string_output_info = gr.Label(value="Output Info", label="Info")
                    elevenlabs_test_button = gr.Button("Try Generating audio")
                    elevenlabs_test_audio_file = gr.Audio(label="Play the generated audio",type="filepath", value ="audio/english/AI as a tool that can augment and empower us, rather than compete or replace us.mp3")
-        with gr.Tab("Text-to-Image"):                 
-                gr.HTML(AskPicturizeIt.DIFFUSION_MODELS_HTML)
-                with gr.Row():
-                    with gr.Column(scale=1):
-                        diffusion_model_selection = gr.Radio(AskPicturizeIt.diffusion_models, label="Select one", info="Which model do you want to use?", value="prompthero/linkedin-diffusion")
-                        diffusion_test_string = gr.Textbox(label="Prompt", value="a lnkdn photography of Sam Altman")
-                        diffusion_test_button = gr.Button("Try it")
-                        diffusion_output_info = gr.Label(value="Output Info", label="Info")
-                    with gr.Column(scale=3):
-                        diffusion_output_photo = gr.Image(label="Generated Image",  type="filepath")                    
-                gr.Examples(
-                    examples=AskPicturizeIt.coolest_midjourney_prompts,                   
-                    label="Select one and try it",
-                    examples_per_page=10,
-                    inputs=diffusion_test_string)
+        with gr.Tab("Text-to-Image"):    
+            gr.HTML(AskPicturizeIt.DIFFUSION_MODELS_HTML)
+            with gr.Row():
+                with gr.Column(scale=1):
+                    diffusion_model_selection = gr.Radio(AskPicturizeIt.diffusion_models, label="Select one", info="Which model do you want to use?", value="prompthero/linkedin-diffusion")
+                    diffusion_test_string = gr.Textbox(label="Prompt", value="a lnkdn photography of Sam Altman")
+                    diffusion_test_button = gr.Button("Try it")
+                    diffusion_output_info = gr.Label(value="Output Info", label="Info")
+                with gr.Column(scale=3):
+                    diffusion_output_photo = gr.Image(label="Generated Image",  type="filepath")                    
+            gr.Examples(
+                examples=AskPicturizeIt.coolest_midjourney_prompts,                   
+                label="Select one and try it",
+                examples_per_page=10,
+                inputs=diffusion_test_string)
         with gr.Tab("Image-(with text)-to-Image"):
+            text2image_selection = gr.Radio(AskPicturizeIt.text2image_medium, label="Select one", info="Which medium do you want to use?", value="StabilityAI")
             with gr.Tab("Stability AI"):                   
                 gr.HTML(AskPicturizeIt.STABILITY_AI_HTML)
                 with gr.Row():
@@ -1387,7 +1389,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
     )
     
     generate_variations_image_stability_ai_button.click(
-        fn=image2image_stability_ai_handler,
+        fn=stability_ai_handler,
         inputs=[stabilityai_api_key, input_image_variation],
         outputs=[label_get_variation, output_generated_image]
     )
