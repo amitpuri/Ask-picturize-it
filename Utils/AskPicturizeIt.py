@@ -92,6 +92,7 @@ class AskPicturizeIt:
     """
     FOOTER = """<div class="footer">
                         <p>by <a href="https://www.amitpuri.com" style="text-decoration: underline;" target="_blank">Amit Puri</a></p>
+
                 </div>            
             """
     
@@ -236,7 +237,7 @@ class AskPicturizeIt:
 
     elevenlabs_voices = ["Rachel","Domi","Bella","Antoni","Elli","Josh","Arnold","Adam","Sam"]
     
-    diffusion_models = ["prompthero/linkedin-diffusion", "prompthero/openjourney","runwayml/stable-diffusion-v1-5","CompVis/stable-diffusion-v1-4"]
+    diffusion_models = ["prompthero/linkedin-diffusion", "prompthero/openjourney","runwayml/stable-diffusion-v1-5","CompVis/stable-diffusion-v1-4","stability.ai","dall-e"]
 
     audio_models = ["openai/whisper-1","speechbrain/speechbrain","assemblyai/assemblyai"]
 
@@ -279,3 +280,12 @@ class AskPicturizeIt:
     NO_ASSEMBLYAI_API_KEY_ERROR = "AssemblyAI API Key or ASSEMBLYAI_API_KEY env variable missing!"
 
     NO_STABILITYAI_API_KEY_ERROR = "StabilityAI API Key or STABILITYAI_API_KEY env variable missing!"
+
+    TEXT_TO_VIDEO_HTML = """
+            <li>The Task, Challenges and the Current State <a href='https://huggingface.co/blog/text-to-video'>https://huggingface.co/blog/text-to-video</a></li>
+            <li><a href='https://imagen.research.google/video'>https://imagen.research.google/video</a></li>
+            <li><a href='https://huggingface.co/spaces/damo-vilab/modelscope-text-to-video-synthesis'>https://huggingface.co/spaces/damo-vilab/modelscope-text-to-video-synthesis</a></li>
+            <li><a href='https://github.com/VideoCrafter/VideoCrafter'>https://github.com/VideoCrafter/VideoCrafter</a></li>
+            <li><a href='https://github.com/THUDM/CogVideo'>https://github.com/THUDM/CogVideo</a></li>
+            <li><a href='https://github.com/topics/text-to-video'>https://github.com/topics/text-to-video</a></li>
+    """

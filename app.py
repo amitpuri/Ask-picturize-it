@@ -38,7 +38,12 @@ prompt_generator =  PromptGenerator()
 test = Test()
 kb = KnowledgeBase()
 
-def diffusion_models_handler(model_selection : str, prompt :str):
+def diffusion_models_handler(model_selection : str, prompt :str, stability_api_key: str, 
+                             openai_api_key: str, openai_org_id: str, 
+                             optionSelection: str, azure_openai_key: str, 
+                             azure_openai_api_base: str, azure_openai_deployment_name: str, 
+                             input_imagesize: str, input_num_images: int):
+                                
     if model_selection not in AskPicturizeIt.diffusion_models:
         raise ValueError("Invalid choice!")
     try: 
@@ -63,6 +68,13 @@ def diffusion_models_handler(model_selection : str, prompt :str):
                 image_generator = FlaxMidjourneyImageGenerator()
                 image_result = image_generator.generate_image(prompt)
                 return f"Image generated from {model_selection}", image_result
+            case "stability.ai":
+                stability_api = StabilityAPI(stability_api_key)
+                output_generated_image = stability_api.text_to_image(text_prompts = [prompt]) 
+                return "Image generated using stability AI ", output_generated_image
+            case "dall-e":
+                uihandlers = get_AskMeUI(openai_api_key, openai_org_id, optionSelection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name)
+                return uihandlers.create_image_from_prompt_handler(prompt, input_imagesize, input_num_images)
     except Exception as exception:
         print(f"Exception Name: {type(exception).__name__}")
         print(exception)
@@ -623,84 +635,88 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                 input_imagesize = gr.Dropdown(["1024x1024", "512x512", "256x256"], 
                                               value="256x256", label="Image size",
                                               info=AskPicturizeIt.imagesize_text )
-    with gr.Tab("Text to Text (Text Completion)"):
-        openai_selection = gr.Radio(AskPicturizeIt.llm_api_options, label="Select one", info="Which service do you want to use?", value="OpenAI API")
-        with gr.Row():
-            with gr.Column():                    
-                test_string = gr.Textbox(
-                    label="Try String", value=AskPicturizeIt.TEST_MESSAGE, lines=2)
-                test_string_response = gr.Textbox(
-                    label="Response")
-                test_string_output_info = gr.Label(value="Output Info", label="Info")
-                test_button = gr.Button("Try it")
-    with gr.Tab("Audio to Text"):
-        gr.HTML(AskPicturizeIt.ASSEMBLY_AI_HTML)
-        audio_model_selection = gr.Radio(AskPicturizeIt.audio_models, label="Select one", info="Which model do you want to use?", value="openai/whisper-1")
-        with gr.Row():
-            with gr.Column(scale=2):                    
-                speechbrain_test_upload = gr.Audio(label="Record or Upload", type="filepath", source="upload")
-                assemblyai_test_uri = gr.Audio(label="Audio to Text", type="filepath", source="microphone")                            
-                gr.Examples(
-                    examples=hindi_audio_examples,                   
-                    label="Select one from Hindi Audio Examples and Transcribe",
-                    examples_per_page=5,
-                    inputs=assemblyai_test_uri)                        
-                gr.Examples(
-                    examples=audio_examples,                   
-                    label="Select one from English Audio Examples and Transcribe",
-                    examples_per_page=5,
-                    inputs=assemblyai_test_uri)                    
-            with gr.Column(scale=1):
-                assemblyai_speechbrain_test_string = gr.Textbox(label="Transcription", lines=5)
-                with gr.Accordion("Options..", open=True):
-                    audio_lang_selection = gr.Dropdown(["en","hi"], label="Select one", info="Audio Language", value="en")
-                with gr.Row():                            
-                    assemblyai_test_button = gr.Button("Try transcribe")
-                    assemblyai_speechbrain_clear = gr.Button("Clear")
-                    assemblyai_test_string_output_info = gr.Label(value="Output Info", label="Info")                
-    with gr.Tab("Text to Audio"):
-        gr.HTML(AskPicturizeIt.ELEVENLABS_HTML)
-        with gr.Row():
-           with gr.Column():                   
-               elevenlabs_voice = gr.Dropdown(AskPicturizeIt.elevenlabs_voices, value="Bella", label="Voice", info="Select a voice to generate audio")
-               elevenlabs_test_string = gr.Textbox(label="Text to Audio string", value=AskPicturizeIt.ELEVENLABS_TEST_MESSAGE, lines=2)
-               elevenlabs_test_string_output_info = gr.Label(value="Output Info", label="Info")
-               elevenlabs_test_button = gr.Button("Try Generating audio")
-               elevenlabs_test_audio_file = gr.Audio(label="Play the generated audio",type="filepath", value ="audio/english/AI as a tool that can augment and empower us, rather than compete or replace us.mp3")
-    with gr.Tab("Text to Image"):                 
-            gr.HTML(AskPicturizeIt.DIFFUSION_MODELS_HTML)
+    with gr.Tab("LLMs scenarios"):        
+        with gr.Tab("Text-to-Text (Text Completion)"):
+            openai_selection = gr.Radio(AskPicturizeIt.llm_api_options, label="Select one", info="Which service do you want to use?", value="OpenAI API")
             with gr.Row():
+                with gr.Column():                    
+                    test_string = gr.Textbox(
+                        label="Try String", value=AskPicturizeIt.TEST_MESSAGE, lines=2)
+                    test_string_response = gr.Textbox(
+                        label="Response")
+                    test_string_output_info = gr.Label(value="Output Info", label="Info")
+                    test_button = gr.Button("Try it")
+        with gr.Tab("Audio-to-Text"):
+            gr.HTML(AskPicturizeIt.ASSEMBLY_AI_HTML)
+            audio_model_selection = gr.Radio(AskPicturizeIt.audio_models, label="Select one", info="Which model do you want to use?", value="openai/whisper-1")
+            with gr.Row():
+                with gr.Column(scale=2):                    
+                    speechbrain_test_upload = gr.Audio(label="Record or Upload", type="filepath", source="upload")
+                    assemblyai_test_uri = gr.Audio(label="Audio to Text", type="filepath", source="microphone")                            
+                    gr.Examples(
+                        examples=hindi_audio_examples,                   
+                        label="Select one from Hindi Audio Examples and Transcribe",
+                        examples_per_page=5,
+                        inputs=assemblyai_test_uri)                        
+                    gr.Examples(
+                        examples=audio_examples,                   
+                        label="Select one from English Audio Examples and Transcribe",
+                        examples_per_page=5,
+                        inputs=assemblyai_test_uri)                    
                 with gr.Column(scale=1):
-                    diffusion_model_selection = gr.Radio(AskPicturizeIt.diffusion_models, label="Select one", info="Which model do you want to use?", value="prompthero/linkedin-diffusion")
-                    diffusion_test_string = gr.Textbox(label="Prompt", value="a lnkdn photography of Sam Altman")
-                    diffusion_test_button = gr.Button("Try it")
-                    diffusion_output_info = gr.Label(value="Output Info", label="Info")
-                with gr.Column(scale=3):
-                    diffusion_output_photo = gr.Image(label="Generated Image",  type="filepath")                    
-            gr.Examples(
-                examples=AskPicturizeIt.coolest_midjourney_prompts,                   
-                label="Select one and try it",
-                examples_per_page=10,
-                inputs=diffusion_test_string)
-    with gr.Tab("Image (with text) to Image"):
-        gr.HTML(AskPicturizeIt.STABILITY_AI_HTML)
-        stabilityai_style_preset = gr.Dropdown(AskPicturizeIt.style_presets, 
-                               value="digital-art", label="Style preset", info="Select one style preset")            
-        stabilityai_steps = gr.Slider(minimum=10, maximum=150, step=10, label="Number of diffusion steps to run", value=30, info="Diffusion steps")
-        stabilityai_test_string = gr.Textbox(label="Prompt", value="panda mad scientist mixing sparkling chemicals digital art")
-        with gr.Column(scale=2):
-            stabilityai_photo = gr.Image(label="Input Image",  type="filepath", value="images/generated-image-panda.png")
-            stabilityai_output_photo = gr.Image(label="output Image",  type="filepath")
-        with gr.Column(scale=1):
-            gr.Examples(
-                examples=images_examples,
-                label="Select one from Image Examples and get variation",
-                inputs=[stabilityai_photo],
-                examples_per_page=10,
-                outputs=stabilityai_photo,
-            )
-            stabilityai_test_button = gr.Button("Try it")
-            stabilityai_output_info = gr.Label(value="Output Info", label="Info")
+                    assemblyai_speechbrain_test_string = gr.Textbox(label="Transcription", lines=5)
+                    with gr.Accordion("Options..", open=True):
+                        audio_lang_selection = gr.Dropdown(["en","hi"], label="Select one", info="Audio Language", value="en")
+                    with gr.Row():                            
+                        assemblyai_test_button = gr.Button("Try transcribe")
+                        assemblyai_speechbrain_clear = gr.Button("Clear")
+                        assemblyai_test_string_output_info = gr.Label(value="Output Info", label="Info")                
+        with gr.Tab("Text-to-Audio"):
+            gr.HTML(AskPicturizeIt.ELEVENLABS_HTML)
+            with gr.Row():
+               with gr.Column():                   
+                   elevenlabs_voice = gr.Dropdown(AskPicturizeIt.elevenlabs_voices, value="Bella", label="Voice", info="Select a voice to generate audio")
+                   elevenlabs_test_string = gr.Textbox(label="Text to Audio string", value=AskPicturizeIt.ELEVENLABS_TEST_MESSAGE, lines=2)
+                   elevenlabs_test_string_output_info = gr.Label(value="Output Info", label="Info")
+                   elevenlabs_test_button = gr.Button("Try Generating audio")
+                   elevenlabs_test_audio_file = gr.Audio(label="Play the generated audio",type="filepath", value ="audio/english/AI as a tool that can augment and empower us, rather than compete or replace us.mp3")
+        with gr.Tab("Text-to-Image"):                 
+                gr.HTML(AskPicturizeIt.DIFFUSION_MODELS_HTML)
+                with gr.Row():
+                    with gr.Column(scale=1):
+                        diffusion_model_selection = gr.Radio(AskPicturizeIt.diffusion_models, label="Select one", info="Which model do you want to use?", value="prompthero/linkedin-diffusion")
+                        diffusion_test_string = gr.Textbox(label="Prompt", value="a lnkdn photography of Sam Altman")
+                        diffusion_test_button = gr.Button("Try it")
+                        diffusion_output_info = gr.Label(value="Output Info", label="Info")
+                    with gr.Column(scale=3):
+                        diffusion_output_photo = gr.Image(label="Generated Image",  type="filepath")                    
+                gr.Examples(
+                    examples=AskPicturizeIt.coolest_midjourney_prompts,                   
+                    label="Select one and try it",
+                    examples_per_page=10,
+                    inputs=diffusion_test_string)
+        with gr.Tab("Image-(with text)-to-Image"):
+            gr.HTML(AskPicturizeIt.STABILITY_AI_HTML)
+            stabilityai_style_preset = gr.Dropdown(AskPicturizeIt.style_presets, 
+                                   value="digital-art", label="Style preset", info="Select one style preset")            
+            stabilityai_steps = gr.Slider(minimum=10, maximum=150, step=10, label="Number of diffusion steps to run", value=30, info="Diffusion steps")
+            stabilityai_test_string = gr.Textbox(label="Prompt", value="panda mad scientist mixing sparkling chemicals digital art")
+            with gr.Column(scale=2):
+                stabilityai_photo = gr.Image(label="Input Image",  type="filepath", value="images/generated-image-panda.png")
+                stabilityai_output_photo = gr.Image(label="output Image",  type="filepath")
+            with gr.Column(scale=1):
+                gr.Examples(
+                    examples=images_examples,
+                    label="Select one from Image Examples and get variation",
+                    inputs=[stabilityai_photo],
+                    examples_per_page=10,
+                    outputs=stabilityai_photo,
+                )
+                stabilityai_test_button = gr.Button("Try it")
+                stabilityai_output_info = gr.Label(value="Output Info", label="Info")
+        with gr.Tab("Text-to-Video"):
+            gr.HTML(AskPicturizeIt.TEXT_TO_VIDEO_HTML)
+            gr.HTML("Work in progress....")           
     with gr.Tab("Record, transcribe, picturize and upload"):
         gr.HTML("<p>Record voice, transcribe a prompt, picturize the prompt, create variations, and upload in Output tab</p>")
         with gr.Tab("Whisper(whisper-1)"):
@@ -1098,7 +1114,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
     
     diffusion_test_button.click(
         fn=diffusion_models_handler,
-        inputs=[diffusion_model_selection, diffusion_test_string],
+        inputs=[diffusion_model_selection, diffusion_test_string, stabilityai_api_key, input_key, org_id, openai_selection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, input_imagesize, input_num_images],
         outputs=[diffusion_output_info, diffusion_output_photo]
     )
 
