@@ -696,24 +696,28 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                     examples_per_page=10,
                     inputs=diffusion_test_string)
         with gr.Tab("Image-(with text)-to-Image"):
-            gr.HTML(AskPicturizeIt.STABILITY_AI_HTML)
-            stabilityai_style_preset = gr.Dropdown(AskPicturizeIt.style_presets, 
-                                   value="digital-art", label="Style preset", info="Select one style preset")            
-            stabilityai_steps = gr.Slider(minimum=10, maximum=150, step=10, label="Number of diffusion steps to run", value=30, info="Diffusion steps")
-            stabilityai_test_string = gr.Textbox(label="Prompt", value="panda mad scientist mixing sparkling chemicals digital art")
+            with gr.Tab("Stability AI"):                   
+                gr.HTML(AskPicturizeIt.STABILITY_AI_HTML)
+                with gr.Row():
+                    stabilityai_style_preset = gr.Dropdown(AskPicturizeIt.style_presets, 
+                                           value="digital-art", label="Style preset", info="Select one style preset")            
+                    stabilityai_steps = gr.Slider(minimum=10, maximum=150, step=10, label="Number of diffusion steps to run", value=30, info="Diffusion steps")
+            image2image_string = gr.Textbox(label="Prompt", value="panda mad scientist mixing sparkling chemicals digital art")            
             with gr.Column(scale=2):
-                stabilityai_photo = gr.Image(label="Input Image",  type="filepath", value="images/generated-image-panda.png")
-                stabilityai_output_photo = gr.Image(label="output Image",  type="filepath")
+                image2image_photo = gr.Image(label="Input Image",  type="filepath", value="images/generated-image-panda.png")                    
             with gr.Column(scale=1):
                 gr.Examples(
                     examples=images_examples,
                     label="Select one from Image Examples and get variation",
-                    inputs=[stabilityai_photo],
+                    inputs=[image2image_photo],
                     examples_per_page=10,
-                    outputs=stabilityai_photo,
+                    outputs=image2image_photo,
                 )
-                stabilityai_test_button = gr.Button("Try it")
-                stabilityai_output_info = gr.Label(value="Output Info", label="Info")
+            image2image_output_photo = gr.Image(label="output Image",  type="filepath")
+            with gr.Row():
+                with gr.Column():
+                    image2image_button = gr.Button("Try it")
+                    image2image_output_info = gr.Label(value="Output Info", label="Info")
         with gr.Tab("Text-to-Video"):
             gr.HTML(AskPicturizeIt.TEXT_TO_VIDEO_HTML)
             gr.HTML("Work in progress....")           
@@ -1137,10 +1141,10 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
     )
 
         
-    stabilityai_test_button.click(
+    image2image_button.click(
         fn=test_stability_ai_handler,
-        inputs=[stabilityai_api_key, stabilityai_style_preset, stabilityai_test_string, stabilityai_photo, stabilityai_steps],
-        outputs=[stabilityai_output_info, stabilityai_output_photo]
+        inputs=[stabilityai_api_key, stabilityai_style_preset, image2image_string, image2image_photo, stabilityai_steps],
+        outputs=[image2image_output_info, image2image_output_photo]
     )
     
     youtube_transcribe_button.click(
