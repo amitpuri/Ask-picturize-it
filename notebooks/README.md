@@ -11,3 +11,12 @@ This folder contains notebooks from various research and learning materials for 
 3. [DeepSpeed + AzureML](https://github.com/Azure/azureml-examples/tree/main/v1/python-sdk/workflows/train/deepspeed)
 4. [DeepSpeed + Hugging Face Transformers Integration](https://huggingface.co/docs/transformers/main_classes/deepspeed)
 5. [DeepSpeed + PyTorch Lightning](https://lightning.ai/docs/pytorch/stable/api/lightning.pytorch.utilities.deepspeed.html)
+
+GCP Vertex AI Samples
+- [GoogleCloudPlatform/vertex-ai-samples](https://nbviewer.org/github/GoogleCloudPlatform/vertex-ai-samples)
+
+Books
+- [Machine Learning book](https://nbviewer.org/github/rasbt/machine-learning-book)
+- [Generative_Deep_Learning_2nd_Edition](https://nbviewer.org/github/davidADSP/Generative_Deep_Learning_2nd_Edition/)
+- [github/phlippe-uvadlc_notebooks-tutorial_notebooks](https://nbviewer.org/github/phlippe/uvadlc_notebooks/tree/master/docs/tutorial_notebooks)
+- [Denoising Diffusion Implicit Models](https://keras.io/examples/generative/ddim)
