@@ -4,6 +4,7 @@ git+https://github.com/google/flax.git
 jaxlib
 openai
 google-generativeai
+google-cloud-aiplatform
 stability-sdk
 assemblyai
 elevenlabs

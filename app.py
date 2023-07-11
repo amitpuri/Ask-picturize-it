@@ -8,6 +8,7 @@ import gradio as gr
 import openai
 from langchain.llms import OpenAI
 from langchain.chat_models import AzureChatOpenAI
+from langchain.chat_models import ChatVertexAI
 from langchain.retrievers import WikipediaRetriever
 
 from ExamplesUtil.PromptGenerator import *
@@ -300,7 +301,16 @@ def celebs_name_search_handler(input_key, search_text, celebs_chat_history):
                 model=os.getenv("OPENAI_MODEL_NAME"),
                 temperature=0.7,
                 openai_api_version="2023-05-15")
+
+            llm = ChatVertexAI(
+                model_name==os.getenv("PALM_MODEL_NAME"),
+                max_output_tokens=256,
+                temperature=0.7,
+                top_p=0.8,
+                top_k=40,
+                verbose=True)
             '''
+            
             llm_response = llm(search_text)        
             return llm_response, celebs_chat_history, "In progress"
         except openai.error.AuthenticationError:
@@ -658,7 +668,6 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                     test_button = gr.Button("Try it")
         with gr.Tab("Audio-to-Text"):
             gr.HTML(AskPicturizeIt.ASSEMBLY_AI_HTML)
-            gr.HTML(AskPicturizeIt.SPEECHBRAIN_HTML)            
             audio_model_selection = gr.Radio(AskPicturizeIt.audio_models, label="Select one", info="Which model do you want to use?", value="openai/whisper-1")
             with gr.Row():
                 with gr.Column(scale=2):                    
