@@ -32,6 +32,7 @@ from Utils.TranscribeSpeechbrain import TranscribeSpeechbrain
 #load_dotenv()
 
 
+
 prompt_optimizer = PromptOptimizer()
 prompt_generator =  PromptGenerator()
 test = Test()
@@ -647,6 +648,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                     test_button = gr.Button("Try it")
         with gr.Tab("Audio-to-Text"):
             gr.HTML(AskPicturizeIt.ASSEMBLY_AI_HTML)
+            gr.HTML(AskPicturizeIt.SPEECHBRAIN_HTML)            
             audio_model_selection = gr.Radio(AskPicturizeIt.audio_models, label="Select one", info="Which model do you want to use?", value="openai/whisper-1")
             with gr.Row():
                 with gr.Column(scale=2):                    

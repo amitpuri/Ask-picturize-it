@@ -38,6 +38,7 @@ class AskPicturizeIt:
        <li><p>CS25: Stanford Seminar - Transformers United 2023: Introduction to Transformer <a href='https://youtu.be/XfpMkf4rD6E'>https://youtu.be/XfpMkf4rD6E</a></p></li>
        <li><p>Temperature in NLP <a href='https://lukesalamone.github.io/posts/what-is-temperature'>https://lukesalamone.github.io/posts/what-is-temperature</a></p></li>
        <li><p>openai-cookbook <a href='https://github.com/openai/openai-cookbook'>https://github.com/openai/openai-cookbook</a></p></li>                     
+       <li><p>High-Resolution Image Synthesis and Semantic Manipulation with Conditional GANs <a href='https://tcwang0509.github.io/pix2pixHD'>https://tcwang0509.github.io/pix2pixHD</a></p></li>       
        <li><p>Alpaca Eval Leaderboard <a href='https://tatsu-lab.github.io/alpaca_eval'>https://tatsu-lab.github.io/alpaca_eval</a></p></li>
        <li><p>Open LLM Leaderboard <a href='https://huggingface.co/spaces/HuggingFaceH4/open_llm_leaderboard'>https://huggingface.co/spaces/HuggingFaceH4/open_llm_leaderboard</a></p></li>
        <li><p>LLM Sys projects <a href='https://lmsys.org/projects'>https://lmsys.org/projects</a></p></li>
@@ -48,6 +49,7 @@ class AskPicturizeIt:
        <li><p>LangChain for Gen AI and LLMs <a href='https://www.youtube.com/playlist?list=PLIUOU7oqGTLieV9uTIFMm6_4PXg-hlN6F'>https://www.youtube.com/playlist?list=PLIUOU7oqGTLieV9uTIFMm6_4PXg-hlN6F</a></p></li>
        <li><p>LangChain's integration with Chroma <a href='https://blog.langchain.dev/langchain-chroma'>https://blog.langchain.dev/langchain-chroma</a></p></li>
        <li><p>Vector Similarity Explained <a href='https://www.pinecone.io/learn/vector-similarity'>https://www.pinecone.io/learn/vector-similarity</a></p></li>
+       <li><p>Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks <a href='https://arxiv.org/abs/2005.11401'>https://arxiv.org/abs/2005.11401</a></p></li>
        <li><p>An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale <a href='https://arxiv.org/abs/2010.11929'>https://arxiv.org/abs/2010.11929</a></p></li>
        <li>stable-diffusion-image-variations <a href='https://huggingface.co/spaces/lambdalabs/stable-diffusion-image-variations'>https://huggingface.co/spaces/lambdalabs/stable-diffusion-image-variations</a></li> 
        <li>text-to-avatar <a href='https://huggingface.co/spaces/lambdalabs/text-to-avatar'>https://huggingface.co/spaces/lambdalabs/text-to-avatar</a></li> 
@@ -55,7 +57,10 @@ class AskPicturizeIt:
        <li>text-to-pokemon <a href='https://huggingface.co/spaces/lambdalabs/text-to-pokemon'>https://huggingface.co/spaces/lambdalabs/text-to-pokemon</a></li> 
        <li>image-mixer-demo <a href='https://huggingface.co/spaces/lambdalabs/image-mixer-demo'>https://huggingface.co/spaces/lambdalabs/image-mixer-demo</a></li> 
        <li>Stable Diffusion <a href='https://huggingface.co/blog/stable_diffusion'>https://huggingface.co/blog/stable_diffusion</a></li> 
-       <li>CoDi: Any-to-Any Generation via Composable Diffusion <a href='https://codi-gen.github.io'>https://codi-gen.github.io</a></li>        
+       <li>CoDi: Any-to-Any Generation via Composable Diffusion <a href='https://codi-gen.github.io'>https://codi-gen.github.io</a></li> 
+       <li>Imagen - Photorealistic Text-to-Image Diffusion Models <a href='https://imagen.research.google'>https://imagen.research.google</a></li> 
+       <li>Pathways Autoregressive Text-to-Image model (Parti) <a href='https://sites.research.google/parti'>https://sites.research.google/parti</a></li> 
+       <li>Muse: Text-To-Image Generation via Masked Generative Transformers <a href='https://muse-model.github.io'>https://muse-model.github.io</a></li> 
        </ul>
        </p>
     """
@@ -154,6 +159,7 @@ class AskPicturizeIt:
                               "https://langchain.com/features.html",
                               "https://arxiv.org/abs/2010.11929",
                               "https://developers.google.com/machine-learning/gan/generative"]
+
 
 
 
@@ -276,7 +282,9 @@ class AskPicturizeIt:
 
     LANGCHAIN_TEXT = "Credit <a href='https://github.com/gkamradt/langchain-tutorials'>https://github.com/gkamradt/langchain-tutorials</a>"
 
-    ASSEMBLY_AI_HTML = "Sign up AssemblyAI <a href='https://www.assemblyai.com'>https://www.assemblyai.com/dashboard/signup</a> and using <a href='https://huggingface.co/speechbrain'>https://huggingface.co/speechbrain</a>"
+    ASSEMBLY_AI_HTML = "Sign up AssemblyAI <a href='https://www.assemblyai.com'>https://www.assemblyai.com/dashboard/signup</a>"
+
+    SPEECHBRAIN_HTML  = "Speechbrain <a href='https://huggingface.co/speechbrain'>https://huggingface.co/speechbrain</a>"
 
     ELEVENLABS_HTML = "Sign up Elevenlabs <a href='https://www.elevenlabs.io'>https://www.elevenlabs.io</a>"
     
