@@ -12,5 +12,5 @@ This folder contains notebooks from various research and learning materials for 
 4. [DeepSpeed + Hugging Face Transformers Integration](https://huggingface.co/docs/transformers/main_classes/deepspeed)
 5. [DeepSpeed + PyTorch Lightning](https://lightning.ai/docs/pytorch/stable/api/lightning.pytorch.utilities.deepspeed.html)
 
-
+[GoogleCloudPlatform/vertex-ai-samples](https://nbviewer.org/github/GoogleCloudPlatform/vertex-ai-samples)
 [Machine Learning book](https://nbviewer.org/github/rasbt/machine-learning-book)
