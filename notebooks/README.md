@@ -19,3 +19,4 @@ Books
 - [Machine Learning book](https://nbviewer.org/github/rasbt/machine-learning-book)
 - [Generative_Deep_Learning_2nd_Edition](https://nbviewer.org/github/davidADSP/Generative_Deep_Learning_2nd_Edition/)
 - [github/phlippe-uvadlc_notebooks-tutorial_notebooks](https://nbviewer.org/github/phlippe/uvadlc_notebooks/tree/master/docs/tutorial_notebooks)
+- [Denoising Diffusion Implicit Models](https://keras.io/examples/generative/ddim)
