@@ -15,3 +15,4 @@ This folder contains notebooks from various research and learning materials for 
 [GoogleCloudPlatform/vertex-ai-samples](https://nbviewer.org/github/GoogleCloudPlatform/vertex-ai-samples)
 
 [Machine Learning book](https://nbviewer.org/github/rasbt/machine-learning-book)
+[Generative_Deep_Learning_2nd_Edition](https://nbviewer.org/github/davidADSP/Generative_Deep_Learning_2nd_Edition/)
