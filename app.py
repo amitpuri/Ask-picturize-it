@@ -7,6 +7,7 @@ import gpt3_tokenizer
 import gradio as gr
 import openai
 from langchain.llms import OpenAI
+from langchain.chat_models import AzureChatOpenAI
 from langchain.retrievers import WikipediaRetriever
 
 from ExamplesUtil.PromptGenerator import *
@@ -30,7 +31,6 @@ from Utils.TranscribeSpeechbrain import TranscribeSpeechbrain
 
 #from dotenv import load_dotenv
 #load_dotenv()
-
 
 prompt_optimizer = PromptOptimizer()
 prompt_generator =  PromptGenerator()
@@ -290,6 +290,17 @@ def celebs_name_search_handler(input_key, search_text, celebs_chat_history):
         celebs_chat_history = celebs_chat_history + [(search_text, None)] 
         try:
             llm = OpenAI(temperature=0.7)
+            # TO DO 
+            '''
+            llm = AzureChatOpenAI(
+                openai_api_type="azure",
+                openai_api_key=os.getenv("OPENAI_API_KEY"),
+                openai_api_base=os.getenv("OPENAI_API_BASE"),
+                deployment_name=os.getenv("OPENAI_DEPLOYMENT_NAME"),
+                model=os.getenv("OPENAI_MODEL_NAME"),
+                temperature=0.7,
+                openai_api_version="2023-05-15")
+            '''
             llm_response = llm(search_text)        
             return llm_response, celebs_chat_history, "In progress"
         except openai.error.AuthenticationError:
@@ -647,6 +658,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                     test_button = gr.Button("Try it")
         with gr.Tab("Audio-to-Text"):
             gr.HTML(AskPicturizeIt.ASSEMBLY_AI_HTML)
+            gr.HTML(AskPicturizeIt.SPEECHBRAIN_HTML)            
             audio_model_selection = gr.Radio(AskPicturizeIt.audio_models, label="Select one", info="Which model do you want to use?", value="openai/whisper-1")
             with gr.Row():
                 with gr.Column(scale=2):                    
@@ -696,7 +708,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                 label="Select one and try it",
                 examples_per_page=10,
                 inputs=diffusion_test_string)
-        with gr.Tab("Image-(with text)-to-Image"):
+        with gr.Tab("Image-to-Image"):
             text2image_selection = gr.Radio(AskPicturizeIt.text2image_medium, label="Select one", info="Which medium do you want to use?", value="StabilityAI")
             with gr.Tab("Stability AI"):                   
                 gr.HTML(AskPicturizeIt.STABILITY_AI_HTML)
