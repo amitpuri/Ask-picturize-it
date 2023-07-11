@@ -49,7 +49,8 @@ class KnowledgeBase:
             papers.append({
                 'kbtype': "pdf",
                 'keyword': keyword ,
-                'title': pdf.title,
+                'title'
+: pdf.title,
                 'url': pdf.pdf_url,
                 'summary': pdf.summary
             })
@@ -190,7 +191,8 @@ class KnowledgeBase:
                 pass
             if wkpage is not None:
                 title = wkpage.title
-                response  = requests.get(WIKI_REQUEST+title)
+                headers = {'User-Agent': 'AskPicturizeIt/1.0.0 (https://www.amitpuri.com/; amit.puri@amitpuri.com)'}
+                response  = requests.get(WIKI_REQUEST+title, headers=headers)
                 json_data = json.loads(response.text)
     
                 try:
