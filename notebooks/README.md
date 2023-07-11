@@ -11,3 +11,6 @@ This folder contains notebooks from various research and learning materials for 
 3. [DeepSpeed + AzureML](https://github.com/Azure/azureml-examples/tree/main/v1/python-sdk/workflows/train/deepspeed)
 4. [DeepSpeed + Hugging Face Transformers Integration](https://huggingface.co/docs/transformers/main_classes/deepspeed)
 5. [DeepSpeed + PyTorch Lightning](https://lightning.ai/docs/pytorch/stable/api/lightning.pytorch.utilities.deepspeed.html)
+
+
+[Machine Learning book](https://nbviewer.org/github/rasbt/machine-learning-book)
