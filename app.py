@@ -661,7 +661,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                 with gr.Row():
                     with gr.Column():                    
                         azure_openai_key = gr.Textbox(
-                            label="Azure OpenAI API Key", value=os.getenv("AZURE_OPENAI_KEY"), type="password")
+                            label="Azure OpenAI API Key", value=os.getenv("AZURE_OPENAI_API_KEY"), type="password")
                         azure_openai_api_base = gr.Textbox(
                             label="Azure OpenAI API Endpoint", value=os.getenv("AZURE_OPENAI_ENDPOINT"), type="password")
                         azure_openai_deployment_name = gr.Textbox(
