@@ -2,6 +2,10 @@
 
 This folder contains notebooks from various research and learning materials for reference purposes only.
 
+# Semantic Kernal
+
+[Python Samples](https://nbviewer.org/github/microsoft/semantic-kernel/blob/main/samples/notebooks/python)
+
 # DeepSpeed Examples
 
 [https://www.deepspeed.ai](https://www.deepspeed.ai)
