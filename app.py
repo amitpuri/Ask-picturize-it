@@ -969,136 +969,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                             describe_button = gr.Button("Describe via ChatGPT and Save")
                             celeb_upload_save_real_generated_image_button = gr.Button("Upload, Save real & generated image")                    
                 label_upload_here = gr.Label(value=AskPicturizeIt.LABEL_GPT_CELEB_SCREEN, label="Info")            
-        with gr.Tab("Ask GPT"):
-            with gr.Row():
-                with gr.Column(): 
-                    keyword_search = gr.Textbox(label="Keyword")
-                    with gr.Row():
-                        keyword_search_prompt = gr.Textbox(label="Prompt")
-                        keyword_search_response = gr.Textbox(label="Response")
-                with gr.Column():    
-                    with gr.Tab("Recent Codex"):
-                            with gr.Row():
-                                gr.Examples(
-                                        label="Recent keywords",
-                                        fn=get_saved_prompts,
-                                        examples=saved_prompts,
-                                        examples_per_page=10,
-                                        inputs=[keyword_search],
-                                        outputs=[keyword_search_prompt, keyword_search_response],   
-                                        cache_examples = False,
-                                        run_on_click=True,
-                                    )  
-                    with gr.Tab("Recent Awesome Prompts"):
-                        with gr.Row():
-                            gr.Examples(
-                                    label="Recent Prompts",
-                                    fn=get_saved_prompts,
-                                    examples=recent_awesome_chatgpt_prompts,
-                                    examples_per_page=50,
-                                    inputs=[keyword_search],
-                                    outputs=[keyword_search_prompt, keyword_search_response],
-                                    cache_examples = False,
-                                    run_on_click=True,
-                                )
-                    with gr.Tab("Recent Product definition"):
-                        with gr.Row():
-                            gr.Examples(
-                                        label="Recent product definitions",
-                                        fn=get_saved_prompts,
-                                        examples=product_def_keyword_examples,
-                                        examples_per_page=5,
-                                        inputs=[keyword_search],
-                                        outputs=[keyword_search_prompt, keyword_search_response],  
-                                        cache_examples = False,
-                                        run_on_click=True,
-                            )
-            with gr.Tab("Ask Codex"):
-                with gr.Row():
-                    with gr.Column(scale=4):
-                        ask_keyword = gr.Textbox(label="Keyword", lines=1)
-                        ask_prompt = gr.Textbox(label="Prompt", lines=5)                
-                    with gr.Column(scale=1):   
-                        label_codex_here = gr.Label(value="Ask Codex, Write a better code", label="Info")
-                        ask_chatgpt_button = gr.Button("Ask ChatGPT")                
-                with gr.Row():
-                    keyword_response_code = gr.Code(label="Code", language="python", lines=7)               
-            with gr.Tab("🧠 Awesome ChatGPT Prompts"):
-                gr.HTML(AskPicturizeIt.AWESOME_CHATGPT_PROMPTS)
-                with gr.Row():
-                    with gr.Column(scale=4):
-                        awesome_chatgpt_act = gr.Textbox(label="Act")
-                        awesome_chatgpt_prompt = gr.Textbox(label="Awesome ChatGPT Prompt", lines=5)                        
-                    with gr.Column(scale=1):
-                        label_awesome_chatgpt_here = gr.Label(value="See examples below", label="Info")
-                        ask_awesome_chatgpt_button = gr.Button("Ask ChatGPT")                                
-                with gr.Row():
-                    with gr.Column(scale=1):
-                        gr.Examples(
-                            label="Awesome ChatGPT Prompts",
-                            fn=prompt_generator.get_awesome_chatgpt_prompt,
-                            examples=awesome_chatgpt_prompts,
-                            examples_per_page=50,
-                            inputs=[awesome_chatgpt_act],
-                            outputs=[awesome_chatgpt_prompt],
-                            cache_examples = False,
-                            run_on_click=True,
-                        )
-                with gr.Row():            
-                    awesome_chatgpt_response = gr.Textbox(label="Response", lines=20)
-            with gr.Tab("Product definition"):
-                gr.HTML(AskPicturizeIt.PRODUCT_DEFINITION)
-                with gr.Row():
-                    with gr.Column(scale=4):
-                        product_def_keyword = gr.Textbox(label="Keyword")
-                        product_def_final_prompt = gr.Textbox(label="Prompt", lines=10)
-                    with gr.Column(scale=1):                
-                        with gr.Row():                            
-                            product_def_info_label = gr.Label(value="See examples below", label="Info")
-                            product_def_ask_button = gr.Button("Ask ChatGPT")  
-                with gr.Row():                    
-                    with gr.Column(scale=4):
-                        product_fact_sheet = gr.Textbox(label="Product Fact sheet", lines=25)
-                        product_task_explanation = gr.Textbox(label="Task explanation", lines=5)
-                        product_def_question = gr.Textbox(label="Question", lines=5)
-                    with gr.Column(scale=1):
-                        gr.HTML(AskPicturizeIt.PRODUCT_DEFINITION_INFO)
-                        gr.Examples(
-                                    label="Product Fact sheet examples",
-                                    fn=prompt_generator.get_awesome_chatgpt_prompt,
-                                    examples=saved_products,
-                                    examples_per_page=3,
-                                    inputs=[product_def_keyword],
-                                    outputs=[product_fact_sheet],
-                                    cache_examples = False,
-                                    run_on_click=True,
-                                )
-                        gr.Examples(
-                            label="Task explanation examples",
-                            examples=task_explanation_examples,
-                            examples_per_page=10,
-                            inputs=[product_task_explanation],
-                            outputs=[product_task_explanation],
-                        )
-                        gr.Examples(
-                            label="Question examples",
-                            examples=product_def_question_examples,
-                            examples_per_page=6,
-                            inputs=[product_def_question],
-                            outputs=[product_def_question],
-                        )
-                with gr.Row():
-                    product_def_response = gr.Textbox(label="Response", lines=10)
-            with gr.Tab("Picturize Product"):
-                with gr.Row():
-                    with gr.Column(scale=4):
-                        product_def_image_prompt = gr.Textbox(label="Enter Image creation Prompt", lines=5)
-                        product_def_generated_image = gr.Image(label="AI Generated Image",  type="filepath")
-                    with gr.Column(scale=1):                
-                        optimize_prompt_product_def_button = gr.Button("Optimize Prompt")
-                        product_def_generate_button = gr.Button("Picturize it")
-                        product_def_variations_button = gr.Button("More variations")
-                        product_def_image_info_label = gr.Label(value="Picturize it info", label="Info")
+        
         with gr.Tab("Summarizer"):
             with gr.Tab("KB Search"):
                 with gr.Row():
@@ -1177,6 +1048,136 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                         article_article_summarize_button = gr.Button("Summarize")
                         article_article_extract_button = gr.Button("Extract")            
                 article_summary = gr.Code(label="Article response", language="html", lines=10)
+    with gr.Tab("Ask GPT"):
+        with gr.Row():
+            with gr.Column(): 
+                keyword_search = gr.Textbox(label="Keyword")
+                with gr.Row():
+                    keyword_search_prompt = gr.Textbox(label="Prompt")
+                    keyword_search_response = gr.Textbox(label="Response")
+            with gr.Column():    
+                with gr.Tab("Recent Codex"):
+                        with gr.Row():
+                            gr.Examples(
+                                    label="Recent keywords",
+                                    fn=get_saved_prompts,
+                                    examples=saved_prompts,
+                                    examples_per_page=10,
+                                    inputs=[keyword_search],
+                                    outputs=[keyword_search_prompt, keyword_search_response],   
+                                    cache_examples = False,
+                                    run_on_click=True,
+                                )  
+                with gr.Tab("Recent Awesome Prompts"):
+                    with gr.Row():
+                        gr.Examples(
+                                label="Recent Prompts",
+                                fn=get_saved_prompts,
+                                examples=recent_awesome_chatgpt_prompts,
+                                examples_per_page=50,
+                                inputs=[keyword_search],
+                                outputs=[keyword_search_prompt, keyword_search_response],
+                                cache_examples = False,
+                                run_on_click=True,
+                            )
+                with gr.Tab("Recent Product definition"):
+                    with gr.Row():
+                        gr.Examples(
+                                    label="Recent product definitions",
+                                    fn=get_saved_prompts,
+                                    examples=product_def_keyword_examples,
+                                    examples_per_page=5,
+                                    inputs=[keyword_search],
+                                    outputs=[keyword_search_prompt, keyword_search_response],  
+                                    cache_examples = False,
+                                    run_on_click=True,
+                        )
+        with gr.Tab("Ask Codex"):
+            with gr.Row():
+                with gr.Column(scale=4):
+                    ask_keyword = gr.Textbox(label="Keyword", lines=1)
+                    ask_prompt = gr.Textbox(label="Prompt", lines=5)                
+                with gr.Column(scale=1):   
+                    label_codex_here = gr.Label(value="Ask Codex, Write a better code", label="Info")
+                    ask_chatgpt_button = gr.Button("Ask ChatGPT")                
+            with gr.Row():
+                keyword_response_code = gr.Code(label="Code", language="python", lines=7)               
+        with gr.Tab("🧠 Awesome ChatGPT Prompts"):
+            gr.HTML(AskPicturizeIt.AWESOME_CHATGPT_PROMPTS)
+            with gr.Row():
+                with gr.Column(scale=4):
+                    awesome_chatgpt_act = gr.Textbox(label="Act")
+                    awesome_chatgpt_prompt = gr.Textbox(label="Awesome ChatGPT Prompt", lines=5)                        
+                with gr.Column(scale=1):
+                    label_awesome_chatgpt_here = gr.Label(value="See examples below", label="Info")
+                    ask_awesome_chatgpt_button = gr.Button("Ask ChatGPT")                                
+            with gr.Row():
+                with gr.Column(scale=1):
+                    gr.Examples(
+                        label="Awesome ChatGPT Prompts",
+                        fn=prompt_generator.get_awesome_chatgpt_prompt,
+                        examples=awesome_chatgpt_prompts,
+                        examples_per_page=50,
+                        inputs=[awesome_chatgpt_act],
+                        outputs=[awesome_chatgpt_prompt],
+                        cache_examples = False,
+                        run_on_click=True,
+                    )
+            with gr.Row():            
+                awesome_chatgpt_response = gr.Textbox(label="Response", lines=20)
+        with gr.Tab("Product definition"):
+            gr.HTML(AskPicturizeIt.PRODUCT_DEFINITION)
+            with gr.Row():
+                with gr.Column(scale=4):
+                    product_def_keyword = gr.Textbox(label="Keyword")
+                    product_def_final_prompt = gr.Textbox(label="Prompt", lines=10)
+                with gr.Column(scale=1):                
+                    with gr.Row():                            
+                        product_def_info_label = gr.Label(value="See examples below", label="Info")
+                        product_def_ask_button = gr.Button("Ask ChatGPT")  
+            with gr.Row():                    
+                with gr.Column(scale=4):
+                    product_fact_sheet = gr.Textbox(label="Product Fact sheet", lines=25)
+                    product_task_explanation = gr.Textbox(label="Task explanation", lines=5)
+                    product_def_question = gr.Textbox(label="Question", lines=5)
+                with gr.Column(scale=1):
+                    gr.HTML(AskPicturizeIt.PRODUCT_DEFINITION_INFO)
+                    gr.Examples(
+                                label="Product Fact sheet examples",
+                                fn=prompt_generator.get_awesome_chatgpt_prompt,
+                                examples=saved_products,
+                                examples_per_page=3,
+                                inputs=[product_def_keyword],
+                                outputs=[product_fact_sheet],
+                                cache_examples = False,
+                                run_on_click=True,
+                            )
+                    gr.Examples(
+                        label="Task explanation examples",
+                        examples=task_explanation_examples,
+                        examples_per_page=10,
+                        inputs=[product_task_explanation],
+                        outputs=[product_task_explanation],
+                    )
+                    gr.Examples(
+                        label="Question examples",
+                        examples=product_def_question_examples,
+                        examples_per_page=6,
+                        inputs=[product_def_question],
+                        outputs=[product_def_question],
+                    )
+            with gr.Row():
+                product_def_response = gr.Textbox(label="Response", lines=10)
+        with gr.Tab("Picturize Product"):
+            with gr.Row():
+                with gr.Column(scale=4):
+                    product_def_image_prompt = gr.Textbox(label="Enter Image creation Prompt", lines=5)
+                    product_def_generated_image = gr.Image(label="AI Generated Image",  type="filepath")
+                with gr.Column(scale=1):                
+                    optimize_prompt_product_def_button = gr.Button("Optimize Prompt")
+                    product_def_generate_button = gr.Button("Picturize it")
+                    product_def_variations_button = gr.Button("More variations")
+                    product_def_image_info_label = gr.Label(value="Picturize it info", label="Info")
     with gr.Tab("DISCLAIMER"):
         gr.Markdown(AskPicturizeIt.DISCLAIMER)
     gr.HTML(AskPicturizeIt.FOOTER)

@@ -6,11 +6,11 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 class YouTubeSummarizer:
     def setOpenAIConfig(self, openai_api_key, model_name: str="gpt4", temperature=0.0):
-        self.llm = OpenAI(openai_api_key=openai_api_key,
-                          openai_api_type="openai", 
-                          openai_api_version = '2020-11-07',
+        self.llm = OpenAI(api_key=openai_api_key,
+                          api_type="openai", 
+                          api_version = '2020-11-07',
                           temperature=temperature,
-                          openai_api_base = "https://api.openai.com/v1")
+                          api_base = "https://api.openai.com/v1")
 
     def setAzureOpenAIConfig(self, azure_openai_api_key: str, 
                              azure_openai_api_base: str, azure_openai_deployment_name: str, 
@@ -18,13 +18,13 @@ class YouTubeSummarizer:
         openai_api_version="2023-05-15"
         openai_api_type="azure"
         self.llm = AzureOpenAI(
-            openai_api_type=openai_api_type,
-            openai_api_key=azure_openai_api_key,
-            openai_api_base=azure_openai_api_base,
+            api_type=openai_api_type,
+            api_key=azure_openai_api_key,
+            api_base=azure_openai_api_base,
             deployment_name=azure_openai_deployment_name,
             model=model_name,
             temperature=temperature,
-            openai_api_version=openai_api_version)
+            api_version=openai_api_version)
 
     def transcribe(self, url):
         loader = YoutubeLoader.from_youtube_url(url, add_video_info=True)
