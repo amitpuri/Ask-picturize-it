@@ -50,7 +50,8 @@ kb = KnowledgeBase()
 
 def diffusion_models_handler(model_selection : str, prompt :str, stability_api_key: str, 
                              openai_api_key: str, openai_org_id: str, 
-                             optionSelection: str, azure_openai_key: str, 
+                             optionSelection: str
+, azure_openai_key: str, 
                              azure_openai_api_base: str, azure_openai_deployment_name: str, 
                              input_imagesize: str, input_num_images: int):
                                 
@@ -686,9 +687,9 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                     with gr.Row():
                         with gr.Column():
                             google_project_id = gr.Textbox(
-                                    label="Google Generative AI API Key", value=os.getenv("GCP_PROJECT_ID"), type="password") 
+                                    label="Google Cloud Project ID", value=os.getenv("GCP_PROJECT_ID"), type="password") 
                             google_credentials = gr.Textbox(
-                                    label="Google Generative AI API Key", value=os.getenv("GOOGLE_APPLICATION_CREDENTIALS"), type="password") 
+                                    label="Google Application Credentials", value=os.getenv("GOOGLE_APPLICATION_CREDENTIALS"), type="password") 
         with gr.Tab("AssemblyAI API"):
             gr.HTML(AskPicturizeIt.ASSEMBLY_AI_HTML)
             with gr.Row():
