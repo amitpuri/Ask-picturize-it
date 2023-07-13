@@ -4,7 +4,11 @@ This folder contains notebooks from various research and learning materials for 
 
 # Semantic Kernal
 
-[Python Samples](https://nbviewer.org/github/microsoft/semantic-kernel/blob/main/samples/notebooks/python)
+- [Python Samples](https://nbviewer.org/github/microsoft/semantic-kernel/blob/main/samples/notebooks/python)
+
+# Microsoft -> Guidance repo
+
+- [A guidance language for controlling large language models](https://nbviewer.org/github/microsoft/guidance)
 
 # DeepSpeed Examples
 
