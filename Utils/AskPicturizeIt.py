@@ -279,6 +279,8 @@ class AskPicturizeIt:
                      "gpt-3.5-turbo-0613", "gpt-3.5-turbo-16k", "gpt-3.5-turbo-16k-0613", "text-davinci-003", 
                      "text-davinci-002", "text-curie-001", "text-babbage-001", "text-ada-001"]
 
+    google_palm_models = ["models/text-bison-001"]
+    
     imagesize_text = "Select one, use download for image size from Image generation/variation Output tab"
     
     STABILITY_AI_HTML = "Sign up here <a href='https://platform.stability.ai'>https://platform.stability.ai</a> and learn how to write a prompt <a href='https://dreamstudio.ai/prompt-guide'>https://dreamstudio.ai/prompt-guide</a>"

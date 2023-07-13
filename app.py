@@ -5,8 +5,10 @@ import requests
 
 import gpt3_tokenizer
 import gradio as gr
-
 import openai
+import google.auth
+from google.oauth2 import service_account
+
 from langchain.chat_models import ChatOpenAI
 from langchain.chat_models import AzureChatOpenAI
 from langchain.chat_models import ChatVertexAI
@@ -17,6 +19,7 @@ from langchain.prompts.chat import (
     SystemMessagePromptTemplate,
     HumanMessagePromptTemplate,
 )
+
 from langchain.schema import HumanMessage, SystemMessage
 from ExamplesUtil.PromptGenerator import *
 from MongoUtil.StateDataClient import *
@@ -204,7 +207,6 @@ def get_key_traits(name):
 Image generation 
 '''
 
-
 def create_image_from_prompt_handler(api_key :str, org_id :str, optionSelection :str, azure_openai_key :str, azure_openai_api_base :str, azure_openai_deployment_name :str, input_prompt :str, input_imagesize :str, input_num_images :int):    
     uihandlers = get_AskMeUI(api_key, org_id, optionSelection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name)
     return uihandlers.create_image_from_prompt_handler(input_prompt, input_imagesize, input_num_images)
@@ -291,25 +293,27 @@ def celeb_save_description_handler(mongo_config, mongo_connection_string, mongo_
 
 def celebs_name_search_handler(api_key, org_id, model_name, optionSelection, 
                                azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, 
-                               google_generative_api_key, search_text, celebs_chat_history,
+                               google_generative_api_key, google_project_id, google_model_name, search_text, celebs_chat_history,
                                input_language, output_language):
     if optionSelection not in AskPicturizeIt.llm_api_options:
         raise ValueError("Invalid choice!")
         
     if not api_key or len(api_key.strip())==0:        
         return search_text, celebs_chat_history, AskPicturizeIt.NO_API_KEY_ERROR
-    elif len(search_text.strip())>0:        
-        celebs_chat_history = celebs_chat_history + [(search_text, None)] 
-        try:
-            chat = None
-            match optionSelection:
-                case  "OpenAI API":                    
-                    chat = ChatOpenAI(                                                
-                        openai_api_key=api_key,
-                        model=model_name,
-                        temperature=0.7)
-                case "Azure OpenAI API":
-                    chat = AzureChatOpenAI(
+    elif len(search_text.strip())<=0:
+        return None, celebs_chat_history, "Error: No Input"
+
+    celebs_chat_history = celebs_chat_history + [(search_text, None)] 
+    try:
+        chat = None
+        match optionSelection:
+            case  "OpenAI API":                    
+                chat = ChatOpenAI(                                                
+                    openai_api_key=api_key,
+                    model=model_name,
+                    temperature=0.7)
+            case "Azure OpenAI API":
+                chat = AzureChatOpenAI(
                     openai_api_type="azure",
                     openai_api_key=azure_openai_key,
                     openai_api_base=azure_openai_api_base,
@@ -317,77 +321,79 @@ def celebs_name_search_handler(api_key, org_id, model_name, optionSelection,
                     model=model_name,
                     temperature=0.7,
                     openai_api_version="2023-05-15")
-                case "Google PaLM API":
-                    '''
-                    #TO DO AUTH
-                    Please provide a project ID by:
-                        - Passing a constructor argument
-                        - Using aiplatform.init()
-                        - Setting project using 'gcloud config set project my-project'
-                        - Setting a GCP environment variable
-                    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = google_generative_api_key 
-                    chat = ChatVertexAI(
-                        model_name="models/text-bison-001",
-                        max_output_tokens=256,
-                        temperature=0.7,
-                        top_p=0.8,
-                        top_k=40,
-                        verbose=True)
-                    '''
-            if chat is None:                       
-                if input_language in output_language:
-                    template = (
-                            "You are a helpful assistant that answers this question."
-                    )
-                else:
-                    template = (
-                            "You are a helpful assistant that answers this question in {input_language} and translate to [output_language]."
-                    )
-                system_message_prompt = SystemMessagePromptTemplate.from_template(template)
-                human_template = "{text}"
-                human_message_prompt = HumanMessagePromptTemplate.from_template(human_template)
-                chat_prompt = ChatPromptTemplate.from_messages(
-                    [system_message_prompt, human_message_prompt]
-                )
-                if input_language in output_language:
-                    llm_response = chat(
-                        chat_prompt.format_prompt(
-                            text=search_text
-                        ).to_messages()
-                    )
-                else:
-                    llm_response = chat(
-                        chat_prompt.format_prompt(
-                            input_language=input_language, 
-                            output_language=output_language,
-                            text=search_text
-                        ).to_messages()
-                    )
-                return llm_response.content, celebs_chat_history, "In progress"
-            else:
-                return None, celebs_chat_history, "Error: The LLM provider is not yet supported."
-        except Exception as exception:
-            print(f"For {optionSelection} - Exception Name: {type(exception).__name__}")
-            print(exception) 
-            return None, celebs_chat_history, exception
-    else:
-        return None, celebs_chat_history, "Error: No Input"
+            case "Google PaLM API":                    
+                #TO DO AUTH
+                #service_account_info = os.getenv["GOOGLE_APPLICATION_CREDENTIALS"]
+                #credentials = service_account.Credentials.from_service_account_info(service_account_info, scopes="googleapis.com")
+                '''
+                chat = ChatVertexAI(
+                    project_id=google_project_id,
+                    model_name=google_model_name,
+                    max_output_tokens=256,
+                    temperature=0.7,
+                    top_p=0.8,
+                    top_k=40,
+                    verbose=True)
+                '''
+                return None, celebs_chat_history, "Error: The LLM provider is not yet supported."  
+    except Exception as exception:
+        errorMessage = f"Error: For {optionSelection} - Exception Name: {type(exception).__name__} - {exception}"
+        print(errorMessage)
+        return None, celebs_chat_history, errorMessage
+        
+    try:
+        if input_language in output_language:
+            template = (
+                    "You are a helpful assistant that answers this question."
+            )
+        else:
+            template = (
+                    "You are a helpful assistant that answers this question in {input_language} and translate to [output_language]."
+            )
+        system_message_prompt = SystemMessagePromptTemplate.from_template(template)
+        human_template = "{text}"
+        human_message_prompt = HumanMessagePromptTemplate.from_template(human_template)
+        chat_prompt = ChatPromptTemplate.from_messages([system_message_prompt, human_message_prompt])
+        if input_language in output_language:
+            llm_response = chat(
+                chat_prompt.format_prompt(
+                    text=search_text
+                ).to_messages()
+            )
+        else:
+            llm_response = chat(
+                chat_prompt.format_prompt(
+                    input_language=input_language, 
+                    output_language=output_language,
+                    text=search_text
+                ).to_messages()
+            )
+        return llm_response.content, celebs_chat_history, "In progress"
+    except Exception as exception:
+        errorMessage = f"Error: Formating prompt and LLMing for {optionSelection} - Exception Name: {type(exception).__name__} - {exception}"
+        print(errorMessage) 
+        return None, celebs_chat_history, errorMessage
+
 
 def celebs_name_search_history_handler(search_text, celebs_chat_history, celebs_name_search_label): 
     default_celeb_name = "John Doe"
     try:      
-        if "Error:" in celebs_name_search_label:
-            return None, default_celeb_name, celebs_chat_history, celebs_name_search_label
+        if "Error" in celebs_name_search_label["label"]:
+            return None, default_celeb_name, celebs_chat_history, celebs_name_search_label["label"]
         
         if search_text is not None:
             celebrity_name=search_text.replace(".", "").strip()
             if len(celebrity_name)>0:
                 celebs_chat_history[-1][1] = celebrity_name
                 return None, celebrity_name, celebs_chat_history, f"Review Celebrity tab for {celebrity_name} details, else rewrite your question to get a right answer."
+            else:
+                return None, default_celeb_name, celebs_chat_history, "Error 1: Input error!"
+        else:   
+            return None, default_celeb_name, celebs_chat_history, "Error 2: Input error!"
     except Exception as exception:
-        print(f"Exception Name: {type(exception).__name__}")
-        print(exception)
-        return None, default_celeb_name, celebs_chat_history, AskPicturizeIt.NO_API_KEY_ERROR
+        errorMessage = f"celebs_name_search_history_handler -> Exception Name: {type(exception).__name__} - {exception} "
+        print(errorMessage)
+        return None, default_celeb_name, celebs_chat_history, errorMessage
 
 '''
 Codex
@@ -648,14 +654,14 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                                                            value="English", label="Input Language", info="Select a language") 
                         llm_output_language = gr.Dropdown(["English"], 
                                                    value="English", label="Output Language", info="Select a language") 
+                        openai_model = gr.Dropdown(AskPicturizeIt.openai_models, 
+                                                   value="gpt-4", label="Model", info="Select one, for Natural language")            
                 with gr.Row():
                     with gr.Column():                    
                         input_key = gr.Textbox(
                             label="OpenAI API Key", value=os.getenv("OPENAI_API_KEY"), type="password")
                         org_id = gr.Textbox(
-                            label="OpenAI ORG ID (only for org account)", value=os.getenv("OPENAI_ORG_ID"))  
-                        openai_model = gr.Dropdown(AskPicturizeIt.openai_models, 
-                                                   value="gpt-4", label="Model", info="Select one, for Natural language")            
+                            label="OpenAI ORG ID (only for org account)", value=os.getenv("OPENAI_ORG_ID"),  type="password")  
             with gr.Tab("Azure OpenAI API"):
                 gr.HTML(AskPicturizeIt.AZURE_OPENAI_HTML)
                 with gr.Row():
@@ -666,12 +672,23 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                             label="Azure OpenAI API Endpoint", value=os.getenv("AZURE_OPENAI_ENDPOINT"), type="password")
                         azure_openai_deployment_name = gr.Textbox(
                             label="Azure OpenAI API Deployment Name", value=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME"), type="password")
-            with gr.Tab("Google PaLM API"):
-                gr.HTML(AskPicturizeIt.GOOGLE_PALMAPI_HTML)
-                with gr.Row():
-                    with gr.Column():
-                        google_generative_api_key = gr.Textbox(
-                                label="Google Generative AI API Key", value=os.getenv("LANGUAGE_MODEL_API_KEY"), type="password")
+            with gr.Tab("Google API"):            
+                google_model_name = gr.Dropdown(AskPicturizeIt.google_palm_models, 
+                                                   value="models/text-bison-001", label="Model", info="Select one, for Natural language") 
+                with gr.Tab("Google PaLM API"):
+                    gr.HTML(AskPicturizeIt.GOOGLE_PALMAPI_HTML)                    
+                    with gr.Row():
+                        with gr.Column():
+                            google_generative_api_key = gr.Textbox(
+                                    label="Google Generative AI API Key", value=os.getenv("LANGUAGE_MODEL_API_KEY"), type="password")
+                with gr.Tab("PaLM API on Vertex AI"):
+                    gr.HTML("<p>an enterprise version of PaLM</p>")                     
+                    with gr.Row():
+                        with gr.Column():
+                            google_project_id = gr.Textbox(
+                                    label="Google Generative AI API Key", value=os.getenv("GCP_PROJECT_ID"), type="password") 
+                            google_credentials = gr.Textbox(
+                                    label="Google Generative AI API Key", value=os.getenv("GOOGLE_APPLICATION_CREDENTIALS"), type="password") 
         with gr.Tab("AssemblyAI API"):
             gr.HTML(AskPicturizeIt.ASSEMBLY_AI_HTML)
             with gr.Row():
@@ -1277,7 +1294,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
     
     celebs_name_search.submit(
         celebs_name_search_handler,
-        inputs=[input_key, org_id, openai_model, openai_selection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, google_generative_api_key, celebs_name_search, celebs_name_chatbot, llm_input_language, llm_output_language],
+        inputs=[input_key, org_id, openai_model, openai_selection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, google_generative_api_key, google_project_id, google_model_name, celebs_name_search, celebs_name_chatbot, llm_input_language, llm_output_language],
         outputs=[celebs_name_search, celebs_name_chatbot, celebs_name_search_label]).then(
         celebs_name_search_history_handler, 
         inputs=[celebs_name_search, celebs_name_chatbot, celebs_name_search_label], 
