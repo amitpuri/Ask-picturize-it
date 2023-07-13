@@ -1,5 +1,6 @@
 import json
 import os
+
 import wikipedia
 import requests
 
@@ -50,8 +51,7 @@ kb = KnowledgeBase()
 
 def diffusion_models_handler(model_selection : str, prompt :str, stability_api_key: str, 
                              openai_api_key: str, openai_org_id: str, 
-                             optionSelection: str
-, azure_openai_key: str, 
+                             optionSelection: str, azure_openai_key: str, 
                              azure_openai_api_base: str, azure_openai_deployment_name: str, 
                              input_imagesize: str, input_num_images: int):
                                 
@@ -336,7 +336,7 @@ def celebs_name_search_handler(api_key, org_id, model_name, optionSelection,
                     top_k=40,
                     verbose=True)
                 '''
-                return None, celebs_chat_history, "Error: The LLM provider is not yet supported."  
+                return None, celebs_chat_history, f"Error: The LLM provider {optionSelection} is not yet supported."  
     except Exception as exception:
         errorMessage = f"Error: For {optionSelection} - Exception Name: {type(exception).__name__} - {exception}"
         print(errorMessage)
@@ -897,6 +897,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                     variation_cloudinary_upload = gr.Button("Upload to Cloudinary")
             label_upload_variation = gr.Label(value="Upload output", label="Output Info")
     with gr.Tab("Use cases"):
+        usecases_llm_selection = gr.Radio(AskPicturizeIt.llm_api_options, label="Select one", info="Which service do you want to use?", value="OpenAI API")
         with gr.Tab("Know your Celebrity"):
             with gr.Tab("GPT Search"):
                 with gr.Row():
@@ -1100,7 +1101,6 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                         product_def_image_info_label = gr.Label(value="Picturize it info", label="Info")
         with gr.Tab("Summarizer"):
             with gr.Tab("KB Search"):
-                gr.HTML("Work in progress......")
                 with gr.Row():
                     with gr.Column(scale=4):                    
                         keyword_search = gr.Textbox(label="Keyword", placeholder="Search Arxiv, YouTube, wikipedia?")
@@ -1118,7 +1118,6 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                 keyword_search_output = gr.JSON() 
             with gr.Tab("Summarizer via LLM using LangChain"):
                 gr.HTML(AskPicturizeIt.LANGCHAIN_TEXT)
-                gr.HTML("Work in progress......")
                 with gr.Tab("YouTube"):                    
                     with gr.Row():
                         with gr.Column(scale=4):                    
@@ -1157,7 +1156,8 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                             )
                         with gr.Column(scale=1):  
                             pdf_summarize_info_label = gr.Label(value="PDF summarize Output info", label="Info")
-                            pdf_summarize_button = gr.Button("Read PDF")
+                            pdf_read_contents_button= gr.Button("Read PDF")
+                            pdf_summarize_button = gr.Button("Summarize PDF")
                     pdf_summary = gr.Textbox(label="PDF response", lines=10) 
             with gr.Tab("Article Extractor and Summarizer"):
                 gr.HTML(AskPicturizeIt.RAPIDAPI_ARTICLE_HTML)
@@ -1253,7 +1253,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
     
     youtube_transcribe_button.click(
         fn=kb.youtube_transcribe_handler,
-        inputs=[input_key, youtube_link],
+        inputs=[youtube_link],
         outputs=[youtube_transcribe_summarize_info_label, youtube_transcribe_summary]
     )
 
@@ -1264,14 +1264,20 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
     )
     
     pdf_summarize_button.click(
-        fn=kb.pdf_summarizer_handler,
-        inputs=[input_key, pdf_link],
+        fn=kb.pdf_summarize_contents_handler,
+        inputs=[usecases_llm_selection, input_key, org_id, openai_model, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, pdf_link],
+        outputs=[pdf_summarize_info_label, pdf_summary]
+    )
+
+    pdf_read_contents_button.click(
+        fn=kb.pdf_read_contents_handler,
+        inputs=[pdf_link],
         outputs=[pdf_summarize_info_label, pdf_summary]
     )
     
     youtube_summarize_button.click(
         fn=kb.youtube_summarizer_handler,
-        inputs=[input_key, youtube_link],
+        inputs=[usecases_llm_selection, input_key, org_id, openai_model, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, youtube_link],
         outputs=[youtube_transcribe_summarize_info_label, youtube_transcribe_summary]
     )
     
@@ -1295,7 +1301,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
     
     celebs_name_search.submit(
         celebs_name_search_handler,
-        inputs=[input_key, org_id, openai_model, openai_selection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, google_generative_api_key, google_project_id, google_model_name, celebs_name_search, celebs_name_chatbot, llm_input_language, llm_output_language],
+        inputs=[input_key, org_id, openai_model, usecases_llm_selection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, google_generative_api_key, google_project_id, google_model_name, celebs_name_search, celebs_name_chatbot, llm_input_language, llm_output_language],
         outputs=[celebs_name_search, celebs_name_chatbot, celebs_name_search_label]).then(
         celebs_name_search_history_handler, 
         inputs=[celebs_name_search, celebs_name_chatbot, celebs_name_search_label], 

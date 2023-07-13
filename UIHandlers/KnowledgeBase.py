@@ -49,8 +49,7 @@ class KnowledgeBase:
             papers.append({
                 'kbtype': "pdf",
                 'keyword': keyword ,
-                'title'
-: pdf.title,
+                'title': pdf.title,
                 'url': pdf.pdf_url,
                 'summary': pdf.summary
             })
@@ -102,40 +101,64 @@ class KnowledgeBase:
                     pass
             return outputs
     
-    def youtube_summarizer_handler(self, api_key, url):    
-        if api_key:
-            if url and len(url)>0:
-                youtube_summarizer = YouTubeSummarizer()
-                youtube_summarizer.setOpenAIConfig(api_key)
-                return AskPicturizeIt.TRANSCRIBE_OUTPUT_INFO,  youtube_summarizer.summarize(url)
-            else:
-                return "No URL",  ""
+    def youtube_summarizer_handler(self, select_medium: str, api_key: str, org_id: str, model_name: str, 
+                                       azure_openai_key: str, azure_openai_api_base: str, 
+                                       azure_openai_deployment_name: str, 
+                                       url: str):    
+        if url and len(url)>0:
+            if select_medium not in AskPicturizeIt.llm_api_options:
+                raise ValueError("Invalid choice!")
+            
+            youtube_summarizer = YouTubeSummarizer()
+            match select_medium:
+                case  "OpenAI API":
+                    youtube_summarizer.setOpenAIConfig(api_key)
+                    return AskPicturizeIt.TRANSCRIBE_OUTPUT_INFO,  youtube_summarizer.summarize(url)
+                case "Azure OpenAI API":
+                    youtube_summarizer.setAzureOpenAIConfig(azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, model_name)
+                    return AskPicturizeIt.TRANSCRIBE_OUTPUT_INFO,  youtube_summarizer.summarize(url)
+                case "Google PaLM API":
+                    return f"Error: The LLM provider {select_medium} is not yet supported.", ""
         else:
-            return AskPicturizeIt.NO_API_KEY_ERROR, ""
+            return "No URL",  ""
+
+    def youtube_transcribe_handler(self, url: str):    
+        if url and len(url)>0:
+            youtube_summarizer = YouTubeSummarizer()
+            return AskPicturizeIt.TRANSCRIBE_OUTPUT_INFO,  youtube_summarizer.transcribe(url)
+        else:
+            return "No URL",  ""
+
     
-    def youtube_transcribe_handler(self, api_key, url):    
-        if api_key:
-            if url and len(url)>0:
-                youtube_summarizer = YouTubeSummarizer()
-                youtube_summarizer.setOpenAIConfig(api_key)
-                return AskPicturizeIt.TRANSCRIBE_OUTPUT_INFO,  youtube_summarizer.transcribe(url)
-            else:
-                return "No URL",  ""
-        else:
-            return AskPicturizeIt.NO_API_KEY_ERROR, ""
     
-    def pdf_summarizer_handler(self, api_key, url):    
-        if api_key:
-            if url and len(url)>0:
-                pdf_summarizer = PDFSummarizer()
-                pdf_summarizer.setOpenAIConfig(api_key)
-                #TO DO
-                return AskPicturizeIt.PDF_OUTPUT_INFO, pdf_summarizer.summarize(url)
-            else:
-                return "No URL",  ""
+    def pdf_summarize_contents_handler(self, select_medium: str, api_key: str, org_id: str, model_name: str, 
+                                       azure_openai_key: str, azure_openai_api_base: str, 
+                                       azure_openai_deployment_name: str, 
+                                       url: str):    
+        if url and len(url)>0:
+            if select_medium not in AskPicturizeIt.llm_api_options:
+                raise ValueError("Invalid choice!")
+            
+            pdf_summarizer = PDFSummarizer()
+            match select_medium:
+                case  "OpenAI API":
+                    pdf_summarizer.setOpenAIConfig(api_key)
+                    return AskPicturizeIt.PDF_OUTPUT_INFO, pdf_summarizer.summarize_contents(url)
+                case "Azure OpenAI API":
+                    pdf_summarizer.setAzureOpenAIConfig(azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, model_name)
+                    return AskPicturizeIt.PDF_OUTPUT_INFO, pdf_summarizer.summarize_contents(url)
+                case "Google PaLM API":
+                    return f"Error: The LLM provider {select_medium} is not yet supported.", ""
         else:
-            return AskPicturizeIt.NO_API_KEY_ERROR, ""
-                   
+            return "No URL",  ""
+
+    def pdf_read_contents_handler(self, url: str):    
+        if url and len(url)>0:
+            pdf_summarizer = PDFSummarizer()
+            return AskPicturizeIt.PDF_OUTPUT_INFO, pdf_summarizer.read_contents(url)
+        else:
+            return "No URL",  ""
+    
     def article_summarize_handler(self, rapidapi_api_key, article_link, length):
         rapidapi_util = RapidapiUtil()
         if rapidapi_api_key:

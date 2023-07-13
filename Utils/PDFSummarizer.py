@@ -1,31 +1,45 @@
-# credit https://github.com/gkamradt/langchain-tutorials
-
+from langchain.llms import OpenAI
+from langchain.llms import AzureOpenAI
 from langchain.document_loaders import OnlinePDFLoader
-from langchain.schema import Document
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.chat_models import ChatOpenAI
-from langchain.vectorstores import FAISS
-from langchain.embeddings import OpenAIEmbeddings
+from langchain.text_splitter import CharacterTextSplitter
+from langchain.docstore.document import Document
 from langchain.chains.summarize import load_summarize_chain
 
-import numpy as np
-from sklearn.cluster import KMeans
-from sklearn.manifold import TSNE
-import matplotlib.pyplot as plt
-
 class PDFSummarizer:
-    def setOpenAIConfig(self, OPENAI_API_KEY):
-        self.openai_api_key = OPENAI_API_KEY
-        
-    def summarize(self, url):
+    def setOpenAIConfig(self, openai_api_key, model_name: str="gpt4", temperature=0.0):
+        self.llm = OpenAI(openai_api_key=openai_api_key,
+                          openai_api_type="openai", 
+                          openai_api_version = '2020-11-07',
+                          openai_api_base = "https://api.openai.com/v1",
+                          temperature=temperature)
+
+    def setAzureOpenAIConfig(self, azure_openai_api_key: str, azure_openai_api_base: str, azure_openai_deployment_name: str, 
+                             model_name: str="gpt4", temperature=0.0):
+        openai_api_version="2023-05-15"
+        openai_api_type="azure"
+        self.llm = AzureOpenAI(
+            openai_api_type=openai_api_type,
+            openai_api_key=azure_openai_api_key,
+            openai_api_base=azure_openai_api_base,
+            deployment_name=azure_openai_deployment_name,
+            model=model_name,
+            temperature=temperature,
+            openai_api_version=openai_api_version)
+    
+    def read_contents(self, url):
         loader = OnlinePDFLoader(url)
         pages = loader.load()
         text = ""
         for page in pages:
             text += page.page_content
     
-        text = text.replace('\t', ' ')
-        text_splitter = RecursiveCharacterTextSplitter(separators=["\n\n", "\n", "\t"], chunk_size=10000, chunk_overlap=3000)
-        docs = text_splitter.create_documents([text])
-        output = "TO DO"
+        text_splitter = CharacterTextSplitter()
+        texts = text_splitter.split_text(text)
+        docs = [Document(page_content=t) for t in texts[:3]]
         return docs
+
+        
+    def summarize_contents(self, url):
+        docs = self.read_contents(url)
+        chain = load_summarize_chain(self.llm, chain_type="map_reduce")
+        return chain.run(docs)
