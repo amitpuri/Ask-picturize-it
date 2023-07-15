@@ -523,13 +523,15 @@ def get_input_examples():
     return prompt_generator.get_input_examples()
 
 def get_images_examples():
-    return prompt_generator.get_images_examples()
-
+    images = []
+    for imagefile in prompt_generator.get_images_examples():
+        images.append(imagefile["file_path"])
+    return images
 
 keyword_examples = AskPicturizeIt.KEYWORD_EXAMPLES
 audio_examples = prompt_generator.get_audio_examples()
 hindi_audio_examples = prompt_generator.get_audio_examples(lang = "hindi")
-images_examples = prompt_generator.get_images_examples()
+images_examples = get_images_examples()
 input_examples = prompt_generator.get_input_examples()
 product_def_keyword_examples =  get_keyword_prompts("product") 
 recent_awesome_chatgpt_prompts = get_keyword_prompts("awesome-prompts")
