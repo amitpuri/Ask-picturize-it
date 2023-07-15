@@ -182,7 +182,8 @@ class AskMeUI:
                     operations.set_azure_openai_api_key(self.azure_openai_key, self.azure_openai_api_base, self.azure_openai_deployment_name)
                 else:
                     operations.set_openai_api_key(self.api_key)
-                    operations.set_model_name(self.model_name)
+                    if self.model_name:
+                        operations.set_model_name(self.model_name)
                     if self.org_id:
                         operations.set_org_id(self.org_id)
                         
@@ -222,7 +223,8 @@ class AskMeUI:
                     
                 else:
                     operations.set_openai_api_key(self.api_key)
-                    operations.set_model_name(self.model_name)
+                    if self.model_name:
+                        operations.set_model_name(self.model_name)                    
                     if self.org_id:
                         operations.set_org_id(self.org_id)
                     

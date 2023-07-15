@@ -17,10 +17,12 @@ class KBDataClient:
         
     def save_kb_searchdata(self, output):
         try:
-            self.KBSearchData.insert_many(output)
+            if output or len(output)>0:
+                self.KBSearchData.insert_many(output)
+            else:
+                print(f"KBDataClient save_kb_searchdata error None or non-empty list")
         except Exception as err:
-            print(f"KBDataClient save_kb_searchdata error {err}"
-)
+            print(f"KBDataClient save_kb_searchdata error {err}")
             print(err)
 
     def list_kb_searchData(self, kbtype: str):

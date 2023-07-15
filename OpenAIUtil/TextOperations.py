@@ -21,9 +21,11 @@ class TextOperations(Operations):
         self.models = ["gpt-4", "gpt-4-0613", "gpt-4-32k", "gpt-4-32k-0613", "gpt-3.5-turbo", "gpt-3.5-turbo-0613", "gpt-3.5-turbo-16k", "gpt-3.5-turbo-16k-0613"]
         self.deployment_name = None
         self.org_id = None
+        #default to gpt-4
+        self.model_name="gpt-4"
         
     def summarize(self, prompt: str):                    
-        self.chat_completion(f"Summarize the following text :{prompt}")
+        return self.chat_completion(f"Summarize the following text :{prompt}")
 
     def chat_completion(self, prompt: str, 
                         system_prompt: str = None, 

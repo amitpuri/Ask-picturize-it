@@ -31,6 +31,7 @@ from UIHandlers.KnowledgeBase import KnowledgeBase
 from AssemblyAIUtil.AssemblyAITranscriber import AssemblyAITranscriber
 from OpenAIUtil.TranscribeOperations import TranscribeOperations
 from ElevenlabsUtil.ElevenlabsVoiceGenerator import ElevenlabsVoiceGenerator
+
 from Utils.PromptOptimizer import PromptOptimizer
 from Utils.StabilityAPI import StabilityAPI
 from Utils.AskPicturizeIt import *
@@ -279,7 +280,7 @@ def get_celebs_response(mongo_config, mongo_connection_string, mongo_database, c
     
 def celeb_summarize_handler(api_key, org_id, prompt):
     uihandlers = AskMeUI()
-    uihandlers.set_openai_config(api_key, None)
+    uihandlers.set_openai_config(api_key)
     if org_id:
         uihandlers.set_org_id(org_id)
     return uihandlers.ask_chatgpt_summarize(prompt)
@@ -1053,7 +1054,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
     with gr.Tab("Ask GPT"):
         with gr.Row():
             with gr.Column(): 
-                keyword_search = gr.Textbox(label="Keyword")
+                gpt_search = gr.Textbox(label="Keyword")
                 with gr.Row():
                     keyword_search_prompt = gr.Textbox(label="Prompt")
                     keyword_search_response = gr.Textbox(label="Response")
@@ -1065,7 +1066,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                                     fn=get_saved_prompts,
                                     examples=saved_prompts,
                                     examples_per_page=10,
-                                    inputs=[keyword_search],
+                                    inputs=[gpt_search],
                                     outputs=[keyword_search_prompt, keyword_search_response],   
                                     cache_examples = False,
                                     run_on_click=True,
@@ -1077,7 +1078,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                                 fn=get_saved_prompts,
                                 examples=recent_awesome_chatgpt_prompts,
                                 examples_per_page=50,
-                                inputs=[keyword_search],
+                                inputs=[gpt_search],
                                 outputs=[keyword_search_prompt, keyword_search_response],
                                 cache_examples = False,
                                 run_on_click=True,
@@ -1089,7 +1090,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                                     fn=get_saved_prompts,
                                     examples=product_def_keyword_examples,
                                     examples_per_page=5,
-                                    inputs=[keyword_search],
+                                    inputs=[gpt_search],
                                     outputs=[keyword_search_prompt, keyword_search_response],  
                                     cache_examples = False,
                                     run_on_click=True,
