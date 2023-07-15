@@ -279,7 +279,7 @@ def get_celebs_response(mongo_config, mongo_connection_string, mongo_database, c
     
 def celeb_summarize_handler(api_key, org_id, prompt):
     uihandlers = AskMeUI()
-    uihandlers.set_openai_config(api_key, None)
+    uihandlers.set_openai_config(api_key)
     if org_id:
         uihandlers.set_org_id(org_id)
     return uihandlers.ask_chatgpt_summarize(prompt)
