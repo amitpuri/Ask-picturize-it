@@ -3,4 +3,4 @@ Credits
 - https://github.com/samwit
 
 
-[Browse Notebooks](https://nbviewer.org/github/amitpuri/Ask-picturize-it/notebooks/SamWitteveen)
+[Browse Sam Witteveen's Notebooks](https://nbviewer.org/github/amitpuri/Ask-picturize-it/tree/main/notebooks/SamWitteveen)
