@@ -28,7 +28,7 @@ class PromptGenerator:
 
     def get_images_examples(self):
         if os.path.exists(self.images_path):
-            images_examples = [join(self.images_path, f) for f in os.listdir(self.images_path) if isfile(join(self.images_path, f))]
+            images_examples = [{ "file_path":join(self.images_path,f),"image_name":f[:-3]} for f in os.listdir(self.images_path) if isfile(join(self.images_path, f))]
             return images_examples
         else:
             return []
