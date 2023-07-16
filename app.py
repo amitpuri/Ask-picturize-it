@@ -31,12 +31,14 @@ from UIHandlers.KnowledgeBase import KnowledgeBase
 from AssemblyAIUtil.AssemblyAITranscriber import AssemblyAITranscriber
 from OpenAIUtil.TranscribeOperations import TranscribeOperations
 from ElevenlabsUtil.ElevenlabsVoiceGenerator import ElevenlabsVoiceGenerator
+
 from Utils.PromptOptimizer import PromptOptimizer
 from Utils.StabilityAPI import StabilityAPI
 from Utils.AskPicturizeIt import *
 from Utils.LinkedInImageGenerator import LinkedInImageGenerator
 from Utils.OpenJourneyImageGenerator import OpenJourneyImageGenerator
 from Utils.FlaxMidjourneyImageGenerator import FlaxMidjourneyImageGenerator
+
 from Utils.RunwaymlImageGenerator import RunwaymlImageGenerator
 from Utils.CompVisImageGenerator import CompVisImageGenerator
 from Utils.TranscribeSpeechbrain import TranscribeSpeechbrain
@@ -648,17 +650,17 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
         gr.HTML(AskPicturizeIt.RESEARCH_SECTION)
         gr.HTML(AskPicturizeIt.SECTION_FOOTER)
     with gr.Tab("Configuration"):
-        with gr.Tab("OpenAI settings"):            
+        with gr.Tab("AI provider settings"):                       
+            with gr.Group():
+                with gr.Row():
+                    llm_input_language = gr.Dropdown(["English"], 
+                                                       value="English", label="Input Language", info="Select a language") 
+                    llm_output_language = gr.Dropdown(["English"], 
+                                               value="English", label="Output Language", info="Select a language") 
+                    openai_model = gr.Dropdown(AskPicturizeIt.openai_models, 
+                                               value="gpt-4", label="Model", info="Select one, for Natural language")            
             with gr.Tab("OpenAI API"):
                 gr.HTML(AskPicturizeIt.OPENAI_HTML)
-                with gr.Group():
-                    with gr.Row():
-                        llm_input_language = gr.Dropdown(["English"], 
-                                                           value="English", label="Input Language", info="Select a language") 
-                        llm_output_language = gr.Dropdown(["English"], 
-                                                   value="English", label="Output Language", info="Select a language") 
-                        openai_model = gr.Dropdown(AskPicturizeIt.openai_models, 
-                                                   value="gpt-4", label="Model", info="Select one, for Natural language")            
                 with gr.Row():
                     with gr.Column():                    
                         input_key = gr.Textbox(
@@ -1053,7 +1055,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
     with gr.Tab("Ask GPT"):
         with gr.Row():
             with gr.Column(): 
-                keyword_search = gr.Textbox(label="Keyword")
+                gpt_search = gr.Textbox(label="Keyword")
                 with gr.Row():
                     keyword_search_prompt = gr.Textbox(label="Prompt")
                     keyword_search_response = gr.Textbox(label="Response")
@@ -1065,7 +1067,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                                     fn=get_saved_prompts,
                                     examples=saved_prompts,
                                     examples_per_page=10,
-                                    inputs=[keyword_search],
+                                    inputs=[gpt_search],
                                     outputs=[keyword_search_prompt, keyword_search_response],   
                                     cache_examples = False,
                                     run_on_click=True,
@@ -1077,7 +1079,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                                 fn=get_saved_prompts,
                                 examples=recent_awesome_chatgpt_prompts,
                                 examples_per_page=50,
-                                inputs=[keyword_search],
+                                inputs=[gpt_search],
                                 outputs=[keyword_search_prompt, keyword_search_response],
                                 cache_examples = False,
                                 run_on_click=True,
@@ -1089,7 +1091,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                                     fn=get_saved_prompts,
                                     examples=product_def_keyword_examples,
                                     examples_per_page=5,
-                                    inputs=[keyword_search],
+                                    inputs=[gpt_search],
                                     outputs=[keyword_search_prompt, keyword_search_response],  
                                     cache_examples = False,
                                     run_on_click=True,
