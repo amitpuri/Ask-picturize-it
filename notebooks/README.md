@@ -22,6 +22,7 @@ This folder contains notebooks from various research and learning materials for 
 
 GCP Vertex AI Samples
 - [GoogleCloudPlatform/vertex-ai-samples](https://nbviewer.org/github/GoogleCloudPlatform/vertex-ai-samples)
+- [Community SDK Notebooks](https://nbviewer.org/github/GoogleCloudPlatform/vertex-ai-samples/tree/main/notebooks/community/sdk)
 
 Books
 - [Machine Learning book](https://nbviewer.org/github/rasbt/machine-learning-book)
