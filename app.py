@@ -657,8 +657,6 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                                                        value="English", label="Input Language", info="Select a language") 
                     llm_output_language = gr.Dropdown(["English"], 
                                                value="English", label="Output Language", info="Select a language") 
-                    openai_model = gr.Dropdown(AskPicturizeIt.openai_models, 
-                                               value="gpt-4", label="Model", info="Select one, for Natural language")            
             with gr.Tab("OpenAI API"):
                 gr.HTML(AskPicturizeIt.OPENAI_HTML)
                 with gr.Row():
@@ -667,6 +665,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                             label="OpenAI API Key", value=os.getenv("OPENAI_API_KEY"), type="password")
                         org_id = gr.Textbox(
                             label="OpenAI ORG ID (only for org account)", value=os.getenv("OPENAI_ORG_ID"),  type="password")  
+                        openai_model = gr.Dropdown(AskPicturizeIt.openai_models, value="gpt-4", label="Model", info="Select one, for Natural language")
             with gr.Tab("Azure OpenAI API"):
                 gr.HTML(AskPicturizeIt.AZURE_OPENAI_HTML)
                 with gr.Row():
