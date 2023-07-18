@@ -30,11 +30,14 @@ Books
 - [github/phlippe-uvadlc_notebooks-tutorial_notebooks](https://nbviewer.org/github/phlippe/uvadlc_notebooks/tree/master/docs/tutorial_notebooks)
 - [Denoising Diffusion Implicit Models](https://keras.io/examples/generative/ddim)
 
+Captum AI
 
 [Captum AI Tutorial](https://nbviewer.org/github/amitpuri/Ask-picturize-it/tree/main/notebooks/captum.ai-tutorial)
 
-Credits 
+Credits - Sam Witteveen
 - https://www.youtube.com/@samwitteveenai
 - https://github.com/samwit
 
-[Browse Sam Witteveen's Notebooks](https://nbviewer.org/github/amitpuri/Ask-picturize-it/tree/main/notebooks/SamWitteveen)
+- [Browse Sam Witteveen's Notebooks](https://nbviewer.org/github/amitpuri/Ask-picturize-it/tree/main/notebooks/SamWitteveen)
+- or directly from [repo](https://nbviewer.org/github/samwit/langchain-tutorials)
+
