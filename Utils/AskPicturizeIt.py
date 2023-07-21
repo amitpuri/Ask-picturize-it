@@ -309,6 +309,7 @@ class AskPicturizeIt:
     TEXT_TO_VIDEO_HTML = """
             <li>The Task, Challenges and the Current State <a href='https://huggingface.co/blog/text-to-video'>https://huggingface.co/blog/text-to-video</a></li>
             <li><a href='https://imagen.research.google/video'>https://imagen.research.google/video</a></li>
+	    <li><a href='https://phenaki.video'>https://phenaki.video</a></li>
             <li><a href='https://huggingface.co/spaces/damo-vilab/modelscope-text-to-video-synthesis'>https://huggingface.co/spaces/damo-vilab/modelscope-text-to-video-synthesis</a></li>
             <li><a href='https://github.com/VideoCrafter/VideoCrafter'>https://github.com/VideoCrafter/VideoCrafter</a></li>
             <li><a href='https://github.com/THUDM/CogVideo'>https://github.com/THUDM/CogVideo</a></li>

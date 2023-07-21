@@ -40,3 +40,4 @@ youtube-search
 jax
 flax
 speechbrain
+pypdf

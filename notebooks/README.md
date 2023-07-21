@@ -22,9 +22,23 @@ This folder contains notebooks from various research and learning materials for 
 
 GCP Vertex AI Samples
 - [GoogleCloudPlatform/vertex-ai-samples](https://nbviewer.org/github/GoogleCloudPlatform/vertex-ai-samples)
+- [Community SDK Notebooks](https://nbviewer.org/github/GoogleCloudPlatform/vertex-ai-samples/tree/main/notebooks/community/sdk)
 
 Books
 - [Machine Learning book](https://nbviewer.org/github/rasbt/machine-learning-book)
 - [Generative_Deep_Learning_2nd_Edition](https://nbviewer.org/github/davidADSP/Generative_Deep_Learning_2nd_Edition/)
 - [github/phlippe-uvadlc_notebooks-tutorial_notebooks](https://nbviewer.org/github/phlippe/uvadlc_notebooks/tree/master/docs/tutorial_notebooks)
 - [Denoising Diffusion Implicit Models](https://keras.io/examples/generative/ddim)
+
+Captum AI
+
+[Captum AI Tutorial](https://nbviewer.org/github/amitpuri/Ask-picturize-it/tree/main/notebooks/captum.ai-tutorial)
+
+Credits - Sam Witteveen
+- https://www.youtube.com/@samwitteveenai
+- https://github.com/samwit
+
+- [Browse Sam Witteveen's Notebooks](https://nbviewer.org/github/amitpuri/Ask-picturize-it/tree/main/notebooks/SamWitteveen)
+- or directly from
+    - [langchain-tutorials repo](https://nbviewer.org/github/samwit/langchain-tutorials)
+    - [llm-tutorials repo](https://nbviewer.org/github/samwit/llm-tutorials)

@@ -13,68 +13,7 @@ This uses OpenAI API Whisper(whisper-1), DALL-E, GPT(gpt-3.5-turbo), also Azure 
 ![image](https://github.com/amitpuri/Ask-picturize-it/assets/6460233/04dc970f-dea2-4b0f-9aec-67af4ff1073f)
 
 
-## OpenAI Pricing notes
 
-Extracted from https://openai.com/pricing
-
-Multiple models, each with different capabilities and price points. Prices are per 1,000 tokens. 
-You can think of tokens as pieces of words, where 1,000 tokens is about 750 words. 
-This paragraph is 35 tokens.
-
-GPT-4
-
-With broad general knowledge and domain expertise, 
-GPT-4 can follow complex instructions in natural language and solve difficult problems with accuracy.
-
-| Model         | Prompt            | Completion               |
-|---------------|-------------------|--------------------------|
-| 8K context    | $0.03 / 1K tokens | $0.06 / 1K tokens        |
-| 32K context   | $0.06 / 1K tokens | $0.12 / 1K tokens        |
-
-
-| Model            | Usage             | 
-|------------------|-------------------|
-| gpt-3.5-turbo    | $0.002 / 1K tokens| 
-
---------------------------------------------------------
-
-DALL-E
-
-| Resolution            | Price        | 
-|------------------|-------------------|
-| 1024×1024        | $0.020 / image    | 
-| 512×512          | $0.018 / image    | 
-| 256×256          | $0.016 / image    | 
-
---------------------------------------------------------
-
-Audio 
-
-| Model            | Usage                                          | 
-|------------------|------------------------------------------------|
-| Whisper          | $0.006 / minute (rounded to the nearest second)| 
-
-
---------------------------------------------------------
-Fine-tuning models
-Create your own custom models by fine-tuning our base models with your training data. Once you fine-tune a model, 
-you’ll be billed only for the tokens you use in requests to that model.
-
-| Model         | Training            | Usage                  |
-|---------------|---------------------|------------------------|
-| Ada           | $0.0004 / 1K tokens | $0.0016 / 1K tokens    |
-| Babbage       | $0.0006 / 1K tokens | $0.0024 / 1K tokens    |
-| Curie         | $0.0030 / 1K tokens | $0.0120 / 1K tokens    |
-| Davinci       | $0.0300 / 1K tokens | $0.1200 / 1K tokens    |
-
-
---------------------------------------------------------
-Embedding models
-Build advanced search, clustering, topic modeling, and classification functionality with our embeddings offering.
-
-| Model        | Usage                 | 
-|--------------|-----------------------|
-| Ada          | $0.0004 / 1K tokens   | 
 
 ## Azure Container registry and Docker notes
 

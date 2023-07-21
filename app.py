@@ -6,6 +6,7 @@ import requests
 
 import gpt3_tokenizer
 import gradio as gr
+
 import openai
 import google.auth
 from google.oauth2 import service_account
@@ -15,6 +16,7 @@ from langchain.chat_models import AzureChatOpenAI
 from langchain.chat_models import ChatVertexAI
 from langchain.retrievers import WikipediaRetriever
 from langchain.chat_models import ChatVertexAI
+
 from langchain.prompts.chat import (
     ChatPromptTemplate,
     SystemMessagePromptTemplate,
@@ -38,6 +40,7 @@ from Utils.AskPicturizeIt import *
 from Utils.LinkedInImageGenerator import LinkedInImageGenerator
 from Utils.OpenJourneyImageGenerator import OpenJourneyImageGenerator
 from Utils.FlaxMidjourneyImageGenerator import FlaxMidjourneyImageGenerator
+
 from Utils.RunwaymlImageGenerator import RunwaymlImageGenerator
 from Utils.CompVisImageGenerator import CompVisImageGenerator
 from Utils.TranscribeSpeechbrain import TranscribeSpeechbrain
@@ -244,40 +247,27 @@ def celeb_upload_save_real_generated_image_handler(cloudinary_cloud_name, cloudi
     
 def get_celebs_response_change_handler(mongo_config, mongo_connection_string, mongo_database, celebrity, image_prompt_text, key_traits):
     return get_celebs_response(mongo_config, mongo_connection_string, mongo_database, celebrity, image_prompt_text, key_traits)
-
-def get_internal_celeb_name(celebrity):
-    for celeb in IndianFilm_celeb_list:
-        if celeb[0]==celebrity:
-            return celeb[1]
-    for celeb in Hollywood_celeb_list:
-        if celeb[0]==celebrity:
-            return celeb[1]
-    for celeb in Business_celeb_list:
-        if celeb[0]==celebrity:
-            return celeb[1]
     
 
 def get_celebs_response(mongo_config, mongo_connection_string, mongo_database, celebrity, image_prompt_text, key_traits):
     uihandlers = AskMeUI()
     uihandlers.set_mongodb_config(mongo_config, mongo_connection_string, mongo_database)
-    internal_celeb_name = get_internal_celeb_name(celebrity)
-    retriever = WikipediaRetriever()
-    docs = retriever.get_relevant_documents(query=celebrity)    
-    wiki_summary = docs[0].page_content
-    
+    response = None
     key_traits = get_key_traits(celebrity)
     try:
         name, prompt, response, wiki_image, generated_image_url = uihandlers.get_celebs_response_handler(celebrity)
-        if wiki_image is None:
-            wiki_image = kb.get_wikimedia_image(celebrity)
-        return name, prompt, wiki_summary, response, wiki_image, generated_image_url, f"{name}", key_traits
     except:
-        response = None
+        name = celebrity
+        prompt = celebrity
         generated_image_url = None
-        wiki_image = kb.get_wikimedia_image(internal_celeb_name)
-        return celebrity, f"Write a paragraph on {celebrity}", wiki_summary, "", wiki_image, None, f"{celebrity}", key_traits
-        pass
-    
+        wiki_image = None  
+
+    retriever = WikipediaRetriever(load_all_available_meta=True)
+    docs = retriever.get_relevant_documents(query=celebrity)    
+    wiki_summary = docs[0].metadata["summary"]
+    #wiki_image = docs[0].metadata["image_urls"][0]    
+    return name, prompt, wiki_summary, response, wiki_image, generated_image_url, f"{name}", key_traits
+
 def celeb_summarize_handler(api_key, org_id, prompt):
     uihandlers = AskMeUI()
     uihandlers.set_openai_config(api_key)
@@ -649,23 +639,22 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
         gr.HTML(AskPicturizeIt.RESEARCH_SECTION)
         gr.HTML(AskPicturizeIt.SECTION_FOOTER)
     with gr.Tab("Configuration"):
-        with gr.Tab("OpenAI settings"):            
+        with gr.Tab("AI provider settings"):                       
+            with gr.Group():
+                with gr.Row():
+                    llm_input_language = gr.Dropdown(["English"], 
+                                                       value="English", label="Input Language", info="Select a language") 
+                    llm_output_language = gr.Dropdown(["English"], 
+                                               value="English", label="Output Language", info="Select a language") 
             with gr.Tab("OpenAI API"):
                 gr.HTML(AskPicturizeIt.OPENAI_HTML)
-                with gr.Group():
-                    with gr.Row():
-                        llm_input_language = gr.Dropdown(["English"], 
-                                                           value="English", label="Input Language", info="Select a language") 
-                        llm_output_language = gr.Dropdown(["English"], 
-                                                   value="English", label="Output Language", info="Select a language") 
-                        openai_model = gr.Dropdown(AskPicturizeIt.openai_models, 
-                                                   value="gpt-4", label="Model", info="Select one, for Natural language")            
                 with gr.Row():
                     with gr.Column():                    
                         input_key = gr.Textbox(
                             label="OpenAI API Key", value=os.getenv("OPENAI_API_KEY"), type="password")
                         org_id = gr.Textbox(
                             label="OpenAI ORG ID (only for org account)", value=os.getenv("OPENAI_ORG_ID"),  type="password")  
+                        openai_model = gr.Dropdown(AskPicturizeIt.openai_models, value="gpt-4", label="Model", info="Select one, for Natural language")
             with gr.Tab("Azure OpenAI API"):
                 gr.HTML(AskPicturizeIt.AZURE_OPENAI_HTML)
                 with gr.Row():
@@ -1018,6 +1007,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                             pdf_link = gr.Textbox(label="Enter PDF link")
                             pdf_title = gr.Textbox(label="Title")
                             pdf_summary = gr.Textbox(label="Summary")
+                            pdf_pages = gr.Textbox(label="Pages")
                             gr.Examples(
                                     label="PDF examples",
                                     fn=kb.pdf_search_data_by_uri,
@@ -1026,7 +1016,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                                     examples=pdf_examples,
                                     examples_per_page=25,
                                     inputs=[pdf_link],
-                                    outputs=[pdf_link,pdf_title,pdf_summary],
+                                    outputs=[pdf_link,pdf_title,pdf_summary, pdf_pages],
                             )
                         with gr.Column(scale=1):  
                             pdf_summarize_info_label = gr.Label(value="PDF summarize Output info", label="Info")
