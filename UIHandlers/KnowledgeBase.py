@@ -220,36 +220,3 @@ class KnowledgeBase:
         connection_string, database = self.get_private_mongo_config()       
         kb_data_client = KBDataClient(connection_string, database)
         return kb_data_client.list_kb_searchData("youtube")
-
-    def get_wikimedia_image(self, keyword):
-        WIKI_REQUEST = 'http://en.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&piprop=original&titles='
-
-        if keyword:
-            try:
-                result = wikipedia.search(keyword, results = 1)
-            except wikipedia.exceptions.WikipediaException as exception:
-                print(f"Exception Name: {type(exception).__name__}")
-                print(exception)
-                result = None
-                pass
-            wikipedia.set_lang('en')
-            try:
-                if result is not None:
-                    wkpage = wikipedia.WikipediaPage(title = result[0])
-            except wikipedia.exceptions.WikipediaException as exception:
-                print(f"Exception Name: {type(exception).__name__}")
-                print(exception)
-                wkpage = None
-                pass
-            if wkpage is not None:
-                title = wkpage.title
-                headers = {'User-Agent': 'AskPicturizeIt/1.0.0 (https://www.amitpuri.com/; amit.puri@amitpuri.com)'}
-                response  = requests.get(WIKI_REQUEST+title, headers=headers)
-                json_data = json.loads(response.text)
-    
-                try:
-                    image_link = list(json_data['query']['pages'].values())[0]['original']['source']
-                    return image_link
-                except:
-                    return None
-    
