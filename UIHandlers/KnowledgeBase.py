@@ -3,6 +3,7 @@ import json
 import arxiv
 import wikipedia
 import requests
+from pypdf import PdfReader
 from youtube_search import YoutubeSearch
 from Utils.YouTubeSummarizer import *
 from Utils.PDFSummarizer import *
@@ -13,6 +14,24 @@ from Utils.AskPicturizeIt import *
 class KnowledgeBase: 
     def get_private_mongo_config(self):
         return os.getenv("P_MONGODB_URI"), os.getenv("P_MONGODB_DATABASE")
+
+    def download_pdf(self, url, delete_flag=False):	
+    	response = requests.get(url, stream=True)
+    	number_of_pages = 0 
+    	with NamedTemporaryFile(delete=delete_flag) as f:
+    		f.write(response.content)
+    		f.flush()
+    		return f.name
+		
+    def get_number_of_pages(self, pdf_file):
+    	reader = PdfReader(pdf_file)
+    	number_of_pages = len(reader.pages)
+    	return number_of_pages
+
+    def get_temp_file_online_pdf(self, url):
+    	loader = OnlinePDFLoader(url)
+    	pages = loader.load()			
+    	return pages[0].metadata["source"]
         
     def get_searchData_by_uri(self, uri: str):
         try:
@@ -36,6 +55,7 @@ class KnowledgeBase:
             url = f"https://www.youtube.com/watch?v={video_id}"
             videos.append({
                 'kbtype': "youtube",
+
                 'keyword': keyword ,
                 'title': video["title"],
                 'url': url,
@@ -50,15 +70,24 @@ class KnowledgeBase:
                 'kbtype': "pdf",
                 'keyword': keyword ,
                 'title': pdf.title,
+
                 'url': pdf.pdf_url,
                 'summary': pdf.summary
             })
         return papers
                 
     def pdf_search_data_by_uri(self, uri: str):
+        try:
+            temp_pdf_file = self.get_temp_file_online_pdf(uri)
+            num_pages = self.get_number_of_pages(temp_pdf_file)            
+        except Exception as exception:
+            print(f"Exception Name: {type(exception).__name__}")
+            print(exception)
+            num_pages = 0 
+            
         title, summary = self.get_searchData_by_uri(uri)
-        return uri, title, summary
-        
+        return uri, title, summary, num_pages
+            
                 
     def youtube_search_data_by_uri(self, uri: str):
         title, summary = self.get_searchData_by_uri(uri)
