@@ -42,3 +42,8 @@ Credits - Sam Witteveen
 - or directly from
     - [langchain-tutorials repo](https://nbviewer.org/github/samwit/langchain-tutorials)
     - [llm-tutorials repo](https://nbviewer.org/github/samwit/llm-tutorials)
+
+Pinecone 
+
+- [Audio Recommendation with OpenAI and Vector DBs](https://www.pinecone.io/learn/audio-recommendation-openai)
+- [Audio Recommendation with OpenAI and Vector DBs Notebook](https://nbviewer.org/github/pinecone-io/examples/blob/master/recommendation/audio-recommender/audio-recommendation.ipynb)
