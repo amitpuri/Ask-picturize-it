@@ -55,7 +55,6 @@ class KnowledgeBase:
             url = f"https://www.youtube.com/watch?v={video_id}"
             videos.append({
                 'kbtype': "youtube",
-
                 'keyword': keyword ,
                 'title': video["title"],
                 'url': url,
@@ -70,7 +69,6 @@ class KnowledgeBase:
                 'kbtype': "pdf",
                 'keyword': keyword ,
                 'title': pdf.title,
-
                 'url': pdf.pdf_url,
                 'summary': pdf.summary
             })
@@ -220,3 +218,4 @@ class KnowledgeBase:
         connection_string, database = self.get_private_mongo_config()       
         kb_data_client = KBDataClient(connection_string, database)
         return kb_data_client.list_kb_searchData("youtube")
+    

@@ -1,7 +1,3 @@
-git+https://github.com/huggingface/diffusers
-git+https://github.com/huggingface/transformers
-git+https://github.com/google/flax.git
-jaxlib
 openai
 google-generativeai
 google-cloud-aiplatform
@@ -33,11 +29,8 @@ scikit-learn
 unstructured
 pdf2image
 pandas
-chromadb
 tiktoken
 arxiv
 youtube-search
-jax
-flax
 speechbrain
 pypdf

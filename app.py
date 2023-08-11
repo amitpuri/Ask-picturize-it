@@ -15,7 +15,6 @@ from langchain.chat_models import ChatOpenAI
 from langchain.chat_models import AzureChatOpenAI
 from langchain.chat_models import ChatVertexAI
 from langchain.retrievers import WikipediaRetriever
-from langchain.chat_models import ChatVertexAI
 
 from langchain.prompts.chat import (
     ChatPromptTemplate,
@@ -33,14 +32,11 @@ from UIHandlers.KnowledgeBase import KnowledgeBase
 from AssemblyAIUtil.AssemblyAITranscriber import AssemblyAITranscriber
 from OpenAIUtil.TranscribeOperations import TranscribeOperations
 from ElevenlabsUtil.ElevenlabsVoiceGenerator import ElevenlabsVoiceGenerator
-
 from Utils.PromptOptimizer import PromptOptimizer
 from Utils.StabilityAPI import StabilityAPI
 from Utils.AskPicturizeIt import *
 from Utils.LinkedInImageGenerator import LinkedInImageGenerator
 from Utils.OpenJourneyImageGenerator import OpenJourneyImageGenerator
-from Utils.FlaxMidjourneyImageGenerator import FlaxMidjourneyImageGenerator
-
 from Utils.RunwaymlImageGenerator import RunwaymlImageGenerator
 from Utils.CompVisImageGenerator import CompVisImageGenerator
 from Utils.TranscribeSpeechbrain import TranscribeSpeechbrain
@@ -77,10 +73,6 @@ def diffusion_models_handler(model_selection : str, prompt :str, stability_api_k
                 return f"Image generated from {model_selection}", image_result
             case  "CompVis/stable-diffusion-v1-4":
                 image_generator = CompVisImageGenerator()
-                image_result = image_generator.generate_image(prompt)
-                return f"Image generated from {model_selection}", image_result
-            case  "flax/midjourney-v4-diffusion":
-                image_generator = FlaxMidjourneyImageGenerator()
                 image_result = image_generator.generate_image(prompt)
                 return f"Image generated from {model_selection}", image_result
             case "stability.ai":
@@ -213,17 +205,22 @@ Image generation
 '''
 
 def create_image_from_prompt_handler(api_key :str, org_id :str, optionSelection :str, azure_openai_key :str, azure_openai_api_base :str, azure_openai_deployment_name :str, input_prompt :str, input_imagesize :str, input_num_images :int):    
-    uihandlers = get_AskMeUI(api_key, org_id, optionSelection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name)
-    return uihandlers.create_image_from_prompt_handler(input_prompt, input_imagesize, input_num_images)
-
+    if api_key or azure_openai_key:
+        uihandlers = get_AskMeUI(api_key, org_id, optionSelection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name)
+        return uihandlers.create_image_from_prompt_handler(input_prompt, input_imagesize, input_num_images)
+    else:
+        return AskPicturizeIt.NO_API_KEY_ERROR, None, None
 
 '''
 Image variations 
 '''
 
 def create_variation_from_image_handler(api_key, org_id, optionSelection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, input_image_variation, input_imagesize, input_num_images):
-    uihandlers = get_AskMeUI(api_key, org_id, optionSelection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name)   
-    return uihandlers.create_variation_from_image_handler(input_image_variation, input_imagesize, input_num_images)
+    if api_key or azure_openai_key:
+        uihandlers = get_AskMeUI(api_key, org_id, optionSelection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name)   
+        return uihandlers.create_variation_from_image_handler(input_image_variation, input_imagesize, input_num_images)
+    else:
+        return AskPicturizeIt.NO_API_KEY_ERROR, None, None
 
 
 '''
@@ -286,7 +283,8 @@ def celeb_save_description_handler(mongo_config, mongo_connection_string, mongo_
 def celebs_name_search_handler(api_key, org_id, model_name, optionSelection, 
                                azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, 
                                google_generative_api_key, google_project_id, google_model_name, search_text, celebs_chat_history,
-                               input_language, output_language):
+                               input_language, output_language,
+                              location="us-east1"):
     if optionSelection not in AskPicturizeIt.llm_api_options:
         raise ValueError("Invalid choice!")
         
@@ -316,7 +314,13 @@ def celebs_name_search_handler(api_key, org_id, model_name, optionSelection,
             case "Google PaLM API":                    
                 #TO DO AUTH
                 #service_account_info = os.getenv["GOOGLE_APPLICATION_CREDENTIALS"]
+                # or,
+                #with open('service_service.json') as source:
+                #    service_account_info = json.load(source)
+                
                 #credentials = service_account.Credentials.from_service_account_info(service_account_info, scopes="googleapis.com")
+                #project_id and location
+                # load_credentials_from_dict with service account info
                 '''
                 chat = ChatVertexAI(
                     project_id=google_project_id,
@@ -681,7 +685,17 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
                             google_project_id = gr.Textbox(
                                     label="Google Cloud Project ID", value=os.getenv("GCP_PROJECT_ID"), type="password") 
                             google_credentials = gr.Textbox(
-                                    label="Google Application Credentials", value=os.getenv("GOOGLE_APPLICATION_CREDENTIALS"), type="password") 
+                                    label="Google Application Credentials", value=os.getenv("GOOGLE_APPLICATION_CREDENTIALS"), type="password")
+                            google_model_locations = gr.Dropdown([
+                                    "us-central1",
+                                    "us-east1",
+                                    "us-west1",
+                                    "us-west2",
+                                    "europe-west1",
+                                    "asia-east1",
+                                    "asia-southeast1",
+                                    "australia-southeast1",
+                                ], value="us-east1", label="Location", info="Select a location")
         with gr.Tab("AssemblyAI API"):
             gr.HTML(AskPicturizeIt.ASSEMBLY_AI_HTML)
             with gr.Row():
@@ -1295,7 +1309,7 @@ with gr.Blocks(css='https://cdn.amitpuri.com/ask-picturize-it.css') as AskMeTabb
     
     celebs_name_search.submit(
         celebs_name_search_handler,
-        inputs=[input_key, org_id, openai_model, usecases_llm_selection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, google_generative_api_key, google_project_id, google_model_name, celebs_name_search, celebs_name_chatbot, llm_input_language, llm_output_language],
+        inputs=[input_key, org_id, openai_model, usecases_llm_selection, azure_openai_key, azure_openai_api_base, azure_openai_deployment_name, google_generative_api_key, google_project_id, google_model_name, celebs_name_search, celebs_name_chatbot, llm_input_language, llm_output_language, google_model_locations],
         outputs=[celebs_name_search, celebs_name_chatbot, celebs_name_search_label]).then(
         celebs_name_search_history_handler, 
         inputs=[celebs_name_search, celebs_name_chatbot, celebs_name_search_label], 

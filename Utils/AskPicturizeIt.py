@@ -48,7 +48,6 @@ class AskPicturizeIt:
        <li><p>LLM Sys projects <a href='https://lmsys.org/projects'>https://lmsys.org/projects</a></p></li>
        <li><p>A list of open LLMs available for commercial use<a href='https://github.com/eugeneyan/open-llms'>https://github.com/eugeneyan/open-llms</a></p></li>
        <li><p>Aviary Explorer  <a href='https://aviary.anyscale.com'>https://aviary.anyscale.com</a></p></li>       
-       <li><p>LangChain <a href='https://langchain.com/features.html'>https://langchain.com/features.html</a></p></li>
        <li><p>LangChain Python <a href='https://python.langchain.com'>https://python.langchain.com</a></p></li>
        <li><p>LangChain for Gen AI and LLMs <a href='https://www.youtube.com/playlist?list=PLIUOU7oqGTLieV9uTIFMm6_4PXg-hlN6F'>https://www.youtube.com/playlist?list=PLIUOU7oqGTLieV9uTIFMm6_4PXg-hlN6F</a></p></li>
        <li><p>LangChain's integration with Chroma <a href='https://blog.langchain.dev/langchain-chroma'>https://blog.langchain.dev/langchain-chroma</a></p></li>
@@ -243,12 +242,64 @@ class AskPicturizeIt:
  "While traversing a parallel dimension, you come across a mirror that shows you glimpses of your own future. How will these glimpses affect your choices and the outcome of your journey?",
  "During a long train ride, you strike up a conversation with a mysterious stranger who claims to have the ability to travel through time. Will you believe their incredible stories and join them on a mind-bending adventure?",
  "As you explore an ancient, abandoned ruin, you accidentally activate a long-lost artifact, transporting you to a bygone era. Can you find a way back home while navigating the perils of a time unknown to you?",
- "While backpacking through a remote wilderness, you stumble upon a hidden tribe that has managed to preserve ancient traditions and knowledge. Will you earn their trust and gain access to their wisdom?" ]
+ "While backpacking through a remote wilderness, you stumble upon a hidden tribe that has managed to preserve ancient traditions and knowledge. Will you earn their trust and gain access to their wisdom?" ,
+"Visualize the concept of thought leadership in a futuristic cityscape.",
+"Illustrate the power of collaboration in a forest ecosystem.",
+"Depict a tree growing from a seed to a mighty oak to symbolize a growth mindset.",
+"Create a humorous scene of robots having a stressful day at work.",
+"Show a sunrise over a mountain range, symbolizing new beginnings and opportunities.",
+"Illustrate the concept of resilience in a desert oasis.",
+"Depict a symphony orchestra as a metaphor for harmonious teamwork.",
+"Visualize the journey of a single drop of water contributing to a mighty river, symbolizing individual contribution to collective success.",
+"Create an image of a lighthouse standing firm amidst a storm, symbolizing guidance and steadfastness.",
+"Illustrate a garden blooming in all seasons, symbolizing adaptability and continuous growth.",
+"Show a humorous scene of animals conducting a business meeting.",
+"Depict a chess game where all pieces are working together, symbolizing strategic collaboration.",
+"Visualize a bridge connecting two cliffs, symbolizing problem-solving and connection.",
+"Create a scene of a runner passing the baton in a relay race, symbolizing trust and teamwork.",
+"Illustrate a vibrant coral reef, symbolizing diversity and symbiotic relationships.",
+"Show a humorous scene of birds having a singing competition.",
+"Depict a tree with deep roots and wide branches, symbolizing strength and growth.",
+"Visualize a mountain climber reaching the peak, symbolizing achievement and ambition.",
+"Create a scene of a spaceship exploring unknown galaxies, symbolizing curiosity and innovation.",
+"Illustrate a cityscape where nature and technology coexist harmoniously.",
+"Show a humorous scene of a robot trying to paint a masterpiece.",
+"Depict a phoenix rising from the ashes, symbolizing resilience and rebirth.",
+"Visualize a person planting seeds, symbolizing patience and investment in the future.",
+"Create a scene of a tightrope walker, symbolizing balance and risk-taking.",
+"Illustrate a network of interconnected gears, symbolizing synergy and cooperation.",
+"Show a humorous scene of a group of animals having a picnic.",
+"Depict a person standing at a crossroads, symbolizing decision-making and strategic planning.",
+"Visualize a person building a sandcastle, symbolizing creativity and imagination.",
+"Create a scene of a hot air balloon rising above the clouds, symbolizing aspiration and freedom.",
+"Illustrate a group of diverse individuals holding hands, symbolizing unity and inclusivity.",
+"Show a humorous scene of a robot trying to cook a gourmet meal.",
+"Depict a person climbing a staircase made of books, symbolizing knowledge and progress.",
+"Visualize a person standing at the edge of a cliff, looking at the horizon, symbolizing vision and foresight.",
+"Create a scene of a person navigating through a maze, symbolizing problem-solving and determination.",
+"Illustrate a group of people building a bridge, symbolizing collaboration and teamwork.",
+"Show a humorous scene of a group of animals playing a game of soccer.",
+"Depict a person planting a tree, symbolizing investment in the future and environmental consciousness.",
+"Visualize a person painting a canvas, symbolizing creativity and self-expression.",
+"Create a scene of a person reaching for a star, symbolizing ambition and aspiration.",
+"Illustrate a group of people holding different pieces of a puzzle, symbolizing teamwork and collaboration.",
+"Show a humorous scene of a robot trying to dance.",
+"Depict a person standing at multiple doors, symbolizing choices and opportunities.",
+"Visualize a person holding a light in the darkness, symbolizing hope and guidance.",
+"Create a scene of a person sailing in a storm, symbolizing resilience and courage.",
+"Illustrate a group of people from different cultures holding hands, symbolizing unity in diversity.",
+"Show a humorous scene of a group of animals having a music concert.",
+"Depict a person standing on top of a mountain, looking at the horizon, symbolizing achievement and vision.",
+"Visualize a person walking on a path that leads to a bright future, symbolizing hope and progress.",
+"Create a scene of a person building a house, symbolizing patience and hard work.",
+"Illustrate a group of people carrying a giant globe, symbolizing shared responsibility and global cooperation."
+]
 
     style_presets = ["enhance", "anime", "photographic", "digital-art", "comic-book", "fantasy-art", 
                     "line-art", "analog-film", "neon-punk", "isometric", 
                     "low-poly", "origami", "modeling-compound", "cinematic", 
                     "3d-model", "pixel-art", "tile-texture"]
+
 
     elevenlabs_voices = ["Rachel","Domi","Bella","Antoni","Elli","Josh","Arnold","Adam","Sam"]
     
@@ -258,10 +309,11 @@ class AskPicturizeIt:
 
     llm_api_options = ["OpenAI API","Azure OpenAI API","Google PaLM API"]
 
+    llm_models = ["meta-llama/Llama-2-70b-chat-hf"]
+
     text2audio_medium = ["elevanlabs","microsoft/speecht5_tts","coqui/tts","speechbrain/tts-tacotron2-ljspeech"]
 
     text2image_medium = ["StabilityAI", "OpenAI API","Azure OpenAI API","Vertex AI Image Generation"]
-
 
     TEST_MESSAGE = "My favorite TV shows are The Mentalist, The Blacklist, Designated Survivor, and Unforgettable. What are ten series that I should watch next?"
 
@@ -309,7 +361,7 @@ class AskPicturizeIt:
     TEXT_TO_VIDEO_HTML = """
             <li>The Task, Challenges and the Current State <a href='https://huggingface.co/blog/text-to-video'>https://huggingface.co/blog/text-to-video</a></li>
             <li><a href='https://imagen.research.google/video'>https://imagen.research.google/video</a></li>
-	    <li><a href='https://phenaki.video'>https://phenaki.video</a></li>
+            <li><a href='https://phenaki.video'>https://phenaki.video</a></li>
             <li><a href='https://huggingface.co/spaces/damo-vilab/modelscope-text-to-video-synthesis'>https://huggingface.co/spaces/damo-vilab/modelscope-text-to-video-synthesis</a></li>
             <li><a href='https://github.com/VideoCrafter/VideoCrafter'>https://github.com/VideoCrafter/VideoCrafter</a></li>
             <li><a href='https://github.com/THUDM/CogVideo'>https://github.com/THUDM/CogVideo</a></li>

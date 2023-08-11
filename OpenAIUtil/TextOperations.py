@@ -37,10 +37,6 @@ class TextOperations(Operations):
                         presence_penalty=0,
                         stop=None):
         try:
-            if self.model_name is None:
-                #default to gpt-4
-                self.model_name="gpt-4"
-                
             if prompt is not None:
                 if system_prompt is None:
                     messages = [{"role": "user", "content": f"{prompt}"}]
