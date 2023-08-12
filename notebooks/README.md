@@ -2,6 +2,11 @@
 
 This folder contains notebooks from various research and learning materials for reference purposes only.
 
+# Deep Dream
+
+- [Generative AI Tutorials](https://nbviewer.org/github/tensorflow/docs/tree/master/site/en/tutorials/generative)
+- [Inceptionism: Going Deeper into Neural Networks](https://ai.googleblog.com/2015/06/inceptionism-going-deeper-into-neural.html)
+
 # Semantic Kernal
 
 - [Python Samples](https://nbviewer.org/github/microsoft/semantic-kernel/blob/main/samples/notebooks/python)
