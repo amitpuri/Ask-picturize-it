@@ -53,4 +53,5 @@ Pinecone
 - [Audio Recommendation with OpenAI and Vector DBs](https://www.pinecone.io/learn/audio-recommendation-openai)
 - [Audio Recommendation with OpenAI and Vector DBs Notebook](https://nbviewer.org/github/pinecone-io/examples/blob/master/recommendation/audio-recommender/audio-recommendation.ipynb)
 
-[Relataly Public Python Tutorials](https://nbviewer.org/github/flo7up/relataly-public-python-tutorials/)
+Python Tutorials
+[Relataly Public Python Tutorials](https://nbviewer.org/github/flo7up/relataly-public-python-tutorials/) by [https://www.relataly.com](https://www.relataly.com)
