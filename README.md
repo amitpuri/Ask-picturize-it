@@ -2,10 +2,6 @@
 
 [![licenses](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Huggingface Space 🤗
-
-[https://huggingface.co/spaces/amitpuri/Ask-picturize-it](https://huggingface.co/spaces/amitpuri/Ask-picturize-it)
-
 This uses OpenAI API Whisper(whisper-1), DALL-E, GPT(gpt-3.5-turbo), also Azure OpenAI and Google PaLM (https://developers.generativeai.google)
 
 ![image](https://github.com/amitpuri/Ask-picturize-it/assets/6460233/c25cf323-3102-4828-91fb-c5e4e3c329ed)
@@ -13,9 +9,7 @@ This uses OpenAI API Whisper(whisper-1), DALL-E, GPT(gpt-3.5-turbo), also Azure 
 ![image](https://github.com/amitpuri/Ask-picturize-it/assets/6460233/04dc970f-dea2-4b0f-9aec-67af4ff1073f)
 
 
-
-
-## Azure Container registry and Docker notes
+## Azure Container Registry and Docker notes
 
 export required environment variables
 
