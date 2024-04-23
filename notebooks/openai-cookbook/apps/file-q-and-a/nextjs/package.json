@@ -24,7 +24,7 @@
     "clsx": "^1.2.1",
     "eslint": "8.32.0",
     "eslint-config-next": "13.1.2",
-    "formidable": "^2.1.1",
+    "formidable": "^3.2.4",
     "lodash": "^4.17.21",
     "mammoth": "^1.5.1",
     "next": "13.5.6",
